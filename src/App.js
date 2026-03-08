@@ -1190,22 +1190,29 @@ export default function App() {
       </div>
 
       <div className="px-5 -mt-6 relative z-20">
-        <div className="bg-white rounded-xl shadow-lg border border-red-100 p-4">
-          <div className="flex items-start gap-3">
-            <div className="bg-red-50 p-2 rounded-full text-red-500 mt-0.5">
-              <AlertCircle size={20} />
+        <div className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(220,38,38,0.08)] border border-red-50 overflow-hidden">
+          {/* 頂部漸層裝飾線 */}
+          <div className="h-1.5 w-full bg-gradient-to-r from-red-300 via-red-400 to-red-300"></div>
+          
+          <div className="p-4 sm:p-5 flex items-start gap-3 sm:gap-4">
+            <div className="relative mt-0.5 flex-shrink-0">
+              <span className="absolute inset-0 bg-red-400 rounded-full animate-ping opacity-25 duration-1000"></span>
+              <div className="bg-red-50 p-2.5 rounded-full text-red-500 relative z-10">
+                <AlertCircle size={22} />
+              </div>
             </div>
-            <div>
-              <h3 className="text-sm font-bold text-gray-800 mb-1">
+            <div className="flex-1">
+              <h3 className="text-[15px] font-bold text-gray-800 mb-1.5 flex items-center gap-2">
                 預約重要須知
+                <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-md font-bold tracking-wider">必讀</span>
               </h3>
-              <p className="text-xs text-gray-600 leading-relaxed">
-                請直接{" "}
-                <span className="text-red-500 font-bold">回傳訊息</span>{" "}
-                告知您想預約的時間。
-                  </span>(選取時間後點選下方時間並回傳客服)
-                <br />
+              <p className="text-sm text-gray-600 leading-relaxed mb-2.5">
+                請直接 <span className="inline-block bg-red-50 text-red-600 font-bold px-2 py-0.5 rounded border border-red-100 mx-0.5 shadow-sm transform -translate-y-[1px]">回傳訊息</span> 告知想預約的時間。
               </p>
+              <div className="text-xs text-gray-500 flex items-start gap-1.5 bg-gray-50 p-2.5 rounded-lg border border-gray-100">
+                <span className="text-[#A87B7B] shrink-0 mt-0.5">💡</span>
+                <span className="leading-relaxed font-medium">請先選取時段空檔，再點擊最下方的按鈕回傳給客服喔！</span>
+              </div>
             </div>
           </div>
         </div>
