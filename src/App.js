@@ -1201,9 +1201,9 @@ export default function App() {
               </h3>
               <p className="text-xs text-gray-600 leading-relaxed">
                 請直接{" "}
-                <span className="text-red-500 font-bold">截圖或回傳訊息</span>{" "}
+                <span className="text-red-500 font-bold">回傳訊息</span>{" "}
                 告知您想預約的時間。
-                <br />❌ 僅在此處點擊無法直接完成預約喔！
+                <br />
               </p>
             </div>
           </div>
