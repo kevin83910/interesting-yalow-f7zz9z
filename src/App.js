@@ -89,10 +89,13 @@ const Icons = {
   Search: ({ size = 24, className = "" }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
   ),
+  HelpCircle: ({ size = 24, className = "" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+  ),
 };
 
 const {
-  MapPin, AlertCircle, CalendarCheck, ChevronRight, Settings, Save, Plus, Trash2, Eye, Lock, X, Key, Clock, MessageCircle, Cloud, Search,
+  MapPin, AlertCircle, CalendarCheck, ChevronRight, Settings, Save, Plus, Trash2, Eye, Lock, X, Key, Clock, MessageCircle, Cloud, Search, HelpCircle
 } = Icons;
 
 // --- 初始預設資料 ---
@@ -251,10 +254,19 @@ export default function App() {
 
   const [designerToDelete, setDesignerToDelete] = useState(null);
   const [showCopyModal, setShowCopyModal] = useState(false);
+  
+  // --- 教學卡片狀態 ---
+  const [showGuide, setShowGuide] = useState(false);
 
   // --- 顧客搜尋篩選狀態 ---
   const [filterDate, setFilterDate] = useState("all");
   const [filterTime, setFilterTime] = useState("all");
+
+  // --- 自動產生日期狀態 ---
+  const [generateMonth, setGenerateMonth] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
 
   const [designers, setDesigners] = useState(initialDesigners);
   const [activeDesignerId, setActiveDesignerId] = useState(initialDesigners[0].id);
@@ -284,6 +296,17 @@ export default function App() {
         clearInterval(checkTailwind);
         clearTimeout(fallback);
       };
+    }
+  }, []);
+
+  // --- 偵測首次進入，顯示教學卡片 ---
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const hasSeen = localStorage.getItem('hasSeenBookingGuide');
+      if (!hasSeen) {
+        setShowGuide(true);
+        localStorage.setItem('hasSeenBookingGuide', 'true');
+      }
     }
   }, []);
 
@@ -484,9 +507,14 @@ export default function App() {
 
   const handleGenerateMonthSchedules = () => {
     if (!activeDesigner) return;
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth(); 
+    if (!generateMonth) {
+      showToast("請先選擇月份！");
+      return;
+    }
+
+    const [yearStr, monthStr] = generateMonth.split("-");
+    const year = parseInt(yearStr, 10);
+    const month = parseInt(monthStr, 10) - 1; 
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
     let newSchedules = [...activeDesigner.schedules];
@@ -514,9 +542,9 @@ export default function App() {
     if (addedCount > 0) {
       newSchedules.sort((a, b) => new Date(a.fullDate) - new Date(b.fullDate));
       updateActiveDesigner("schedules", newSchedules);
-      showToast(`已自動補齊本月剩下的 ${addedCount} 天！`);
+      showToast(`已自動補齊 ${year} 年 ${month + 1} 月剩下的 ${addedCount} 天！`);
     } else {
-      showToast(`本月 1-${daysInMonth} 日皆已存在！`);
+      showToast(`${year} 年 ${month + 1} 月的日期皆已存在！`);
     }
   };
 
@@ -568,7 +596,7 @@ export default function App() {
   };
 
   // ==========================================
-  // 視圖 1：後台編輯模式 (文字放大)
+  // 視圖 1：後台編輯模式
   // ==========================================
   const renderAdminView = () => (
     <div className="w-full max-w-md bg-gray-50 min-h-screen shadow-2xl relative pb-28 flex flex-col mx-auto border-x border-gray-200">
@@ -640,9 +668,17 @@ export default function App() {
           <div className="flex justify-between items-center mb-5">
             <h2 className="text-lg font-bold text-gray-800">可預約時段設定</h2>
             <div className="flex gap-2.5">
-              <button onClick={handleGenerateMonthSchedules} className="text-[#A87B7B] text-sm font-bold flex items-center gap-1 bg-[#F5E3E3] px-3.5 py-2 rounded-lg hover:bg-[#F0E6D8] transition shadow-sm">
-                自動產生本月
-              </button>
+              <div className="flex items-center gap-1.5 bg-[#F5E3E3] px-2 py-1.5 rounded-lg shadow-sm border border-[#F0E6D8]">
+                <input
+                  type="month"
+                  value={generateMonth}
+                  onChange={(e) => setGenerateMonth(e.target.value)}
+                  className="text-xs p-1.5 rounded-md border border-[#F0E6D8] text-gray-700 bg-white outline-none cursor-pointer"
+                />
+                <button onClick={handleGenerateMonthSchedules} className="text-[#A87B7B] text-sm font-bold flex items-center gap-1 hover:text-[#8f6666] transition px-2">
+                  自動產生
+                </button>
+              </div>
               <button onClick={handleAddSchedule} className="text-[#A87B7B] text-sm font-bold flex items-center gap-1 bg-[#F5E3E3] px-3.5 py-2 rounded-lg hover:bg-[#F0E6D8] transition shadow-sm">
                 <Plus size={16} /> 新增日期
               </button>
@@ -694,15 +730,65 @@ export default function App() {
   );
 
   // ==========================================
-  // 視圖 2：顧客預約模式 (文字全面放大)
+  // 視圖 2：顧客預約模式
   // ==========================================
   const renderCustomerView = () => (
     <div className="w-full max-w-md bg-white min-h-screen shadow-2xl relative pb-28 mx-auto border-x border-gray-200">
       {renderToast()}
 
+      {/* --- 教學指南彈出卡片 --- */}
+      {showGuide && (
+        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center backdrop-blur-sm px-4">
+          <div className="bg-white rounded-[2rem] p-8 w-full max-w-[340px] shadow-2xl relative animate-in zoom-in duration-300">
+            <button onClick={() => setShowGuide(false)} className="absolute top-5 right-5 text-gray-400 hover:text-gray-800">
+              <X size={24} />
+            </button>
+            
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800 tracking-wide font-tc">預約快速指南 ✨</h2>
+              <p className="text-sm text-gray-500 mt-2">只需 3 個簡單步驟，輕鬆完成預約</p>
+            </div>
+
+            <div className="space-y-5 mb-8">
+              <div className="flex items-center gap-4 bg-[#FDFBF7] p-4 rounded-2xl border border-[#F0E6D8]">
+                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-[#C59A5C] shadow-sm flex-shrink-0 font-bold text-xl">1</div>
+                <div>
+                  <h3 className="font-bold text-gray-800 text-base mb-1">選擇設計師</h3>
+                  <p className="text-xs text-gray-600 leading-relaxed">在最上方滑動，點選您指定的設計師。</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-4 bg-[#FDFBF7] p-4 rounded-2xl border border-[#F0E6D8]">
+                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-[#C59A5C] shadow-sm flex-shrink-0 font-bold text-xl">2</div>
+                <div>
+                  <h3 className="font-bold text-gray-800 text-base mb-1">挑選空檔</h3>
+                  <p className="text-xs text-gray-600 leading-relaxed">往下滑動，點擊畫面上顯示為白色的「可用時段」。</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 bg-[#FDFBF7] p-4 rounded-2xl border border-[#F0E6D8]">
+                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-[#C59A5C] shadow-sm flex-shrink-0 font-bold text-xl">3</div>
+                <div>
+                  <h3 className="font-bold text-gray-800 text-base mb-1">送出預約</h3>
+                  <p className="text-xs text-gray-600 leading-relaxed">點擊最下方的按鈕，系統會自動帶您跳轉 LINE 送出！</p>
+                </div>
+              </div>
+            </div>
+
+            <button onClick={() => setShowGuide(false)} className="w-full bg-[#A87B7B] text-white py-4 rounded-xl text-lg font-bold hover:bg-[#8f6666] transition shadow-lg shadow-[#A87B7B]/30">
+              我知道了，開始預約
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="sticky top-0 z-40 bg-white shadow-sm border-b border-gray-100">
         <div className="flex items-center justify-between px-5 pt-5 pb-3">
-          <div className="w-10"></div>
+          <div className="w-10">
+            <button onClick={() => setShowGuide(true)} className="w-10 h-10 flex items-center justify-center bg-gray-50 text-gray-400 rounded-full hover:bg-[#FDFBF7] hover:text-[#A87B7B] transition shadow-sm border border-gray-100" title="預約教學">
+              <HelpCircle size={20} />
+            </button>
+          </div>
           <div className="text-center flex flex-col items-center">
             <h2 className="text-[30px] font-beauty font-black tracking-wider gold-text leading-tight drop-shadow-sm">
               Lash <span className="text-[#BA9B85] text-[24px] italic font-serif">&</span> Beauty
