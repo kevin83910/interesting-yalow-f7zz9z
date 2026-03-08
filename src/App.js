@@ -137,6 +137,12 @@ const Icons = {
       <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
     </svg>
   ),
+  Search: ({ size = 24, className = "" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.3-4.3" />
+    </svg>
+  ),
 };
 
 const {
@@ -155,6 +161,7 @@ const {
   Clock,
   MessageCircle,
   Cloud,
+  Search,
 } = Icons;
 
 // --- 初始預設資料 ---
@@ -349,6 +356,10 @@ export default function App() {
 
   const [designerToDelete, setDesignerToDelete] = useState(null);
   const [showCopyModal, setShowCopyModal] = useState(false);
+
+  // --- 顧客搜尋篩選狀態 ---
+  const [filterDate, setFilterDate] = useState("all");
+  const [filterTime, setFilterTime] = useState("all");
 
   const [designers, setDesigners] = useState(initialDesigners);
   const [activeDesignerId, setActiveDesignerId] = useState(
@@ -633,6 +644,46 @@ export default function App() {
     updateActiveDesigner("schedules", newSchedules);
   };
 
+  // --- 自動產生本月日期 (1-31) ---
+  const handleGenerateMonthSchedules = () => {
+    if (!activeDesigner) return;
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth(); // 0-11
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    let newSchedules = [...activeDesigner.schedules];
+    let maxId = newSchedules.length > 0 ? Math.max(...newSchedules.map((s) => s.id)) : 0;
+    let addedCount = 0;
+
+    for (let i = 1; i <= daysInMonth; i++) {
+      const d = new Date(year, month, i);
+      const fullDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(i).padStart(2, "0")}`;
+
+      if (!newSchedules.some(s => s.fullDate === fullDate)) {
+        maxId++;
+        addedCount++;
+        const daysMap = ["日", "一", "二", "三", "四", "五", "六"];
+        newSchedules.push({
+          id: maxId,
+          fullDate: fullDate,
+          date: `${month + 1}/${i}`,
+          day: daysMap[d.getDay()],
+          times: []
+        });
+      }
+    }
+
+    if (addedCount > 0) {
+      // 自動按照日期排序
+      newSchedules.sort((a, b) => new Date(a.fullDate) - new Date(b.fullDate));
+      updateActiveDesigner("schedules", newSchedules);
+      showToast(`已自動補齊本月剩下的 ${addedCount} 天！`);
+    } else {
+      showToast(`本月 1-${daysInMonth} 日皆已存在！`);
+    }
+  };
+
   const handleCopyBooking = () => {
     if (!selectedTime) {
       showToast("請先點選您想要的時段喔！");
@@ -827,15 +878,25 @@ export default function App() {
         <div>
           <div className="flex justify-between items-center mb-4">
             <h2 className="font-bold text-gray-800">可預約時段設定</h2>
-            <button
-              onClick={handleAddSchedule}
-              className="text-[#A87B7B] text-sm font-bold flex items-center gap-1 bg-[#F5E3E3] px-3 py-1.5 rounded-lg hover:bg-[#F0E6D8] transition"
-            >
-              <Plus size={16} /> 新增日期
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={handleGenerateMonthSchedules}
+                className="text-[#A87B7B] text-xs font-bold flex items-center gap-1 bg-[#F5E3E3] px-3 py-1.5 rounded-lg hover:bg-[#F0E6D8] transition shadow-sm"
+              >
+                自動產生本月(1-31)
+              </button>
+              <button
+                onClick={handleAddSchedule}
+                className="text-[#A87B7B] text-xs font-bold flex items-center gap-1 bg-[#F5E3E3] px-3 py-1.5 rounded-lg hover:bg-[#F0E6D8] transition shadow-sm"
+              >
+                <Plus size={14} /> 新增日期
+              </button>
+            </div>
           </div>
           <div>
-            {activeDesigner?.schedules.map((schedule) => (
+            {[...(activeDesigner?.schedules || [])]
+              .sort((a, b) => new Date(a.fullDate) - new Date(b.fullDate))
+              .map((schedule) => (
               <ScheduleItemEditor
                 key={schedule.id}
                 schedule={schedule}
@@ -1158,77 +1219,130 @@ export default function App() {
           <span className="text-xs text-gray-400">點擊時段可複製</span>
         </div>
 
+        {/* 顧客搜尋與篩選區塊 */}
+        <div className="mb-5 bg-[#FDFBF7] p-4 rounded-xl border border-[#F0E6D8] shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <Search size={16} className="text-[#A87B7B]" />
+            <span className="text-sm font-bold text-gray-700">快速搜尋日期與時段</span>
+          </div>
+          <div className="flex gap-2">
+            <select
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+              className="flex-1 p-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-[#A87B7B] focus:ring-1 focus:ring-[#A87B7B] bg-white text-gray-700 transition"
+            >
+              <option value="all">所有日期</option>
+              {[...(activeDesigner?.schedules || [])]
+                .sort((a, b) => new Date(a.fullDate) - new Date(b.fullDate))
+                .filter(s => s.times && s.times.length > 0)
+                .map(s => (
+                  <option key={s.fullDate} value={s.fullDate}>{s.date} (週{s.day})</option>
+              ))}
+            </select>
+            <select
+              value={filterTime}
+              onChange={(e) => setFilterTime(e.target.value)}
+              className="flex-1 p-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-[#A87B7B] focus:ring-1 focus:ring-[#A87B7B] bg-white text-gray-700 transition"
+            >
+              <option value="all">所有時段</option>
+              <option value="morning">早上 (12:00前)</option>
+              <option value="afternoon">下午 (12:00-18:00)</option>
+              <option value="evening">晚上 (18:00後)</option>
+            </select>
+          </div>
+        </div>
+
         <div className="space-y-4">
-          {activeDesigner?.schedules.map((schedule) => {
-            const isWeekend = schedule.day === "六" || schedule.day === "日";
-            const times = schedule.times || [];
-            if (times.length === 0) return null;
+          {(() => {
+            const sortedCustomerSchedules = [...(activeDesigner?.schedules || [])].sort((a, b) => new Date(a.fullDate) - new Date(b.fullDate));
+            const displaySchedules = sortedCustomerSchedules.map(schedule => {
+              if (filterDate !== "all" && schedule.fullDate !== filterDate) return null;
 
-            return (
-              <div key={schedule.id} className="flex gap-4">
-                <div className="flex flex-col items-center pt-1 w-12 flex-shrink-0">
-                  <span className="text-sm font-bold text-gray-800">
-                    {schedule.date}
-                  </span>
-                  <span
-                    className={`text-xs mt-0.5 w-6 h-6 rounded-full flex items-center justify-center ${
-                      isWeekend
-                        ? "bg-[#F5E3E3] text-[#A87B7B] font-bold"
-                        : "bg-gray-100 text-gray-500"
-                    }`}
-                  >
-                    {schedule.day}
-                  </span>
+              const validTimes = (schedule.times || []).filter(tObj => {
+                if (filterTime === "all") return true;
+                const hour = parseInt(tObj.val.split(':')[0], 10);
+                if (filterTime === "morning") return hour < 12;
+                if (filterTime === "afternoon") return hour >= 12 && hour < 18;
+                if (filterTime === "evening") return hour >= 18;
+                return true;
+              });
+
+              if (validTimes.length === 0) return null;
+              return { ...schedule, times: validTimes };
+            }).filter(Boolean);
+
+            if (displaySchedules.length === 0) {
+               return (
+                <div className="text-center py-8 text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-xl">
+                  找不到符合您搜尋條件的時段，請嘗試其他日期！
                 </div>
+               );
+            }
 
-                <div className="flex-1 border-b border-gray-100 pb-4">
-                  <div className="flex flex-wrap gap-2">
-                    {times.map((tObj, tIndex) => {
-                      if (tObj.isFull) {
+            return displaySchedules.map((schedule) => {
+              const isWeekend = schedule.day === "六" || schedule.day === "日";
+              const times = schedule.times || [];
+
+              return (
+                <div key={schedule.id} className="flex gap-4">
+                  <div className="flex flex-col items-center pt-1 w-12 flex-shrink-0">
+                    <span className="text-sm font-bold text-gray-800">
+                      {schedule.date}
+                    </span>
+                    <span
+                      className={`text-xs mt-0.5 w-6 h-6 rounded-full flex items-center justify-center ${
+                        isWeekend
+                          ? "bg-[#F5E3E3] text-[#A87B7B] font-bold"
+                          : "bg-gray-100 text-gray-500"
+                      }`}
+                    >
+                      {schedule.day}
+                    </span>
+                  </div>
+
+                  <div className="flex-1 border-b border-gray-100 pb-4">
+                    <div className="flex flex-wrap gap-2">
+                      {times.map((tObj, tIndex) => {
+                        if (tObj.isFull) {
+                          return (
+                            <button
+                              key={tIndex}
+                              disabled
+                              className="px-3 py-1.5 border border-gray-200 bg-gray-50 text-gray-400 text-sm rounded-lg cursor-not-allowed line-through opacity-70"
+                            >
+                              {tObj.val} (已滿)
+                            </button>
+                          );
+                        }
                         return (
                           <button
                             key={tIndex}
-                            disabled
-                            className="px-3 py-1.5 border border-gray-200 bg-gray-50 text-gray-400 text-sm rounded-lg cursor-not-allowed line-through opacity-70"
+                            onClick={() =>
+                              setSelectedTime(
+                                `預約專屬美麗時光 ✨\n🤍 姓名：\n📱 電話：\n🕰️ 時間：${schedule.date}(${schedule.day}) ${tObj.val} (${activeDesigner.name})\n🎀 項目：`
+                              )
+                            }
+                            className={`px-3 py-1.5 border text-sm rounded-lg transition active:scale-95 shadow-sm
+                              ${
+                                selectedTime &&
+                                selectedTime.includes(
+                                  `${schedule.date}(${schedule.day}) ${tObj.val}`
+                                )
+                                  ? "bg-[#A87B7B] text-white border-[#A87B7B]"
+                                  : "bg-white border-gray-200 text-gray-700 hover:border-[#D4B8A8] hover:text-[#A87B7B] hover:bg-[#FDFBF7]"
+                              }
+                            `}
                           >
-                            {tObj.val} (已滿)
+                            {tObj.val}
                           </button>
                         );
-                      }
-                      return (
-                        <button
-                          key={tIndex}
-                          onClick={() =>
-                            setSelectedTime(
-                              `預約專屬美麗時光 ✨\n🤍 姓名：\n📱 電話：\n🕰️ 時間：${schedule.date}(${schedule.day}) ${tObj.val} (${activeDesigner.name})\n🎀 項目：`
-                            )
-                          }
-                          className={`px-3 py-1.5 border text-sm rounded-lg transition active:scale-95 shadow-sm
-                            ${
-                              selectedTime &&
-                              selectedTime.includes(
-                                `${schedule.date}(${schedule.day}) ${tObj.val}`
-                              )
-                                ? "bg-[#A87B7B] text-white border-[#A87B7B]"
-                                : "bg-white border-gray-200 text-gray-700 hover:border-[#D4B8A8] hover:text-[#A87B7B] hover:bg-[#FDFBF7]"
-                            }
-                          `}
-                        >
-                          {tObj.val}
-                        </button>
-                      );
-                    })}
+                      })}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-          {(!activeDesigner?.schedules ||
-            activeDesigner.schedules.length === 0) && (
-            <div className="text-center py-8 text-gray-400 text-sm">
-              設計師尚未開放預約時段
-            </div>
-          )}
+              );
+            });
+          })()}
         </div>
       </div>
 
