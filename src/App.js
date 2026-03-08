@@ -1202,7 +1202,8 @@ export default function App() {
               <p className="text-xs text-gray-600 leading-relaxed">
                 請直接{" "}
                 <span className="text-red-500 font-bold">回傳訊息</span>{" "}
-                告知您想預約的時間。(選取時間後點選下方時間並回傳客服)
+                告知您想預約的時間。
+                  </span>(選取時間後點選下方時間並回傳客服)
                 <br />
               </p>
             </div>
