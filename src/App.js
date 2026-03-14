@@ -139,6 +139,7 @@ const getTopPx = (timeStr) => {
   return ((h - 9) * 60 + m) * 1.5; 
 };
 
+// 依照連續時間與 eventId 進行群組化
 const groupSlots = (times) => {
   if (!times || times.length === 0) return [];
   const sorted = [...times].sort((a,b) => a.val.localeCompare(b.val));
@@ -164,6 +165,14 @@ const groupSlots = (times) => {
   currentGroup.endTime = getNextTime(currentGroup.slots[currentGroup.slots.length-1]);
   groups.push(currentGroup);
   return groups;
+};
+
+// 取得觸控或滑鼠的 Y 座標
+const getClientY = (e) => {
+  if (e.touches && e.touches.length > 0) {
+    return e.touches[0].clientY;
+  }
+  return e.clientY;
 };
 
 // --- 初始預設資料 ---
@@ -230,6 +239,7 @@ export default function App() {
   const [isAddingVisit, setIsAddingVisit] = useState(false);
   const [editingVisitId, setEditingVisitId] = useState(null); // 新增：追蹤正在編輯的紀錄ID
   const [showAddClientModal, setShowAddClientModal] = useState(false);
+  const [showDeleteClientModal, setShowDeleteClientModal] = useState(false);
   const [newClientData, setNewClientData] = useState({ name: '', phone: '', birthday: '', tags: '' });
   const [customPayment, setCustomPayment] = useState("");
   
@@ -380,6 +390,15 @@ export default function App() {
     };
     setClients([client, ...clients]); setShowAddClientModal(false); setNewClientData({ name: '', phone: '', birthday: '', tags: '' });
     showToast("已建立新客戶檔案！");
+  };
+
+  const handleDeleteClient = () => {
+    if (!selectedClient) return;
+    const updatedClients = clients.filter(c => c.id !== selectedClient.id);
+    setClients(updatedClients);
+    setSelectedClient(null);
+    setShowDeleteClientModal(false);
+    showToast("已成功刪除該客戶所有資料！");
   };
 
   const handleServiceToggle = (serviceName) => {
@@ -597,42 +616,55 @@ export default function App() {
     });
   };
 
-  // --- 行事曆拖曳邏輯 (Drag to Select & Resize & Move) ---
-  const handleGridMouseDown = (dateStr, timeStr) => {
-    setDragState({ date: dateStr, startTime: timeStr, endTime: timeStr, mode: 'add' });
+  // --- 行事曆拖曳邏輯 (Drag to Select & Resize & Move 支援觸控) ---
+  
+  // 處理滑鼠與觸控按下的共用邏輯
+  const handleInteractionStart = (e, dateStr, timeStr, actionType, group = null) => {
+    if (actionType === 'add') {
+      setDragState({ date: dateStr, startTime: timeStr, endTime: timeStr, mode: 'add' });
+    } else if (actionType === 'resize' && group) {
+      e.stopPropagation();
+      setDragState({
+        date: dateStr,
+        startTime: group.startTime, 
+        endTime: group.slots[group.slots.length - 1],
+        mode: 'resize',
+        baseGroup: group 
+      });
+    } else if (actionType === 'move' && group) {
+      e.stopPropagation();
+      const y = getClientY(e) - e.currentTarget.getBoundingClientRect().top;
+      const clickedSlotIndex = Math.floor(y / 45); 
+      
+      const safeIndex = Math.max(0, Math.min(clickedSlotIndex, group.slots.length - 1));
+      const clickedTime = group.slots[safeIndex] || group.startTime;
+      
+      setDragState({
+        date: dateStr,
+        initialHoverTime: clickedTime,
+        currentHoverTime: clickedTime,
+        mode: 'move',
+        baseGroup: group
+      });
+    }
   };
 
-  const handleResizeStart = (e, dateStr, group) => {
-    e.stopPropagation();
-    setDragState({
-      date: dateStr,
-      startTime: group.startTime, 
-      endTime: group.slots[group.slots.length - 1],
-      mode: 'resize',
-      baseGroup: group 
-    });
-  };
+  // 滑鼠事件
+  const handleGridMouseDown = (e, dateStr, timeStr) => handleInteractionStart(e, dateStr, timeStr, 'add');
+  const handleResizeMouseDown = (e, dateStr, group) => handleInteractionStart(e, dateStr, null, 'resize', group);
+  const handleMoveMouseDown = (e, dateStr, group) => handleInteractionStart(e, dateStr, null, 'move', group);
 
-  const handleMoveStart = (e, dateStr, group) => {
-    e.stopPropagation();
-    const rect = e.currentTarget.getBoundingClientRect();
-    const y = e.clientY - rect.top;
-    const clickedSlotIndex = Math.floor(y / 45); 
-    
-    const safeIndex = Math.max(0, Math.min(clickedSlotIndex, group.slots.length - 1));
-    const clickedTime = group.slots[safeIndex] || group.startTime;
-    
-    setDragState({
-      date: dateStr,
-      initialHoverTime: clickedTime,
-      currentHoverTime: clickedTime,
-      mode: 'move',
-      baseGroup: group
-    });
-  };
+  // 觸控事件 (對應滑鼠按下)
+  const handleGridTouchStart = (e, dateStr, timeStr) => handleInteractionStart(e, dateStr, timeStr, 'add');
+  const handleResizeTouchStart = (e, dateStr, group) => handleInteractionStart(e, dateStr, null, 'resize', group);
+  const handleMoveTouchStart = (e, dateStr, group) => handleInteractionStart(e, dateStr, null, 'move', group);
 
-  const handleGridMouseEnter = (dateStr, timeStr) => {
+  // 處理滑鼠與觸控移動的共用邏輯
+  const handleInteractionMove = (e, dateStr, timeStr) => {
     if (dragState && dragState.date === dateStr) {
+      // 防止觸控時螢幕跟著滾動
+      if (e.cancelable) e.preventDefault(); 
+      
       if (dragState.mode === 'move') {
         setDragState(prev => ({ ...prev, currentHoverTime: timeStr }));
       } else {
@@ -641,12 +673,33 @@ export default function App() {
     }
   };
 
-  const handleGridMouseUp = () => {
+  // 觸控移動時，因為 elementFromPoint 需要座標，所以要做特殊處理
+  const handleTouchMove = (e, dateStr) => {
+    if (!dragState) return;
+    e.preventDefault(); // 防止滾動
+    const touch = e.touches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (element && element.dataset.time) {
+      const timeStr = element.dataset.time;
+      // 確保還在同一天內拖曳
+      if (element.dataset.date === dateStr) {
+        handleInteractionMove(e, dateStr, timeStr);
+      }
+    }
+  };
+
+  const handleGridMouseEnter = (dateStr, timeStr) => handleInteractionMove({ cancelable: false }, dateStr, timeStr);
+
+  // 處理滑鼠與觸控結束的共用邏輯
+  const handleInteractionEnd = () => {
     if (dragState) {
       applyDragChanges(dragState);
       setDragState(null);
     }
   };
+
+  const handleGridMouseUp = handleInteractionEnd;
+  const handleTouchEnd = handleInteractionEnd;
 
   const applyDragChanges = (drag) => {
     const { date, mode, baseGroup } = drag;
@@ -844,7 +897,8 @@ export default function App() {
     const weekDates = getWeekDates(currentWeekStart);
 
     return (
-      <div className="h-screen bg-[#F8F9FA] flex flex-col md:flex-row font-sans overflow-hidden w-full select-none" onMouseUp={handleGridMouseUp} onMouseLeave={handleGridMouseUp}>
+      // 加入 touch-action-none 防止在觸控裝置上滑動時觸發預設的滾動行為
+      <div className="h-screen bg-[#F8F9FA] flex flex-col md:flex-row font-sans overflow-hidden w-full select-none" onMouseUp={handleGridMouseUp} onMouseLeave={handleGridMouseUp} onTouchEnd={handleTouchEnd} onTouchCancel={handleTouchEnd}>
         {renderToast()}
         
         {/* 手機版頂部 */}
@@ -880,7 +934,7 @@ export default function App() {
           
           {/* Tab 1: 行事曆 (Google Calendar Style) */}
           {activeTab === 'calendar' && (
-            <div className="p-4 md:p-6 mx-auto h-full flex flex-col min-w-0">
+            <div className="p-4 md:p-6 mx-auto h-full flex flex-col min-w-0 touch-none"> {/* 加入 touch-none 避免手勢衝突 */}
               <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
                 <div>
                   <h1 className="text-2xl font-bold text-gray-800">預約行事曆</h1>
@@ -944,14 +998,21 @@ export default function App() {
                         const isPast = day.fullDate < getTodayString();
 
                         return (
-                          <div key={day.fullDate} className={`flex-1 border-r border-gray-100 relative min-w-[100px] ${day.isToday ? 'bg-[#FDFBF7]/40' : ''}`}>
+                          <div 
+                            key={day.fullDate} 
+                            className={`flex-1 border-r border-gray-100 relative min-w-[100px] ${day.isToday ? 'bg-[#FDFBF7]/40' : ''}`}
+                            onTouchMove={(e) => handleTouchMove(e, day.fullDate)} // 觸控移動事件綁定在這裡
+                          >
                             {/* 背景網格擷取拖曳事件 */}
                             <div className="absolute inset-0 flex flex-col z-0">
                               {TIME_BLOCKS.map(time => (
                                 <div key={time}
+                                     data-time={time} // 加入 data 屬性供觸控尋找
+                                     data-date={day.fullDate}
                                      className={`h-[45px] border-b border-dashed border-gray-100 ${isPast ? 'bg-gray-100/50 cursor-not-allowed' : 'hover:bg-[#E8D3C8]/20 cursor-crosshair'}`}
-                                     onMouseDown={() => !isPast && handleGridMouseDown(day.fullDate, time)}
+                                     onMouseDown={(e) => !isPast && handleGridMouseDown(e, day.fullDate, time)}
                                      onMouseEnter={() => !isPast && handleGridMouseEnter(day.fullDate, time)}
+                                     onTouchStart={(e) => !isPast && handleGridTouchStart(e, day.fullDate, time)}
                                 />
                               ))}
                             </div>
@@ -969,14 +1030,18 @@ export default function App() {
                                 return (
                                   <div key={i}
                                       style={{ top: getTopPx(group.startTime), height: getTopPx(group.endTime) - getTopPx(group.startTime) }}
-                                      className={`absolute left-1 right-1 rounded-md border p-1.5 cursor-pointer overflow-hidden transition-all hover:z-30 hover:shadow-md
+                                      className={`absolute left-1 right-1 rounded-md border p-1.5 cursor-pointer overflow-hidden transition-all hover:z-30 hover:shadow-md touch-none
                                           ${dragState ? 'pointer-events-none' : 'pointer-events-auto hover:scale-[1.02]'}
                                           ${isFullClass}
                                           ${isBeingMoved ? 'opacity-30' : 'opacity-100'}
                                       `}
                                       onMouseDown={(e) => {
                                         if (isPast) return;
-                                        handleMoveStart(e, day.fullDate, group);
+                                        handleMoveMouseDown(e, day.fullDate, group);
+                                      }}
+                                      onTouchStart={(e) => {
+                                        if (isPast) return;
+                                        handleMoveTouchStart(e, day.fullDate, group);
                                       }}
                                   >
                                     <div className="text-[10px] font-bold leading-tight opacity-90 drop-shadow-sm pointer-events-none">
@@ -992,10 +1057,11 @@ export default function App() {
                                     {/* 拖曳把手 */}
                                     {!dragState && !isPast && (
                                       <div 
-                                        className="absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize flex items-end justify-center pb-[3px] hover:bg-black/20 transition-colors z-30"
-                                        onMouseDown={(e) => handleResizeStart(e, day.fullDate, group)}
+                                        className="absolute bottom-0 left-0 right-0 h-4 cursor-ns-resize flex items-end justify-center pb-[3px] hover:bg-black/20 transition-colors z-30"
+                                        onMouseDown={(e) => handleResizeMouseDown(e, day.fullDate, group)}
+                                        onTouchStart={(e) => handleResizeTouchStart(e, day.fullDate, group)}
                                       >
-                                        <div className={`w-6 h-1 rounded-full ${group.isFull ? 'bg-white/50' : 'bg-black/20'}`}></div>
+                                        <div className={`w-8 h-1.5 rounded-full ${group.isFull ? 'bg-white/50' : 'bg-black/20'}`}></div>
                                       </div>
                                     )}
                                   </div>
@@ -1255,8 +1321,19 @@ export default function App() {
                 <div className="lg:col-span-1">
                   <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#E8D3C8] to-[#D4B8A8]"></div>
-                    <h2 className="text-2xl font-bold text-gray-800 mt-2">{selectedClient.name}</h2>
-                    <p className="text-gray-500 text-sm mt-1">{selectedClient.phone}</p>
+                    <div className="flex justify-between items-start mt-2">
+                      <div>
+                        <h2 className="text-2xl font-bold text-gray-800">{selectedClient.name}</h2>
+                        <p className="text-gray-500 text-sm mt-1">{selectedClient.phone}</p>
+                      </div>
+                      <button 
+                        onClick={() => setShowDeleteClientModal(true)}
+                        className="text-gray-400 hover:text-red-500 transition p-2 bg-gray-50 hover:bg-red-50 rounded-full"
+                        title="刪除此客戶"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                     <div className="mt-4 flex flex-wrap gap-1.5">{selectedClient.tags.map(t => <span key={t} className="bg-[#F5E3E3] text-[#A87B7B] text-[10px] px-2 py-0.5 rounded-full font-bold">{t}</span>)}</div>
                     <div className="mt-5 space-y-3">
                       <div className="p-3 bg-[#FDFBF7] rounded-xl border border-[#F0E6D8]">
@@ -1438,6 +1515,22 @@ export default function App() {
                   </div>
                 </div>
               </div>
+
+              {/* 刪除客戶確認 Modal */}
+              {showDeleteClientModal && (
+                <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+                  <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative animate-in zoom-in duration-200">
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">確定刪除此客戶？</h3>
+                    <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+                      刪除「<span className="font-bold">{selectedClient.name}</span>」後將無法復原，包含其所有的消費紀錄與儲值資料都會被永久移除。
+                    </p>
+                    <div className="flex gap-3">
+                      <button onClick={() => setShowDeleteClientModal(false)} className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-200 transition">取消</button>
+                      <button onClick={handleDeleteClient} className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 transition shadow-sm shadow-red-200">確定刪除</button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
