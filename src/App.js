@@ -68,13 +68,14 @@ const Icons = {
   BookmarkPlus: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" /><line x1="12" y1="7" x2="12" y2="13" /><line x1="15" y1="10" x2="9" y2="10" /></svg>),
   CircleDollarSign: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10" /><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8" /><path d="M12 18V6" /></svg>),
   Edit: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>),
-  Wand2: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>)
+  Wand2: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>),
+  CheckCircle: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>)
 };
 
 const {
   MapPin, AlertCircle, CalendarCheck, ChevronRight, Settings, Save, Plus, Trash2, Eye, Lock, X, Key, Clock, MessageCircle, Cloud, Search, HelpCircle,
   Users, Receipt, Package, CalendarDays, MenuIcon, ChevronLeft, CreditCard, ShoppingBag, BookmarkPlus, CircleDollarSign, Edit,
-  ChevronLeftCircle, ChevronRightCircle, Wand2
+  ChevronLeftCircle, ChevronRightCircle, Wand2, CheckCircle
 } = Icons;
 
 // --- 表單常數設定 ---
@@ -264,6 +265,8 @@ export default function App() {
   const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
   const [dragState, setDragState] = useState(null);
   const [editingSlot, setEditingSlot] = useState(null);
+  // 新增：追蹤未儲存變更的狀態
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // 用於區分手機短按與長按滑動
   const touchTimer = useRef(null);
@@ -356,22 +359,34 @@ export default function App() {
     return () => unsubscribe();
   }, [user, isAdminMode]);
 
-  useEffect(() => {
-    if (isAdminMode && isCloudLoaded && user && db) {
-      const timer = setTimeout(() => {
-        const docRef = doc(db, "artifacts", appId, "public", "data", "store_data", "main_config");
-        setDoc(docRef, { designers, adminPassword, lineOfficialId, clients, inventory, paymentMethods }).catch(console.error);
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [designers, adminPassword, lineOfficialId, clients, inventory, paymentMethods, isAdminMode, isCloudLoaded, user]);
+  // 修改：移除自動存檔的 useEffect，改為純手動存檔
+  // useEffect(() => {
+  //   if (isAdminMode && isCloudLoaded && user && db) {
+  //     const timer = setTimeout(() => {
+  //       const docRef = doc(db, "artifacts", appId, "public", "data", "store_data", "main_config");
+  //       setDoc(docRef, { designers, adminPassword, lineOfficialId, clients, inventory, paymentMethods }).catch(console.error);
+  //     }, 1500);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [designers, adminPassword, lineOfficialId, clients, inventory, paymentMethods, isAdminMode, isCloudLoaded, user]);
 
   const handleExplicitSave = async () => {
     if (user && db) {
       try {
         const docRef = doc(db, "artifacts", appId, "public", "data", "store_data", "main_config");
         await setDoc(docRef, { designers, adminPassword, lineOfficialId, clients, inventory, paymentMethods });
-      } catch (e) {}
+        setHasUnsavedChanges(false);
+        showToast("資料已成功儲存並更新至前台！");
+      } catch (e) {
+        showToast("儲存失敗，請稍後再試。");
+      }
+    }
+  };
+
+  const handleExitAdmin = async () => {
+    // 退出前先嘗試儲存
+    if (hasUnsavedChanges) {
+      await handleExplicitSave();
     }
     setIsAdminMode(false);
   };
@@ -405,7 +420,10 @@ export default function App() {
       id: Date.now(), name: newClientData.name, phone: newClientData.phone, birthday: newClientData.birthday || '-', joinDate: getTodayString(),
       tags: newClientData.tags ? newClientData.tags.split(',').map(t => t.trim()) : ["新客"], lashPreference: "尚未建立紀錄", balance: 0, packages: [], visits: []
     };
-    setClients([client, ...clients]); setShowAddClientModal(false); setNewClientData({ name: '', phone: '', birthday: '', tags: '' });
+    setClients([client, ...clients]); 
+    setShowAddClientModal(false); 
+    setNewClientData({ name: '', phone: '', birthday: '', tags: '' });
+    setHasUnsavedChanges(true); // 標記有未儲存變更
     showToast("已建立新客戶檔案！");
   };
 
@@ -415,6 +433,7 @@ export default function App() {
     setClients(updatedClients);
     setSelectedClient(null);
     setShowDeleteClientModal(false);
+    setHasUnsavedChanges(true); // 標記有未儲存變更
     showToast("已成功刪除該客戶所有資料！");
   };
 
@@ -521,14 +540,18 @@ export default function App() {
     setClients(updatedClients); setSelectedClient(updatedClients.find(c => c.id === selectedClient.id)); 
     setIsAddingVisit(false);
     setEditingVisitId(null);
+    setHasUnsavedChanges(true); // 標記有未儲存變更
     
     setNewVisit({ date: getTodayString(), services: [], size: '', amount: '', paymentMethod: '現金', accountLast5: '', deductPackageId: '', notes: '', photoUrl: '' });
     setCustomPayment(''); 
-    showToast(editingVisitId ? "消費紀錄更新成功！" : "消費紀錄儲存成功！");
+    showToast(editingVisitId ? "消費紀錄更新成功！記得點擊右上角儲存。" : "消費紀錄暫存成功！記得點擊右上角儲存。");
   };
 
   // --- 排班管理 ---
-  const updateActiveDesigner = (field, value) => { setDesigners(designers.map((d) => d.id === activeDesignerId ? { ...d, [field]: value } : d)); };
+  const updateActiveDesigner = (field, value) => { 
+    setDesigners(designers.map((d) => d.id === activeDesignerId ? { ...d, [field]: value } : d)); 
+    setHasUnsavedChanges(true); // 標記有未儲存變更
+  };
   
   const handleApplyAutoSchedule = () => {
     if (!activeDesigner || !generateMonth) return showToast("請先選擇月份！");
@@ -616,7 +639,7 @@ export default function App() {
     newSchedules.sort((a, b) => new Date(a.fullDate) - new Date(b.fullDate));
     updateActiveDesigner("schedules", newSchedules);
     setShowAutoScheduleModal(false);
-    showToast(`批次開班成功！已為您將每天自動切成每 2 小時一個的時段方塊。`);
+    showToast(`批次開班成功！記得點擊右上角儲存以更新至前台。`);
   };
 
   const toggleWorkDay = (dayIndex) => {
@@ -903,7 +926,7 @@ export default function App() {
       return s;
     });
     updateActiveDesigner("schedules", updatedSchedules);
-    setEditingSlot(null); showToast("時段設定成功！");
+    setEditingSlot(null); showToast("時段設定成功！記得點擊右上角儲存以更新至前台。");
   };
 
   const handleRemoveSlot = () => {
@@ -958,7 +981,15 @@ export default function App() {
         {/* 手機版頂部 */}
         <div className="md:hidden flex justify-between items-center p-4 bg-white border-b border-gray-200 z-20 shadow-sm">
           <h2 className="text-xl font-beauty font-black text-[#C59A5C] tracking-widest">L<span className="text-[#A87B7B]">&</span>B</h2>
-          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-gray-600 p-1 hover:bg-gray-100 rounded-md"><MenuIcon size={26} /></button>
+          <div className="flex items-center gap-3">
+            {/* 新增：手機版儲存按鈕 */}
+            {hasUnsavedChanges && (
+               <button onClick={handleExplicitSave} className="bg-[#A87B7B] text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-md animate-pulse flex items-center gap-1">
+                 <Save size={14} /> 儲存變更
+               </button>
+            )}
+            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-gray-600 p-1 hover:bg-gray-100 rounded-md"><MenuIcon size={26} /></button>
+          </div>
         </div>
 
         {/* 側邊欄 */}
@@ -977,8 +1008,18 @@ export default function App() {
             <p className="text-xs font-bold text-gray-400 mb-2 mt-6 px-4 tracking-wider">系統</p>
             <button onClick={() => { setActiveTab('settings'); setSelectedClient(null); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium text-sm ${activeTab === 'settings' ? 'bg-[#FDFBF7] text-[#A87B7B]' : 'text-gray-600 hover:bg-gray-50'}`}><Settings size={18} /> 系統設定</button>
           </nav>
-          <div className="p-4 border-t border-gray-100">
-            <button onClick={handleExplicitSave} className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white py-3 rounded-xl text-sm font-bold hover:bg-black transition"><Eye size={16}/> 退出看前台</button>
+          <div className="p-4 border-t border-gray-100 space-y-3">
+             {/* 新增：側邊欄常駐儲存按鈕 (僅在有未儲存變更時醒目提示) */}
+            <button 
+               onClick={handleExplicitSave} 
+               className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition shadow-sm
+                  ${hasUnsavedChanges ? 'bg-[#A87B7B] text-white hover:bg-[#8f6666] animate-pulse shadow-md border-2 border-[#C59A5C]' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}
+               `}
+            >
+               <Save size={16}/> {hasUnsavedChanges ? '儲存變更至前台' : '資料已同步'}
+            </button>
+
+            <button onClick={handleExitAdmin} className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white py-3 rounded-xl text-sm font-bold hover:bg-black transition"><Eye size={16}/> 退出看前台</button>
           </div>
         </div>
         {isMobileMenuOpen && <div className="md:hidden fixed inset-0 bg-black/20 z-30 top-[68px]" onClick={() => setIsMobileMenuOpen(false)}></div>}
@@ -1003,6 +1044,12 @@ export default function App() {
                   <button onClick={() => setShowAutoScheduleModal(true)} className="bg-white border border-gray-200 text-gray-700 text-sm font-bold px-3 py-1.5 rounded-lg hover:bg-gray-50 transition shadow-sm whitespace-nowrap flex items-center gap-1.5">
                     <Wand2 size={16} className="text-[#C59A5C]" /> 快速開班
                   </button>
+                  {/* 新增：桌面版頂部確認儲存按鈕 */}
+                  {hasUnsavedChanges && (
+                     <button onClick={handleExplicitSave} className="bg-[#A87B7B] text-white text-sm font-bold px-4 py-1.5 rounded-lg hover:bg-[#8f6666] transition shadow-md whitespace-nowrap flex items-center gap-1.5 animate-bounce ml-2">
+                       <Save size={16} /> 儲存發布
+                     </button>
+                  )}
                 </div>
               </div>
 
@@ -1334,7 +1381,7 @@ export default function App() {
                 <div className="mt-8 flex gap-3">
                   <button onClick={handleRemoveSlot} className="px-4 py-2.5 bg-red-50 text-red-500 rounded-xl text-sm font-bold hover:bg-red-500 hover:text-white transition flex items-center gap-1"><Trash2 size={16}/> 刪除空檔</button>
                   <div className="flex-1"></div>
-                  <button onClick={handleSaveSlotEdit} className="px-8 py-2.5 bg-[#A87B7B] text-white rounded-xl text-sm font-bold hover:bg-[#8f6666] shadow-sm">儲存設定</button>
+                  <button onClick={handleSaveSlotEdit} className="px-8 py-2.5 bg-[#A87B7B] text-white rounded-xl text-sm font-bold hover:bg-[#8f6666] shadow-sm">套用</button>
                 </div>
               </div>
             </div>
@@ -1517,7 +1564,7 @@ export default function App() {
                            
                            <div className="flex justify-end pt-2">
                              <button onClick={handleAddVisit} className="bg-[#A87B7B] text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-sm hover:bg-[#8f6666] transition flex items-center gap-2">
-                               <Save size={16}/> {editingVisitId ? '更新紀錄' : '儲存紀錄'}
+                               <Save size={16}/> {editingVisitId ? '暫存更新紀錄' : '暫存新紀錄'}
                              </button>
                            </div>
                         </div>
