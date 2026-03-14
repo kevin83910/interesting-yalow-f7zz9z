@@ -43,7 +43,7 @@ const Icons = {
   AlertCircle: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>),
   CalendarCheck: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><path d="m9 16 2 2 4-4" /></svg>),
   ChevronRight: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="9 18 15 12 9 6" /></svg>),
-  Settings: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z" /></svg>),
+  Settings: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z" /></svg>),
   Save: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></svg>),
   Plus: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>),
   Trash2: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>),
@@ -212,7 +212,7 @@ export default function App() {
   const [filterTime, setFilterTime] = useState("all");
   const [showCopyModal, setShowCopyModal] = useState(false);
   
-  // --- 新增：放大圖片狀態 ---
+  // --- 放大圖片狀態 ---
   const [enlargedImage, setEnlargedImage] = useState(null);
 
   // --- 登入與設定 ---
@@ -242,8 +242,9 @@ export default function App() {
   const [editingVisitId, setEditingVisitId] = useState(null); 
   const [showAddClientModal, setShowAddClientModal] = useState(false);
   const [showDeleteClientModal, setShowDeleteClientModal] = useState(false);
-  const [newClientData, setNewClientData] = useState({ name: '', phone: '', birthday: '', tags: '' });
+  const [newClientData, setNewClientData] = useState({ name: '', phone: '', birthday: '', tags: '', lashPreference: '' });
   const [customPayment, setCustomPayment] = useState("");
+  const [editingClientId, setEditingClientId] = useState(null); // 新增：追蹤目前正在編輯的顧客
   
   const [newVisit, setNewVisit] = useState({ 
     date: getTodayString(), 
@@ -266,6 +267,7 @@ export default function App() {
   const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
   const [dragState, setDragState] = useState(null);
   const [editingSlot, setEditingSlot] = useState(null);
+  // 追蹤未儲存變更的狀態
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // 用於區分手機短按與長按滑動
@@ -417,16 +419,58 @@ export default function App() {
   // --- CRM 功能 ---
   const handleSaveClient = () => {
     if(!newClientData.name || !newClientData.phone) return showToast("姓名與電話為必填！");
-    const client = {
-      id: Date.now(), name: newClientData.name, phone: newClientData.phone, birthday: newClientData.birthday || '-', joinDate: getTodayString(),
-      tags: newClientData.tags ? newClientData.tags.split(',').map(t => t.trim()) : ["新客"], lashPreference: "尚未建立紀錄", balance: 0, packages: [], visits: []
-    };
-    const updatedClients = [client, ...clients];
-    setClients(updatedClients); 
-    setShowAddClientModal(false); 
-    setNewClientData({ name: '', phone: '', birthday: '', tags: '' });
-    syncToCloud({ clients: updatedClients });
-    showToast("已建立新客戶檔案！");
+    const tagsArray = newClientData.tags ? newClientData.tags.split(',').map(t => t.trim()) : ["新客"];
+    
+    if (editingClientId) {
+      // 更新現有顧客資料
+      const updatedClients = clients.map(c => {
+        if (c.id === editingClientId) {
+          return {
+            ...c,
+            name: newClientData.name,
+            phone: newClientData.phone,
+            birthday: newClientData.birthday || '-',
+            tags: tagsArray,
+            lashPreference: newClientData.lashPreference || "尚未建立紀錄"
+          };
+        }
+        return c;
+      });
+      setClients(updatedClients);
+      setSelectedClient(updatedClients.find(c => c.id === editingClientId));
+      syncToCloud({ clients: updatedClients });
+      showToast("客戶資料已更新！");
+    } else {
+      // 建立新顧客
+      const client = {
+        id: Date.now(), name: newClientData.name, phone: newClientData.phone, birthday: newClientData.birthday || '-', joinDate: getTodayString(),
+        tags: tagsArray, lashPreference: newClientData.lashPreference || "尚未建立紀錄", balance: 0, packages: [], visits: []
+      };
+      const updatedClients = [client, ...clients];
+      setClients(updatedClients); 
+      syncToCloud({ clients: updatedClients });
+      showToast("已建立新客戶檔案！");
+    }
+
+    closeClientModal();
+  };
+
+  const closeClientModal = () => {
+    setShowAddClientModal(false);
+    setEditingClientId(null);
+    setNewClientData({ name: '', phone: '', birthday: '', tags: '', lashPreference: '' });
+  };
+
+  const handleEditClientClick = () => {
+    setNewClientData({
+      name: selectedClient.name,
+      phone: selectedClient.phone,
+      birthday: selectedClient.birthday !== '-' ? selectedClient.birthday : '',
+      tags: selectedClient.tags.join(', '),
+      lashPreference: selectedClient.lashPreference === '尚未建立紀錄' ? '' : selectedClient.lashPreference
+    });
+    setEditingClientId(selectedClient.id);
+    setShowAddClientModal(true);
   };
 
   const handleDeleteClient = () => {
@@ -448,7 +492,7 @@ export default function App() {
     }));
   };
 
-  // 處理照片上傳與自動壓縮 (避免 Firebase 1MB 限制)
+  // 處理照片上傳與自動壓縮
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -471,7 +515,6 @@ export default function App() {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
-        // 壓縮至 70% JPEG 品質，極大降低 Base64 長度
         const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
         setNewVisit({ ...newVisit, photoUrl: compressedBase64 });
       };
@@ -1442,7 +1485,7 @@ export default function App() {
             <div className="p-6 max-w-6xl mx-auto">
               <div className="flex justify-between items-center mb-6">
                 <div><h1 className="text-2xl font-bold text-gray-800">客戶管理</h1><p className="text-sm text-gray-500">Customer CRM</p></div>
-                <button onClick={() => setShowAddClientModal(true)} className="bg-[#A87B7B] hover:bg-[#8f6666] text-white px-4 py-2 rounded-lg flex items-center gap-1.5 text-sm font-bold"><Plus size={16} />新增客戶</button>
+                <button onClick={() => { setEditingClientId(null); setNewClientData({ name: '', phone: '', birthday: '', tags: '', lashPreference: '' }); setShowAddClientModal(true); }} className="bg-[#A87B7B] hover:bg-[#8f6666] text-white px-4 py-2 rounded-lg flex items-center gap-1.5 text-sm font-bold"><Plus size={16} />新增客戶</button>
               </div>
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
                 <div className="relative mb-4 max-w-md">
@@ -1482,13 +1525,22 @@ export default function App() {
                         <h2 className="text-2xl font-bold text-gray-800">{selectedClient.name}</h2>
                         <p className="text-gray-500 text-sm mt-1">{selectedClient.phone}</p>
                       </div>
-                      <button 
-                        onClick={() => setShowDeleteClientModal(true)}
-                        className="text-gray-400 hover:text-red-500 transition p-2 bg-gray-50 hover:bg-red-50 rounded-full"
-                        title="刪除此客戶"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={handleEditClientClick}
+                          className="text-gray-400 hover:text-[#A87B7B] transition p-2 bg-gray-50 hover:bg-[#FDFBF7] rounded-full"
+                          title="編輯此客戶"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button 
+                          onClick={() => setShowDeleteClientModal(true)}
+                          className="text-gray-400 hover:text-red-500 transition p-2 bg-gray-50 hover:bg-red-50 rounded-full"
+                          title="刪除此客戶"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
                     <div className="mt-4 flex flex-wrap gap-1.5">{selectedClient.tags.map(t => <span key={t} className="bg-[#F5E3E3] text-[#A87B7B] text-[10px] px-2 py-0.5 rounded-full font-bold">{t}</span>)}</div>
                     <div className="mt-5 space-y-3">
@@ -1687,18 +1739,38 @@ export default function App() {
             </div>
           )}
 
-          {/* 新增客戶 Modal */}
+          {/* 新增客戶 / 編輯客戶 Modal */}
           {showAddClientModal && (
             <div className="fixed inset-0 bg-black/40 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
               <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative">
-                <button onClick={() => setShowAddClientModal(false)} className="absolute top-4 right-4 text-gray-400"><X size={20}/></button>
-                <h2 className="text-xl font-bold mb-4">新增客戶資料</h2>
+                <button onClick={closeClientModal} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><X size={20}/></button>
+                <h2 className="text-xl font-bold mb-4">{editingClientId ? '編輯客戶資料' : '新增客戶資料'}</h2>
                 <div className="space-y-3">
-                  <input type="text" placeholder="姓名 *" value={newClientData.name} onChange={e=>setNewClientData({...newClientData,name:e.target.value})} className="w-full p-2 border rounded-lg text-sm outline-none" />
-                  <input type="tel" placeholder="手機 *" value={newClientData.phone} onChange={e=>setNewClientData({...newClientData,phone:e.target.value})} className="w-full p-2 border rounded-lg text-sm outline-none" />
-                  <input type="date" value={newClientData.birthday} onChange={e=>setNewClientData({...newClientData,birthday:e.target.value})} className="w-full p-2 border rounded-lg text-sm outline-none text-gray-500" />
-                  <input type="text" placeholder="標籤 (用逗號分隔)" value={newClientData.tags} onChange={e=>setNewClientData({...newClientData,tags:e.target.value})} className="w-full p-2 border rounded-lg text-sm outline-none" />
-                  <button onClick={handleSaveClient} className="w-full bg-[#A87B7B] text-white py-2.5 rounded-lg text-sm font-bold mt-2">建立</button>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-1">姓名 *</label>
+                    <input type="text" placeholder="例如：林語晴" value={newClientData.name} onChange={e=>setNewClientData({...newClientData,name:e.target.value})} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-1">手機 *</label>
+                    <input type="tel" placeholder="例如：0912-345-678" value={newClientData.phone} onChange={e=>setNewClientData({...newClientData,phone:e.target.value})} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-1">生日</label>
+                    <input type="date" value={newClientData.birthday} onChange={e=>setNewClientData({...newClientData,birthday:e.target.value})} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none text-gray-700 focus:border-[#A87B7B]" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-1">標籤 (用逗號分隔)</label>
+                    <input type="text" placeholder="例如：VIP, 喜歡自然款" value={newClientData.tags} onChange={e=>setNewClientData({...newClientData,tags:e.target.value})} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                  </div>
+                  {editingClientId && (
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">專屬睫毛密碼</label>
+                      <input type="text" placeholder="例如：C翹度 / 粗度0.10" value={newClientData.lashPreference || ''} onChange={e=>setNewClientData({...newClientData,lashPreference:e.target.value})} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                    </div>
+                  )}
+                  <button onClick={handleSaveClient} className="w-full bg-[#A87B7B] text-white py-2.5 rounded-lg text-sm font-bold mt-4 shadow-sm hover:bg-[#8f6666] transition">
+                    {editingClientId ? '更新儲存' : '建立'}
+                  </button>
                 </div>
               </div>
             </div>
