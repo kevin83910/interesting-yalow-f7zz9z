@@ -43,7 +43,7 @@ const Icons = {
   AlertCircle: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>),
   CalendarCheck: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><path d="m9 16 2 2 4-4" /></svg>),
   ChevronRight: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="9 18 15 12 9 6" /></svg>),
-  Settings: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z" /></svg>),
+  Settings: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z" /></svg>),
   Save: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></svg>),
   Plus: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>),
   Trash2: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>),
@@ -70,13 +70,14 @@ const Icons = {
   CircleDollarSign: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10" /><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8" /><path d="M12 18V6" /></svg>),
   Edit: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>),
   Wand2: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>),
-  CheckCircle: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>)
+  CheckCircle: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>),
+  Filter: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>)
 };
 
 const {
   MapPin, AlertCircle, CalendarCheck, ChevronRight, Settings, Save, Plus, Trash2, Eye, Lock, X, Key, Clock, MessageCircle, Cloud, Search, HelpCircle,
   Users, Receipt, Package, CalendarDays, MenuIcon, ChevronLeft, CreditCard, ShoppingBag, BookmarkPlus, CircleDollarSign, Edit,
-  ChevronLeftCircle, ChevronRightCircle, Wand2, CheckCircle
+  ChevronLeftCircle, ChevronRightCircle, Wand2, CheckCircle, Filter
 } = Icons;
 
 // --- 表單常數設定 ---
@@ -180,6 +181,7 @@ const getClientY = (e) => {
 // --- 初始預設資料 ---
 const initialDesigners = [
   { id: "d1", name: "魚魚", location: "北車店 15樓", schedules: [] },
+  { id: "d2", name: "雅婷", location: "北車店 15樓", schedules: [] },
 ];
 
 const initialClients = [
@@ -244,7 +246,7 @@ export default function App() {
   const [showDeleteClientModal, setShowDeleteClientModal] = useState(false);
   const [newClientData, setNewClientData] = useState({ name: '', phone: '', birthday: '', tags: '', lashPreference: '' });
   const [customPayment, setCustomPayment] = useState("");
-  const [editingClientId, setEditingClientId] = useState(null); // 新增：追蹤目前正在編輯的顧客
+  const [editingClientId, setEditingClientId] = useState(null); 
   
   const [newVisit, setNewVisit] = useState({ 
     date: getTodayString(), 
@@ -255,8 +257,20 @@ export default function App() {
     accountLast5: '',
     deductPackageId: '', 
     notes: '', 
-    photoUrl: '' 
+    photoUrl: '',
+    designerId: activeDesignerId || '' 
   });
+
+  // --- 交易紀錄篩選狀態 ---
+  const [txFilterType, setTxFilterType] = useState('month'); // 'all', 'month', 'day', 'custom'
+  const [txFilterMonth, setTxFilterMonth] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
+  const [txFilterDate, setTxFilterDate] = useState(getTodayString());
+  const [txFilterStartDate, setTxFilterStartDate] = useState(getTodayString());
+  const [txFilterEndDate, setTxFilterEndDate] = useState(getTodayString());
+  const [txFilterDesignerId, setTxFilterDesignerId] = useState('all');
 
   const [generateMonth, setGenerateMonth] = useState(() => {
     const d = new Date();
@@ -267,7 +281,6 @@ export default function App() {
   const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
   const [dragState, setDragState] = useState(null);
   const [editingSlot, setEditingSlot] = useState(null);
-  // 追蹤未儲存變更的狀態
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // 用於區分手機短按與長按滑動
@@ -343,6 +356,10 @@ export default function App() {
               schedules: (d.schedules || []).filter(s => !s.fullDate || s.fullDate >= todayStr)
             }));
             setDesigners(cleanedDesigners);
+            // 當第一次載入或設計師資料更新時，預設選擇第一個設計師
+            if (cleanedDesigners.length > 0 && !activeDesignerId) {
+              setActiveDesignerId(cleanedDesigners[0].id);
+            }
           }
           if (data.adminPassword) setAdminPassword(data.adminPassword);
           if (data.lineOfficialId !== undefined) setLineOfficialId(data.lineOfficialId);
@@ -422,7 +439,6 @@ export default function App() {
     const tagsArray = newClientData.tags ? newClientData.tags.split(',').map(t => t.trim()) : ["新客"];
     
     if (editingClientId) {
-      // 更新現有顧客資料
       const updatedClients = clients.map(c => {
         if (c.id === editingClientId) {
           return {
@@ -441,7 +457,6 @@ export default function App() {
       syncToCloud({ clients: updatedClients });
       showToast("客戶資料已更新！");
     } else {
-      // 建立新顧客
       const client = {
         id: Date.now(), name: newClientData.name, phone: newClientData.phone, birthday: newClientData.birthday || '-', joinDate: getTodayString(),
         tags: tagsArray, lashPreference: newClientData.lashPreference || "尚未建立紀錄", balance: 0, packages: [], visits: []
@@ -451,7 +466,6 @@ export default function App() {
       syncToCloud({ clients: updatedClients });
       showToast("已建立新客戶檔案！");
     }
-
     closeClientModal();
   };
 
@@ -492,7 +506,6 @@ export default function App() {
     }));
   };
 
-  // 處理照片上傳與自動壓縮
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -535,7 +548,8 @@ export default function App() {
       accountLast5: visit.accountLast5 || '',
       deductPackageId: visit.deductPackageId || '',
       notes: visit.notes || '',
-      photoUrl: visit.photos && visit.photos.length > 0 ? visit.photos[0] : ''
+      photoUrl: visit.photos && visit.photos.length > 0 ? visit.photos[0] : '',
+      designerId: visit.designerId || (designers.length > 0 ? designers[0].id : '')
     });
     if (visit.paymentMethod && !paymentMethods.includes(visit.paymentMethod)) {
       setCustomPayment(visit.paymentMethod);
@@ -545,8 +559,8 @@ export default function App() {
   };
 
   const handleAddVisit = () => {
-    if (!newVisit.date || newVisit.services.length === 0 || !newVisit.size || !newVisit.amount) {
-      return showToast("請完整填寫日期、消費項目、尺寸與總金額！");
+    if (!newVisit.date || newVisit.services.length === 0 || !newVisit.size || !newVisit.amount || !newVisit.designerId) {
+      return showToast("請完整填寫日期、設計師、項目、尺寸與總金額！");
     }
     
     const serviceAmt = Number(newVisit.amount) || 0;
@@ -565,10 +579,13 @@ export default function App() {
     }
 
     const serviceStr = newVisit.services.join(', ');
+    const selectedDesignerName = designers.find(d => d.id === newVisit.designerId)?.name || '';
 
     const visitData = { 
       id: editingVisitId || Date.now(), 
       date: newVisit.date, 
+      designerId: newVisit.designerId,
+      designerName: selectedDesignerName,
       service: serviceStr, 
       size: newVisit.size,
       amount: serviceAmt, 
@@ -605,6 +622,9 @@ export default function App() {
         } else {
           newVisits = [visitData, ...newVisits];
         }
+        
+        // 依日期排序
+        newVisits.sort((a,b) => new Date(b.date) - new Date(a.date));
 
         return { ...c, balance: newBalance, packages: newPackages, visits: newVisits };
       }
@@ -622,20 +642,14 @@ export default function App() {
     setIsAddingVisit(false);
     setEditingVisitId(null);
     
-    // 自動儲存至雲端
     syncToCloud({ clients: updatedClients, paymentMethods: updatedPaymentMethods });
     
-    setNewVisit({ date: getTodayString(), services: [], size: '', amount: '', paymentMethod: '現金', accountLast5: '', deductPackageId: '', notes: '', photoUrl: '' });
+    setNewVisit({ date: getTodayString(), services: [], size: '', amount: '', paymentMethod: '現金', accountLast5: '', deductPackageId: '', notes: '', photoUrl: '', designerId: activeDesignerId || '' });
     setCustomPayment(''); 
     showToast(editingVisitId ? "消費紀錄已成功更新並儲存！" : "消費紀錄已成功儲存！");
   };
 
   // --- 排班管理 (批次自動開班) ---
-  const updateActiveDesigner = (field, value) => { 
-    setDesigners(designers.map((d) => d.id === activeDesignerId ? { ...d, [field]: value } : d)); 
-    setHasUnsavedChanges(true);
-  };
-  
   const handleApplyAutoSchedule = () => {
     if (!activeDesigner || !generateMonth) return showToast("請先選擇月份！");
     const [yearStr, monthStr] = generateMonth.split("-"); 
@@ -720,11 +734,11 @@ export default function App() {
     }
 
     newSchedules.sort((a, b) => new Date(a.fullDate) - new Date(b.fullDate));
-    updateActiveDesigner("schedules", newSchedules);
+    const newDesigners = designers.map(d => d.id === activeDesignerId ? { ...d, schedules: newSchedules } : d);
+    setDesigners(newDesigners);
     setShowAutoScheduleModal(false);
     
-    // 自動儲存至雲端
-    syncToCloud({ designers: designers.map(d => d.id === activeDesignerId ? { ...d, schedules: newSchedules } : d) });
+    syncToCloud({ designers: newDesigners });
     showToast(`批次開班成功！已自動儲存。`);
   };
 
@@ -904,10 +918,10 @@ export default function App() {
         currentTimes.sort((a, b) => a.val.localeCompare(b.val));
         schedule.times = currentTimes;
         newSchedules[scheduleIndex] = schedule;
-        updateActiveDesigner("schedules", newSchedules);
         
-        // 自動儲存至雲端
-        syncToCloud({ designers: designers.map(d => d.id === activeDesignerId ? { ...d, schedules: newSchedules } : d) });
+        const newDesigners = designers.map(d => d.id === activeDesignerId ? { ...d, schedules: newSchedules } : d);
+        setDesigners(newDesigners);
+        syncToCloud({ designers: newDesigners });
       }
       return;
     }
@@ -941,10 +955,10 @@ export default function App() {
         currentTimes.sort((a, b) => a.val.localeCompare(b.val));
         schedule.times = currentTimes;
         newSchedules[scheduleIndex] = schedule;
-        updateActiveDesigner("schedules", newSchedules);
         
-        // 自動儲存至雲端
-        syncToCloud({ designers: designers.map(d => d.id === activeDesignerId ? { ...d, schedules: newSchedules } : d) });
+        const newDesigners = designers.map(d => d.id === activeDesignerId ? { ...d, schedules: newSchedules } : d);
+        setDesigners(newDesigners);
+        syncToCloud({ designers: newDesigners });
       }
       return;
     }
@@ -987,9 +1001,9 @@ export default function App() {
       schedule.times = currentTimes;
       newSchedules[scheduleIndex] = schedule;
     }
-    updateActiveDesigner("schedules", newSchedules);
-    // 自動儲存至雲端
-    syncToCloud({ designers: designers.map(d => d.id === activeDesignerId ? { ...d, schedules: newSchedules } : d) });
+    const newDesigners = designers.map(d => d.id === activeDesignerId ? { ...d, schedules: newSchedules } : d);
+    setDesigners(newDesigners);
+    syncToCloud({ designers: newDesigners });
   };
 
   const handleSaveSlotEdit = () => {
@@ -1013,11 +1027,11 @@ export default function App() {
       }
       return s;
     });
-    updateActiveDesigner("schedules", updatedSchedules);
-    setEditingSlot(null); 
     
-    // 自動儲存至雲端
-    syncToCloud({ designers: designers.map(d => d.id === activeDesignerId ? { ...d, schedules: updatedSchedules } : d) });
+    const newDesigners = designers.map(d => d.id === activeDesignerId ? { ...d, schedules: updatedSchedules } : d);
+    setDesigners(newDesigners);
+    setEditingSlot(null); 
+    syncToCloud({ designers: newDesigners });
     showToast("時段設定成功！已自動同步。");
   };
 
@@ -1029,11 +1043,11 @@ export default function App() {
       }
       return s;
     });
-    updateActiveDesigner("schedules", updatedSchedules); 
-    setEditingSlot(null);
     
-    // 自動儲存至雲端
-    syncToCloud({ designers: designers.map(d => d.id === activeDesignerId ? { ...d, schedules: updatedSchedules } : d) });
+    const newDesigners = designers.map(d => d.id === activeDesignerId ? { ...d, schedules: updatedSchedules } : d);
+    setDesigners(newDesigners);
+    setEditingSlot(null);
+    syncToCloud({ designers: newDesigners });
     showToast("已刪除該空檔！已自動同步。");
   };
 
@@ -1054,20 +1068,40 @@ export default function App() {
     }
   };
 
-  const handleChangePassword = () => {
-    if (!newPasswordInput) return showToast("請輸入新密碼！");
-    if (newPasswordInput.length < 4) return showToast("密碼長度至少需 4 碼！");
-    setAdminPassword(newPasswordInput); setNewPasswordInput(""); 
-    syncToCloud({ adminPassword: newPasswordInput });
-    showToast("密碼修改成功！下次請使用新密碼登入。");
-  };
-
   // ==========================================
   // 後台主畫面 Render
   // ==========================================
   const renderAdminView = () => {
-    const allTransactions = clients.flatMap(client => client.visits.map(visit => ({ ...visit, clientId: client.id, clientName: client.name, totalAmount: (Number(visit.amount) || 0) + (Number(visit.productAmount) || 0) }))).sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    // --- 交易紀錄進階篩選邏輯 ---
+    let allTransactions = clients.flatMap(client => client.visits.map(visit => ({ 
+      ...visit, 
+      clientId: client.id, 
+      clientName: client.name, 
+      totalAmount: (Number(visit.amount) || 0) + (Number(visit.productAmount) || 0) 
+    })));
+
+    // 1. 篩選設計師
+    if (txFilterDesignerId !== 'all') {
+      allTransactions = allTransactions.filter(tx => tx.designerId === txFilterDesignerId);
+    }
+
+    // 2. 篩選日期
+    if (txFilterType === 'month') {
+      allTransactions = allTransactions.filter(tx => tx.date.startsWith(txFilterMonth));
+    } else if (txFilterType === 'day') {
+      allTransactions = allTransactions.filter(tx => tx.date === txFilterDate);
+    } else if (txFilterType === 'custom') {
+      allTransactions = allTransactions.filter(tx => tx.date >= txFilterStartDate && tx.date <= txFilterEndDate);
+    }
+
+    // 依照日期排序
+    allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    // 計算符合條件的總營業額
     const totalRevenue = allTransactions.filter(t => t.paymentMethod !== '儲值金扣款' && t.paymentMethod !== '扣除包堂').reduce((sum, t) => sum + t.totalAmount, 0);
+    
+    // 客戶列表搜尋
     const filteredClients = clients.filter(c => c.name.includes(searchQuery) || c.phone.includes(searchQuery));
     const weekDates = getWeekDates(currentWeekStart);
 
@@ -1563,7 +1597,7 @@ export default function App() {
                         if (isAddingVisit) {
                           setIsAddingVisit(false);
                           setEditingVisitId(null);
-                          setNewVisit({ date: getTodayString(), services: [], size: '', amount: '', paymentMethod: '現金', accountLast5: '', deductPackageId: '', notes: '', photoUrl: '' });
+                          setNewVisit({ date: getTodayString(), services: [], size: '', amount: '', paymentMethod: '現金', accountLast5: '', deductPackageId: '', notes: '', photoUrl: '', designerId: activeDesignerId || '' });
                           setCustomPayment('');
                         } else {
                           setIsAddingVisit(true);
@@ -1588,8 +1622,11 @@ export default function App() {
                                <input type="date" value={newVisit.date} onChange={e=>setNewVisit({...newVisit,date:e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
                              </div>
                              <div>
-                               <label className="text-xs font-bold text-gray-500 block mb-1">尺寸 *</label>
-                               <input type="text" placeholder="例：C翹度 0.15 10-11-12" value={newVisit.size} onChange={e=>setNewVisit({...newVisit,size:e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                               <label className="text-xs font-bold text-gray-500 block mb-1">操作設計師 *</label>
+                               <select value={newVisit.designerId} onChange={e=>setNewVisit({...newVisit, designerId: e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B] bg-white">
+                                 <option value="">請選擇</option>
+                                 {designers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                               </select>
                              </div>
                            </div>
 
@@ -1608,6 +1645,13 @@ export default function App() {
                                     <span className="leading-snug">{opt}</span>
                                   </label>
                                 ))}
+                             </div>
+                           </div>
+
+                           <div className="grid grid-cols-1 gap-4">
+                             <div>
+                               <label className="text-xs font-bold text-gray-500 block mb-1">尺寸 *</label>
+                               <input type="text" placeholder="例：C翹度 0.15 10-11-12" value={newVisit.size} onChange={e=>setNewVisit({...newVisit,size:e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
                              </div>
                            </div>
 
@@ -1663,7 +1707,7 @@ export default function App() {
                            
                            <div className="flex justify-end pt-2">
                              <button onClick={handleAddVisit} className="bg-[#A87B7B] text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-sm hover:bg-[#8f6666] transition flex items-center gap-2">
-                               <Save size={16}/> {editingVisitId ? '確認更新' : '確認儲存'}
+                               <Save size={16}/> {editingVisitId ? '暫存更新紀錄' : '暫存新紀錄'}
                              </button>
                            </div>
                         </div>
@@ -1677,8 +1721,15 @@ export default function App() {
                           <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-white border-4 border-[#E8D3C8]"></div>
                           <div className="flex flex-col sm:flex-row gap-4 justify-between items-start mb-2">
                             <div>
-                              <span className="text-[10px] font-bold text-[#A87B7B] bg-[#FDFBF7] px-2 py-0.5 rounded">{visit.date}</span>
-                              <h4 className="font-bold text-gray-800 mt-1 text-lg leading-tight">{visit.service}</h4>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-bold text-[#A87B7B] bg-[#FDFBF7] px-2 py-0.5 rounded">{visit.date}</span>
+                                {visit.designerName && (
+                                  <span className="text-[10px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded border border-gray-200">
+                                    由 {visit.designerName} 服務
+                                  </span>
+                                )}
+                              </div>
+                              <h4 className="font-bold text-gray-800 mt-2 text-lg leading-tight">{visit.service}</h4>
                               {visit.size && <p className="text-[11px] text-gray-500 mt-1 font-medium">尺寸規格：{visit.size}</p>}
                             </div>
                             <div className="flex flex-col items-end gap-1 w-full sm:w-auto">
@@ -1776,21 +1827,93 @@ export default function App() {
             </div>
           )}
 
-          {/* Tab 3: 交易紀錄 */}
+          {/* Tab 3: 交易紀錄 (包含進階篩選) */}
           {activeTab === 'transactions' && (
             <div className="p-6 max-w-5xl mx-auto">
-               <div className="mb-6"><h1 className="text-2xl font-bold text-gray-800">交易紀錄</h1></div>
+               <div className="mb-6"><h1 className="text-2xl font-bold text-gray-800">交易紀錄與業績統計</h1></div>
+               
+               {/* --- 新增：進階篩選區塊 --- */}
+               <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 mb-6 flex flex-col md:flex-row gap-4 md:items-end">
+                 <div className="flex items-center gap-2 mb-1 md:hidden">
+                    <Filter size={16} className="text-[#A87B7B]"/> 
+                    <span className="font-bold text-sm text-gray-700">篩選條件</span>
+                 </div>
+                 
+                 <div className="flex-1">
+                   <label className="block text-xs font-bold text-gray-500 mb-1">查詢區間</label>
+                   <select value={txFilterType} onChange={e => setTxFilterType(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]">
+                     <option value="month">單月查詢</option>
+                     <option value="day">單日查詢</option>
+                     <option value="custom">自訂區間</option>
+                     <option value="all">所有紀錄</option>
+                   </select>
+                 </div>
+                 
+                 {txFilterType === 'month' && (
+                   <div className="flex-1">
+                     <label className="block text-xs font-bold text-gray-500 mb-1">選擇月份</label>
+                     <input type="month" value={txFilterMonth} onChange={e=>setTxFilterMonth(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                   </div>
+                 )}
+                 {txFilterType === 'day' && (
+                   <div className="flex-1">
+                     <label className="block text-xs font-bold text-gray-500 mb-1">選擇日期</label>
+                     <input type="date" value={txFilterDate} onChange={e=>setTxFilterDate(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                   </div>
+                 )}
+                 {txFilterType === 'custom' && (
+                   <div className="flex-2 flex items-end gap-2">
+                     <div className="flex-1">
+                       <label className="block text-xs font-bold text-gray-500 mb-1">開始日期</label>
+                       <input type="date" value={txFilterStartDate} onChange={e=>setTxFilterStartDate(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                     </div>
+                     <span className="text-gray-400 mb-2">-</span>
+                     <div className="flex-1">
+                       <label className="block text-xs font-bold text-gray-500 mb-1">結束日期</label>
+                       <input type="date" value={txFilterEndDate} onChange={e=>setTxFilterEndDate(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                     </div>
+                   </div>
+                 )}
+
+                 <div className="flex-1">
+                   <label className="block text-xs font-bold text-gray-500 mb-1">指定設計師</label>
+                   <select value={txFilterDesignerId} onChange={e => setTxFilterDesignerId(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]">
+                     <option value="all">全部設計師 (總店)</option>
+                     {designers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                   </select>
+                 </div>
+               </div>
+
                <div className="grid grid-cols-2 gap-4 mb-6">
-                 <div className="bg-white p-5 rounded-2xl border shadow-sm"><p className="text-sm text-gray-500">總營業額</p><h2 className="text-3xl font-bold text-gray-800">${totalRevenue.toLocaleString()}</h2></div>
+                 <div className="bg-white p-5 rounded-2xl border shadow-sm"><p className="text-sm text-gray-500">期間總營業額</p><h2 className="text-3xl font-bold text-[#A87B7B]">${totalRevenue.toLocaleString()}</h2></div>
                  <div className="bg-white p-5 rounded-2xl border shadow-sm"><p className="text-sm text-gray-500">交易筆數</p><h2 className="text-3xl font-bold text-gray-800">{allTransactions.length}</h2></div>
                </div>
                <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
                  <table className="w-full text-left text-sm whitespace-nowrap">
-                   <thead className="bg-gray-50 text-gray-500"><tr><th className="p-4">日期</th><th className="p-4">客戶</th><th className="p-4">項目</th><th className="p-4">方式</th><th className="p-4 text-right">金額</th></tr></thead>
+                   <thead className="bg-gray-50 text-gray-500 border-b border-gray-100">
+                     <tr>
+                       <th className="p-4">日期</th>
+                       <th className="p-4">設計師</th>
+                       <th className="p-4">客戶</th>
+                       <th className="p-4">項目</th>
+                       <th className="p-4">方式</th>
+                       <th className="p-4 text-right">金額</th>
+                     </tr>
+                   </thead>
                    <tbody>
                      {allTransactions.map(tx => (
-                       <tr key={tx.id} className="border-b hover:bg-gray-50"><td className="p-4 text-gray-600">{tx.date}</td><td className="p-4 font-bold">{tx.clientName}</td><td className="p-4 max-w-[200px] truncate" title={tx.service}>{tx.service}</td><td className="p-4"><span className="bg-gray-100 px-2 py-1 rounded text-xs">{tx.paymentMethod}</span></td><td className="p-4 text-right font-bold">${tx.totalAmount}</td></tr>
+                       <tr key={tx.id} className="border-b border-gray-50 hover:bg-gray-50">
+                         <td className="p-4 text-gray-600">{tx.date}</td>
+                         <td className="p-4 text-gray-600">{tx.designerName || '未指定'}</td>
+                         <td className="p-4 font-bold text-gray-800">{tx.clientName}</td>
+                         <td className="p-4 max-w-[150px] md:max-w-[200px] truncate" title={tx.service}>{tx.service}</td>
+                         <td className="p-4"><span className={`px-2 py-1 rounded text-xs ${tx.paymentMethod === '儲值金扣款' || tx.paymentMethod === '扣除包堂' ? 'bg-[#FDFBF7] text-[#A87B7B] border border-[#F0E6D8]' : 'bg-gray-100 text-gray-500'}`}>{tx.paymentMethod}</span></td>
+                         <td className="p-4 text-right font-bold">${tx.totalAmount.toLocaleString()}</td>
+                       </tr>
                      ))}
+                     {allTransactions.length === 0 && (
+                       <tr><td colSpan="6" className="text-center py-10 text-gray-400">該條件下尚無交易紀錄</td></tr>
+                     )}
                    </tbody>
                  </table>
                </div>
