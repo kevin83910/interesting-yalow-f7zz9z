@@ -98,6 +98,12 @@ const {
   MapPin, AlertCircle, CalendarCheck, ChevronRight, Settings, Save, Plus, Trash2, Eye, Lock, X, Key, Clock, MessageCircle, Cloud, Search, HelpCircle
 } = Icons;
 
+// --- 工具函式：取得今日日期字串 (YYYY-MM-DD) ---
+const getTodayString = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
 // --- 初始預設資料 ---
 const initialDesigners = [
   {
@@ -113,6 +119,7 @@ const initialDesigners = [
 // ==========================================
 const ScheduleItemEditor = ({ schedule, onRemove, onUpdate, onDateChange }) => {
   const [newTime, setNewTime] = useState("");
+  const isToday = schedule.fullDate === getTodayString();
 
   const handleAddTime = () => {
     if (!newTime) return;
@@ -147,11 +154,12 @@ const ScheduleItemEditor = ({ schedule, onRemove, onUpdate, onDateChange }) => {
             className="w-full p-2.5 border rounded-lg text-base font-bold text-gray-700 focus:border-[#A87B7B] outline-none cursor-pointer bg-gray-50 hover:bg-white transition"
           />
         </div>
-        <div className="w-20 bg-gray-50 border border-gray-100 rounded-lg flex flex-col items-center justify-center">
-          <span className="text-base font-bold text-gray-800">
+        <div className={`w-20 border rounded-lg flex flex-col items-center justify-center relative ${isToday ? "bg-[#FDFBF7] border-[#C59A5C]" : "bg-gray-50 border-gray-100"}`}>
+          {isToday && <span className="absolute -top-2.5 bg-[#C59A5C] text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm tracking-widest">今日</span>}
+          <span className={`text-base font-bold ${isToday ? "text-[#C59A5C]" : "text-gray-800"}`}>
             {schedule.date || "-"}
           </span>
-          <span className="text-xs text-gray-500 mt-0.5">
+          <span className={`text-xs mt-0.5 ${isToday ? "text-[#C59A5C]/80 font-bold" : "text-gray-500"}`}>
             {schedule.day ? "週" + schedule.day : "-"}
           </span>
         </div>
@@ -345,7 +353,14 @@ export default function App() {
         if (snap.exists()) {
           const data = snap.data();
           if (!isAdminMode) {
-            if (data.designers) setDesigners(data.designers);
+            if (data.designers) {
+              const todayStr = getTodayString();
+              const cleanedDesigners = data.designers.map(d => ({
+                ...d,
+                schedules: (d.schedules || []).filter(s => !s.fullDate || s.fullDate >= todayStr)
+              }));
+              setDesigners(cleanedDesigners);
+            }
             if (data.adminPassword) setAdminPassword(data.adminPassword);
             if (data.lineOfficialId !== undefined) setLineOfficialId(data.lineOfficialId);
           }
@@ -516,6 +531,7 @@ export default function App() {
     const year = parseInt(yearStr, 10);
     const month = parseInt(monthStr, 10) - 1; 
     const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const todayStr = getTodayString();
 
     let newSchedules = [...activeDesigner.schedules];
     let maxId = newSchedules.length > 0 ? Math.max(...newSchedules.map((s) => s.id)) : 0;
@@ -525,7 +541,7 @@ export default function App() {
       const d = new Date(year, month, i);
       const fullDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(i).padStart(2, "0")}`;
 
-      if (!newSchedules.some(s => s.fullDate === fullDate)) {
+      if (fullDate >= todayStr && !newSchedules.some(s => s.fullDate === fullDate)) {
         maxId++;
         addedCount++;
         const daysMap = ["日", "一", "二", "三", "四", "五", "六"];
@@ -544,7 +560,7 @@ export default function App() {
       updateActiveDesigner("schedules", newSchedules);
       showToast(`已自動補齊 ${year} 年 ${month + 1} 月剩下的 ${addedCount} 天！`);
     } else {
-      showToast(`${year} 年 ${month + 1} 月的日期皆已存在！`);
+      showToast(`${year} 年 ${month + 1} 月的可用日期皆已存在！`);
     }
   };
 
@@ -686,11 +702,12 @@ export default function App() {
           </div>
           <div>
             {[...(activeDesigner?.schedules || [])]
-              .sort((a, b) => new Date(a.fullDate) - new Date(b.fullDate))
+              .filter(s => !s.fullDate || s.fullDate >= getTodayString())
+              .sort((a, b) => new Date(a.fullDate || '9999-12-31') - new Date(b.fullDate || '9999-12-31'))
               .map((schedule) => (
               <ScheduleItemEditor key={schedule.id} schedule={schedule} onRemove={handleRemoveSchedule} onUpdate={handleUpdateSchedule} onDateChange={handleDateChange} />
             ))}
-            {(!activeDesigner?.schedules || activeDesigner.schedules.length === 0) && (
+            {(!activeDesigner?.schedules || activeDesigner.schedules.filter(s => !s.fullDate || s.fullDate >= getTodayString()).length === 0) && (
               <div className="text-center py-10 text-gray-400 text-base border-2 border-dashed border-gray-200 rounded-xl">
                 目前沒有任何開放時段，請點擊上方新增。
               </div>
@@ -963,7 +980,8 @@ export default function App() {
             >
               <option value="all">所有日期</option>
               {[...(activeDesigner?.schedules || [])]
-                .sort((a, b) => new Date(a.fullDate) - new Date(b.fullDate))
+                .filter(s => !s.fullDate || s.fullDate >= getTodayString())
+                .sort((a, b) => new Date(a.fullDate || '9999-12-31') - new Date(b.fullDate || '9999-12-31'))
                 .filter(s => s.times && s.times.length > 0)
                 .map(s => (
                   <option key={s.fullDate} value={s.fullDate}>{s.date} (週{s.day})</option>
@@ -984,7 +1002,9 @@ export default function App() {
 
         <div className="space-y-6">
           {(() => {
-            const sortedCustomerSchedules = [...(activeDesigner?.schedules || [])].sort((a, b) => new Date(a.fullDate) - new Date(b.fullDate));
+            const sortedCustomerSchedules = [...(activeDesigner?.schedules || [])]
+              .filter(s => !s.fullDate || s.fullDate >= getTodayString())
+              .sort((a, b) => new Date(a.fullDate || '9999-12-31') - new Date(b.fullDate || '9999-12-31'));
             const displaySchedules = sortedCustomerSchedules.map(schedule => {
               if (filterDate !== "all" && schedule.fullDate !== filterDate) return null;
               const validTimes = (schedule.times || []).filter(tObj => {
@@ -1009,20 +1029,22 @@ export default function App() {
 
             return displaySchedules.map((schedule) => {
               const isWeekend = schedule.day === "六" || schedule.day === "日";
+              const isToday = schedule.fullDate === getTodayString();
               const times = schedule.times || [];
 
               return (
-                <div key={schedule.id} className="flex gap-4 sm:gap-5">
-                  <div className="flex flex-col items-center pt-1.5 w-14 flex-shrink-0">
-                    <span className="text-base font-bold text-gray-800">
+                <div key={schedule.id} className={`flex gap-4 sm:gap-5 ${isToday ? 'bg-[#FDFBF7] p-3 -mx-3 rounded-2xl border border-[#F5E3BD] shadow-sm' : ''}`}>
+                  <div className={`flex flex-col items-center pt-1.5 w-14 flex-shrink-0 relative ${isToday ? 'mt-1' : ''}`}>
+                    {isToday && <span className="absolute -top-3 bg-[#C59A5C] text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm tracking-widest">今日</span>}
+                    <span className={`text-base font-bold ${isToday ? "text-[#C59A5C]" : "text-gray-800"}`}>
                       {schedule.date}
                     </span>
-                    <span className={`text-sm mt-1 w-8 h-8 rounded-full flex items-center justify-center font-bold ${isWeekend ? "bg-[#F5E3E3] text-[#A87B7B]" : "bg-gray-100 text-gray-500"}`}>
+                    <span className={`text-sm mt-1 w-8 h-8 rounded-full flex items-center justify-center font-bold ${isToday ? "bg-[#C59A5C] text-white shadow-md" : isWeekend ? "bg-[#F5E3E3] text-[#A87B7B]" : "bg-gray-100 text-gray-500"}`}>
                       {schedule.day}
                     </span>
                   </div>
 
-                  <div className="flex-1 border-b border-gray-100 pb-5">
+                  <div className={`flex-1 pb-5 ${isToday ? '' : 'border-b border-gray-100'}`}>
                     <div className="flex flex-wrap gap-2.5">
                       {times.map((tObj, tIndex) => {
                         if (tObj.isFull) {
