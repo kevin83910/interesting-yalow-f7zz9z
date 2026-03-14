@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 // ==========================================
 // 雲端資料庫模組 (Firebase) 導入
@@ -237,7 +237,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedClient, setSelectedClient] = useState(null);
   const [isAddingVisit, setIsAddingVisit] = useState(false);
-  const [editingVisitId, setEditingVisitId] = useState(null); // 新增：追蹤正在編輯的紀錄ID
+  const [editingVisitId, setEditingVisitId] = useState(null); 
   const [showAddClientModal, setShowAddClientModal] = useState(false);
   const [showDeleteClientModal, setShowDeleteClientModal] = useState(false);
   const [newClientData, setNewClientData] = useState({ name: '', phone: '', birthday: '', tags: '' });
@@ -264,6 +264,23 @@ export default function App() {
   const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
   const [dragState, setDragState] = useState(null);
   const [editingSlot, setEditingSlot] = useState(null);
+
+  // 用於區分手機短按與長按滑動
+  const touchTimer = useRef(null);
+
+  // --- 全域阻擋滾動 (當正在拖曳時) ---
+  useEffect(() => {
+    const handleTouchMoveGlobal = (e) => {
+      if (dragState) {
+        e.preventDefault(); // 當正在拖拉時，完全禁止網頁滾動
+      }
+    };
+    // passive: false 才能讓 preventDefault 生效
+    document.addEventListener('touchmove', handleTouchMoveGlobal, { passive: false });
+    return () => {
+      document.removeEventListener('touchmove', handleTouchMoveGlobal);
+    };
+  }, [dragState]);
 
   // --- 批次自動開班設定狀態 ---
   const [showAutoScheduleModal, setShowAutoScheduleModal] = useState(false);
@@ -410,7 +427,6 @@ export default function App() {
     }));
   };
 
-  // 點擊編輯紀錄按鈕
   const handleEditVisitClick = (visit) => {
     setIsAddingVisit(true);
     setEditingVisitId(visit.id);
@@ -440,7 +456,6 @@ export default function App() {
     const serviceAmt = Number(newVisit.amount) || 0;
     const finalPaymentMethod = newVisit.paymentMethod === '自訂' ? customPayment : newVisit.paymentMethod;
     
-    // 如果是編輯，計算暫時還原後的餘額，確保不會誤判餘額不足
     let tempBalance = selectedClient.balance;
     if (editingVisitId) {
        const oldVisit = selectedClient.visits.find(v => v.id === editingVisitId);
@@ -474,7 +489,6 @@ export default function App() {
         let newPackages = [...c.packages];
         let newVisits = [...c.visits];
 
-        // 1. 若為編輯，先還原原本紀錄扣除的餘額與包堂
         if (editingVisitId) {
           const oldVisit = newVisits.find(v => v.id === editingVisitId);
           if (oldVisit) {
@@ -485,13 +499,11 @@ export default function App() {
           }
         }
 
-        // 2. 套用新的扣款或包堂
         if (finalPaymentMethod === '儲值金扣款') newBalance -= serviceAmt;
         if (finalPaymentMethod === '扣除包堂' && newVisit.deductPackageId) {
           newPackages = newPackages.map(pkg => pkg.id === newVisit.deductPackageId ? { ...pkg, remaining: pkg.remaining - 1 } : pkg);
         }
 
-        // 3. 更新或新增陣列
         if (editingVisitId) {
           newVisits = newVisits.map(v => v.id === editingVisitId ? visitData : v);
         } else {
@@ -515,7 +527,7 @@ export default function App() {
     showToast(editingVisitId ? "消費紀錄更新成功！" : "消費紀錄儲存成功！");
   };
 
-  // --- 排班管理 (批次自動開班) ---
+  // --- 排班管理 ---
   const updateActiveDesigner = (field, value) => { setDesigners(designers.map((d) => d.id === activeDesignerId ? { ...d, [field]: value } : d)); };
   
   const handleApplyAutoSchedule = () => {
@@ -616,9 +628,7 @@ export default function App() {
     });
   };
 
-  // --- 行事曆拖曳邏輯 (Drag to Select & Resize & Move 支援觸控) ---
-  
-  // 處理滑鼠與觸控按下的共用邏輯
+  // --- 行事曆拖曳邏輯 ---
   const handleInteractionStart = (e, dateStr, timeStr, actionType, group = null) => {
     if (actionType === 'add') {
       setDragState({ date: dateStr, startTime: timeStr, endTime: timeStr, mode: 'add' });
@@ -649,22 +659,67 @@ export default function App() {
     }
   };
 
-  // 滑鼠事件
+  // 電腦版滑鼠事件
   const handleGridMouseDown = (e, dateStr, timeStr) => handleInteractionStart(e, dateStr, timeStr, 'add');
   const handleResizeMouseDown = (e, dateStr, group) => handleInteractionStart(e, dateStr, null, 'resize', group);
   const handleMoveMouseDown = (e, dateStr, group) => handleInteractionStart(e, dateStr, null, 'move', group);
 
-  // 觸控事件 (對應滑鼠按下)
-  const handleGridTouchStart = (e, dateStr, timeStr) => handleInteractionStart(e, dateStr, timeStr, 'add');
-  const handleResizeTouchStart = (e, dateStr, group) => handleInteractionStart(e, dateStr, null, 'resize', group);
-  const handleMoveTouchStart = (e, dateStr, group) => handleInteractionStart(e, dateStr, null, 'move', group);
+  // 手機版觸控事件 (加入短按/長按判定)
+  const handleGridTouchStart = (e, dateStr, timeStr) => {
+    touchTimer.current = setTimeout(() => {
+      touchTimer.current = null;
+      handleInteractionStart(e, dateStr, timeStr, 'add');
+    }, 200); // 長按 200ms 進入拖拉新增模式
+  };
 
-  // 處理滑鼠與觸控移動的共用邏輯
+  const handleGridTouchEndLocal = (e, dateStr, timeStr) => {
+    if (touchTimer.current) {
+      clearTimeout(touchTimer.current);
+      touchTimer.current = null;
+      // 短按，直接產生一個單格 30 min 的時段
+      applyDragChanges({ date: dateStr, startTime: timeStr, endTime: timeStr, mode: 'add' });
+    }
+  };
+
+  const handleMoveTouchStart = (e, dateStr, group) => {
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const y = getClientY(e) - rect.top;
+    const clickedSlotIndex = Math.floor(y / 45); 
+    const safeIndex = Math.max(0, Math.min(clickedSlotIndex, group.slots.length - 1));
+    const clickedTime = group.slots[safeIndex] || group.startTime;
+
+    touchTimer.current = setTimeout(() => {
+      touchTimer.current = null;
+      setDragState({
+        date: dateStr,
+        initialHoverTime: clickedTime,
+        currentHoverTime: clickedTime,
+        mode: 'move',
+        baseGroup: group
+      });
+    }, 200);
+  };
+
+  const handleBlockTouchEndLocal = (e, dateStr, group) => {
+    if (touchTimer.current) {
+      clearTimeout(touchTimer.current);
+      touchTimer.current = null;
+      const schedule = activeDesigner?.schedules.find(s => s.fullDate === dateStr);
+      setEditingSlot({ ...group, date: dateStr, scheduleId: schedule?.id, color: group.color || 'default' });
+    }
+  };
+
+  const handleResizeTouchStart = (e, dateStr, group) => {
+    e.stopPropagation();
+    if (touchTimer.current) { clearTimeout(touchTimer.current); touchTimer.current = null; }
+    // 調整把手不用等長按，直接觸發
+    handleInteractionStart(e, dateStr, null, 'resize', group);
+  };
+
+  // 移動中處理
   const handleInteractionMove = (e, dateStr, timeStr) => {
     if (dragState && dragState.date === dateStr) {
-      // 防止觸控時螢幕跟著滾動
-      if (e.cancelable) e.preventDefault(); 
-      
       if (dragState.mode === 'move') {
         setDragState(prev => ({ ...prev, currentHoverTime: timeStr }));
       } else {
@@ -673,15 +728,19 @@ export default function App() {
     }
   };
 
-  // 觸控移動時，因為 elementFromPoint 需要座標，所以要做特殊處理
-  const handleTouchMove = (e, dateStr) => {
+  const handleTouchMoveWrapper = (e, dateStr) => {
+    if (touchTimer.current) {
+      // 正在滑動網頁，取消長按判定
+      clearTimeout(touchTimer.current);
+      touchTimer.current = null;
+    }
+
     if (!dragState) return;
-    e.preventDefault(); // 防止滾動
+    
     const touch = e.touches[0];
     const element = document.elementFromPoint(touch.clientX, touch.clientY);
     if (element && element.dataset.time) {
       const timeStr = element.dataset.time;
-      // 確保還在同一天內拖曳
       if (element.dataset.date === dateStr) {
         handleInteractionMove(e, dateStr, timeStr);
       }
@@ -690,16 +749,12 @@ export default function App() {
 
   const handleGridMouseEnter = (dateStr, timeStr) => handleInteractionMove({ cancelable: false }, dateStr, timeStr);
 
-  // 處理滑鼠與觸控結束的共用邏輯
   const handleInteractionEnd = () => {
     if (dragState) {
       applyDragChanges(dragState);
       setDragState(null);
     }
   };
-
-  const handleGridMouseUp = handleInteractionEnd;
-  const handleTouchEnd = handleInteractionEnd;
 
   const applyDragChanges = (drag) => {
     const { date, mode, baseGroup } = drag;
@@ -897,8 +952,7 @@ export default function App() {
     const weekDates = getWeekDates(currentWeekStart);
 
     return (
-      // 加入 touch-action-none 防止在觸控裝置上滑動時觸發預設的滾動行為
-      <div className="h-screen bg-[#F8F9FA] flex flex-col md:flex-row font-sans overflow-hidden w-full select-none" onMouseUp={handleGridMouseUp} onMouseLeave={handleGridMouseUp} onTouchEnd={handleTouchEnd} onTouchCancel={handleTouchEnd}>
+      <div className="h-screen bg-[#F8F9FA] flex flex-col md:flex-row font-sans overflow-hidden w-full select-none" onMouseUp={handleInteractionEnd} onMouseLeave={handleInteractionEnd} onTouchEnd={handleInteractionEnd} onTouchCancel={handleInteractionEnd}>
         {renderToast()}
         
         {/* 手機版頂部 */}
@@ -934,11 +988,11 @@ export default function App() {
           
           {/* Tab 1: 行事曆 (Google Calendar Style) */}
           {activeTab === 'calendar' && (
-            <div className="p-4 md:p-6 mx-auto h-full flex flex-col min-w-0 touch-none"> {/* 加入 touch-none 避免手勢衝突 */}
+            <div className="p-4 md:p-6 mx-auto h-full flex flex-col min-w-0">
               <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
                 <div>
                   <h1 className="text-2xl font-bold text-gray-800">預約行事曆</h1>
-                  <p className="text-sm text-gray-500">週視圖排班：可自由拖曳移動時段、拉伸調整長度</p>
+                  <p className="text-sm text-gray-500">短按新增/編輯；長按區塊可拖拉移動時間</p>
                 </div>
                 <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
                   {designers.map((d) => (
@@ -979,7 +1033,7 @@ export default function App() {
                 </div>
 
                 {/* 時間格線 (可拖曳區) */}
-                <div className="flex-1 overflow-y-auto bg-gray-50/20 relative">
+                <div className="flex-1 overflow-y-auto bg-gray-50/20 relative" style={{ overscrollBehaviorY: 'none' }}>
                   <div className="flex min-w-[700px]">
                     {/* 左側時間軸 */}
                     <div className="w-14 flex-shrink-0 border-r border-gray-200 bg-white sticky left-0 z-20">
@@ -1001,18 +1055,19 @@ export default function App() {
                           <div 
                             key={day.fullDate} 
                             className={`flex-1 border-r border-gray-100 relative min-w-[100px] ${day.isToday ? 'bg-[#FDFBF7]/40' : ''}`}
-                            onTouchMove={(e) => handleTouchMove(e, day.fullDate)} // 觸控移動事件綁定在這裡
+                            onTouchMove={(e) => handleTouchMoveWrapper(e, day.fullDate)} 
                           >
                             {/* 背景網格擷取拖曳事件 */}
                             <div className="absolute inset-0 flex flex-col z-0">
                               {TIME_BLOCKS.map(time => (
                                 <div key={time}
-                                     data-time={time} // 加入 data 屬性供觸控尋找
+                                     data-time={time} 
                                      data-date={day.fullDate}
                                      className={`h-[45px] border-b border-dashed border-gray-100 ${isPast ? 'bg-gray-100/50 cursor-not-allowed' : 'hover:bg-[#E8D3C8]/20 cursor-crosshair'}`}
                                      onMouseDown={(e) => !isPast && handleGridMouseDown(e, day.fullDate, time)}
                                      onMouseEnter={() => !isPast && handleGridMouseEnter(day.fullDate, time)}
                                      onTouchStart={(e) => !isPast && handleGridTouchStart(e, day.fullDate, time)}
+                                     onTouchEnd={(e) => !isPast && handleGridTouchEndLocal(e, day.fullDate, time)}
                                 />
                               ))}
                             </div>
@@ -1030,7 +1085,7 @@ export default function App() {
                                 return (
                                   <div key={i}
                                       style={{ top: getTopPx(group.startTime), height: getTopPx(group.endTime) - getTopPx(group.startTime) }}
-                                      className={`absolute left-1 right-1 rounded-md border p-1.5 cursor-pointer overflow-hidden transition-all hover:z-30 hover:shadow-md touch-none
+                                      className={`absolute left-1 right-1 rounded-md border p-1.5 cursor-pointer overflow-hidden transition-all hover:z-30 hover:shadow-md
                                           ${dragState ? 'pointer-events-none' : 'pointer-events-auto hover:scale-[1.02]'}
                                           ${isFullClass}
                                           ${isBeingMoved ? 'opacity-30' : 'opacity-100'}
@@ -1042,6 +1097,10 @@ export default function App() {
                                       onTouchStart={(e) => {
                                         if (isPast) return;
                                         handleMoveTouchStart(e, day.fullDate, group);
+                                      }}
+                                      onTouchEnd={(e) => {
+                                        if (isPast) return;
+                                        handleBlockTouchEndLocal(e, day.fullDate, group);
                                       }}
                                   >
                                     <div className="text-[10px] font-bold leading-tight opacity-90 drop-shadow-sm pointer-events-none">
@@ -1057,7 +1116,7 @@ export default function App() {
                                     {/* 拖曳把手 */}
                                     {!dragState && !isPast && (
                                       <div 
-                                        className="absolute bottom-0 left-0 right-0 h-4 cursor-ns-resize flex items-end justify-center pb-[3px] hover:bg-black/20 transition-colors z-30"
+                                        className="absolute bottom-0 left-0 right-0 h-5 cursor-ns-resize flex items-end justify-center pb-1 hover:bg-black/20 transition-colors z-30 touch-none"
                                         onMouseDown={(e) => handleResizeMouseDown(e, day.fullDate, group)}
                                         onTouchStart={(e) => handleResizeTouchStart(e, day.fullDate, group)}
                                       >
