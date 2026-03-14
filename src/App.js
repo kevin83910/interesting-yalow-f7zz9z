@@ -13,13 +13,12 @@ import {
 import { getFirestore, doc, setDoc, onSnapshot } from "firebase/firestore";
 
 // ==========================================
-// 全域雲端環境初始化 (修正為動態獲取環境 ID 以符合權限)
+// 全域雲端環境初始化
 // ==========================================
 let app, auth, db;
 const appId = typeof __app_id !== 'undefined' ? __app_id : "lash-beauty-booking-official";
 
 try {
-  // 注意：系統環境內會自動覆蓋 Config，此處保留為備用結構
   const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
     apiKey: "AIzaSyAMu5uINf-wS9FSuIgZHXA7fgnChmGqAus",
     authDomain: "lash-beauty-booking.firebaseapp.com",
@@ -267,7 +266,6 @@ export default function App() {
   const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
   const [dragState, setDragState] = useState(null);
   const [editingSlot, setEditingSlot] = useState(null);
-  // 新增：追蹤未儲存變更的狀態
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // 用於區分手機短按與長按滑動
@@ -277,10 +275,9 @@ export default function App() {
   useEffect(() => {
     const handleTouchMoveGlobal = (e) => {
       if (dragState) {
-        e.preventDefault(); // 當正在拖拉時，完全禁止網頁滾動
+        e.preventDefault(); 
       }
     };
-    // passive: false 才能讓 preventDefault 生效
     document.addEventListener('touchmove', handleTouchMoveGlobal, { passive: false });
     return () => {
       document.removeEventListener('touchmove', handleTouchMoveGlobal);
@@ -361,36 +358,37 @@ export default function App() {
     return () => unsubscribe();
   }, [user, isAdminMode]);
 
-  const handleExplicitSave = async () => {
-    if (user && db) {
-      try {
-        // 防呆：使用 JSON 轉換去除所有可能的 undefined 屬性，避免 Firebase 報錯
-        const dataToSave = JSON.parse(JSON.stringify({ 
-          designers, 
-          adminPassword, 
-          lineOfficialId, 
-          clients, 
-          inventory, 
-          paymentMethods 
-        }));
-
-        const docRef = doc(db, "artifacts", appId, "public", "data", "store_data", "main_config");
-        await setDoc(docRef, dataToSave);
-        
-        setHasUnsavedChanges(false);
-        showToast("資料已成功儲存並更新至前台！");
-      } catch (e) {
-        console.error("儲存失敗詳細錯誤:", e);
-        showToast("儲存失敗，請稍後再試。");
-      }
+  // --- 自動儲存至雲端共用函數 ---
+  const syncToCloud = async (updates = {}) => {
+    if (!user || !db) return false;
+    try {
+      const payload = {
+        designers: 'designers' in updates ? updates.designers : designers,
+        adminPassword: 'adminPassword' in updates ? updates.adminPassword : adminPassword,
+        lineOfficialId: 'lineOfficialId' in updates ? updates.lineOfficialId : lineOfficialId,
+        clients: 'clients' in updates ? updates.clients : clients,
+        inventory: 'inventory' in updates ? updates.inventory : inventory,
+        paymentMethods: 'paymentMethods' in updates ? updates.paymentMethods : paymentMethods,
+      };
+      const dataToSave = JSON.parse(JSON.stringify(payload));
+      const docRef = doc(db, "artifacts", appId, "public", "data", "store_data", "main_config");
+      await setDoc(docRef, dataToSave);
+      setHasUnsavedChanges(false);
+      return true;
+    } catch (e) {
+      console.error("同步失敗:", e);
+      showToast("雲端同步失敗，請檢查網路或照片是否過大！");
+      return false;
     }
   };
 
+  const handleExplicitSave = async () => {
+    const success = await syncToCloud();
+    if(success) showToast("資料已成功儲存並更新至前台！");
+  };
+
   const handleExitAdmin = async () => {
-    // 退出前先嘗試儲存
-    if (hasUnsavedChanges) {
-      await handleExplicitSave();
-    }
+    if (hasUnsavedChanges) await syncToCloud();
     setIsAdminMode(false);
   };
 
@@ -423,10 +421,11 @@ export default function App() {
       id: Date.now(), name: newClientData.name, phone: newClientData.phone, birthday: newClientData.birthday || '-', joinDate: getTodayString(),
       tags: newClientData.tags ? newClientData.tags.split(',').map(t => t.trim()) : ["新客"], lashPreference: "尚未建立紀錄", balance: 0, packages: [], visits: []
     };
-    setClients([client, ...clients]); 
+    const updatedClients = [client, ...clients];
+    setClients(updatedClients); 
     setShowAddClientModal(false); 
     setNewClientData({ name: '', phone: '', birthday: '', tags: '' });
-    setHasUnsavedChanges(true); // 標記有未儲存變更
+    syncToCloud({ clients: updatedClients });
     showToast("已建立新客戶檔案！");
   };
 
@@ -436,7 +435,7 @@ export default function App() {
     setClients(updatedClients);
     setSelectedClient(null);
     setShowDeleteClientModal(false);
-    setHasUnsavedChanges(true); // 標記有未儲存變更
+    syncToCloud({ clients: updatedClients });
     showToast("已成功刪除該客戶所有資料！");
   };
 
@@ -447,6 +446,38 @@ export default function App() {
         ? prev.services.filter(s => s !== serviceName)
         : [...prev.services, serviceName]
     }));
+  };
+
+  // 處理照片上傳與自動壓縮 (避免 Firebase 1MB 限制)
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 800;
+        const MAX_HEIGHT = 800;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+        } else {
+          if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        // 壓縮至 70% JPEG 品質，極大降低 Base64 長度
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+        setNewVisit({ ...newVisit, photoUrl: compressedBase64 });
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleEditVisitClick = (visit) => {
@@ -537,23 +568,29 @@ export default function App() {
       return c;
     });
 
+    let updatedPaymentMethods = [...paymentMethods];
     if(newVisit.paymentMethod === '自訂' && customPayment && !paymentMethods.includes(customPayment)){
-       setPaymentMethods([...paymentMethods, customPayment]);
+       updatedPaymentMethods.push(customPayment);
+       setPaymentMethods(updatedPaymentMethods);
     }
-    setClients(updatedClients); setSelectedClient(updatedClients.find(c => c.id === selectedClient.id)); 
+    
+    setClients(updatedClients); 
+    setSelectedClient(updatedClients.find(c => c.id === selectedClient.id)); 
     setIsAddingVisit(false);
     setEditingVisitId(null);
-    setHasUnsavedChanges(true); // 標記有未儲存變更
+    
+    // 自動儲存至雲端
+    syncToCloud({ clients: updatedClients, paymentMethods: updatedPaymentMethods });
     
     setNewVisit({ date: getTodayString(), services: [], size: '', amount: '', paymentMethod: '現金', accountLast5: '', deductPackageId: '', notes: '', photoUrl: '' });
     setCustomPayment(''); 
-    showToast(editingVisitId ? "消費紀錄更新成功！記得點擊右上角儲存。" : "消費紀錄暫存成功！記得點擊右上角儲存。");
+    showToast(editingVisitId ? "消費紀錄已成功更新並儲存！" : "消費紀錄已成功儲存！");
   };
 
-  // --- 排班管理 ---
+  // --- 排班管理 (批次自動開班) ---
   const updateActiveDesigner = (field, value) => { 
     setDesigners(designers.map((d) => d.id === activeDesignerId ? { ...d, [field]: value } : d)); 
-    setHasUnsavedChanges(true); // 標記有未儲存變更
+    setHasUnsavedChanges(true);
   };
   
   const handleApplyAutoSchedule = () => {
@@ -642,7 +679,10 @@ export default function App() {
     newSchedules.sort((a, b) => new Date(a.fullDate) - new Date(b.fullDate));
     updateActiveDesigner("schedules", newSchedules);
     setShowAutoScheduleModal(false);
-    showToast(`批次開班成功！記得點擊右上角儲存以更新至前台。`);
+    
+    // 自動儲存至雲端
+    syncToCloud({ designers: designers.map(d => d.id === activeDesignerId ? { ...d, schedules: newSchedules } : d) });
+    showToast(`批次開班成功！已自動儲存。`);
   };
 
   const toggleWorkDay = (dayIndex) => {
@@ -685,24 +725,21 @@ export default function App() {
     }
   };
 
-  // 電腦版滑鼠事件
   const handleGridMouseDown = (e, dateStr, timeStr) => handleInteractionStart(e, dateStr, timeStr, 'add');
   const handleResizeMouseDown = (e, dateStr, group) => handleInteractionStart(e, dateStr, null, 'resize', group);
   const handleMoveMouseDown = (e, dateStr, group) => handleInteractionStart(e, dateStr, null, 'move', group);
 
-  // 手機版觸控事件 (加入短按/長按判定)
   const handleGridTouchStart = (e, dateStr, timeStr) => {
     touchTimer.current = setTimeout(() => {
       touchTimer.current = null;
       handleInteractionStart(e, dateStr, timeStr, 'add');
-    }, 200); // 長按 200ms 進入拖拉新增模式
+    }, 200); 
   };
 
   const handleGridTouchEndLocal = (e, dateStr, timeStr) => {
     if (touchTimer.current) {
       clearTimeout(touchTimer.current);
       touchTimer.current = null;
-      // 短按，直接產生一個單格 30 min 的時段
       applyDragChanges({ date: dateStr, startTime: timeStr, endTime: timeStr, mode: 'add' });
     }
   };
@@ -739,11 +776,9 @@ export default function App() {
   const handleResizeTouchStart = (e, dateStr, group) => {
     e.stopPropagation();
     if (touchTimer.current) { clearTimeout(touchTimer.current); touchTimer.current = null; }
-    // 調整把手不用等長按，直接觸發
     handleInteractionStart(e, dateStr, null, 'resize', group);
   };
 
-  // 移動中處理
   const handleInteractionMove = (e, dateStr, timeStr) => {
     if (dragState && dragState.date === dateStr) {
       if (dragState.mode === 'move') {
@@ -756,7 +791,6 @@ export default function App() {
 
   const handleTouchMoveWrapper = (e, dateStr) => {
     if (touchTimer.current) {
-      // 正在滑動網頁，取消長按判定
       clearTimeout(touchTimer.current);
       touchTimer.current = null;
     }
@@ -817,9 +851,9 @@ export default function App() {
              const newVal = TIME_BLOCKS[newIdx];
              const existingIdx = currentTimes.findIndex(ct => ct.val === newVal);
              if (existingIdx >= 0) {
-               currentTimes[existingIdx] = { val: newVal, isFull: baseGroup.isFull, clientName: baseGroup.clientName || '', service: baseGroup.service || '', eventId: baseGroup.eventId || '', color: baseGroup.color || 'default' };
+               currentTimes[existingIdx] = { val: newVal, isFull: baseGroup.isFull, clientName: baseGroup.clientName || '', service: baseGroup.service || '', eventId: baseGroup.eventId, color: baseGroup.color };
              } else {
-               currentTimes.push({ val: newVal, isFull: baseGroup.isFull, clientName: baseGroup.clientName || '', service: baseGroup.service || '', eventId: baseGroup.eventId || '', color: baseGroup.color || 'default' });
+               currentTimes.push({ val: newVal, isFull: baseGroup.isFull, clientName: baseGroup.clientName || '', service: baseGroup.service || '', eventId: baseGroup.eventId, color: baseGroup.color });
              }
            }
         });
@@ -828,6 +862,9 @@ export default function App() {
         schedule.times = currentTimes;
         newSchedules[scheduleIndex] = schedule;
         updateActiveDesigner("schedules", newSchedules);
+        
+        // 自動儲存至雲端
+        syncToCloud({ designers: designers.map(d => d.id === activeDesignerId ? { ...d, schedules: newSchedules } : d) });
       }
       return;
     }
@@ -862,6 +899,9 @@ export default function App() {
         schedule.times = currentTimes;
         newSchedules[scheduleIndex] = schedule;
         updateActiveDesigner("schedules", newSchedules);
+        
+        // 自動儲存至雲端
+        syncToCloud({ designers: designers.map(d => d.id === activeDesignerId ? { ...d, schedules: newSchedules } : d) });
       }
       return;
     }
@@ -905,6 +945,8 @@ export default function App() {
       newSchedules[scheduleIndex] = schedule;
     }
     updateActiveDesigner("schedules", newSchedules);
+    // 自動儲存至雲端
+    syncToCloud({ designers: designers.map(d => d.id === activeDesignerId ? { ...d, schedules: newSchedules } : d) });
   };
 
   const handleSaveSlotEdit = () => {
@@ -929,7 +971,11 @@ export default function App() {
       return s;
     });
     updateActiveDesigner("schedules", updatedSchedules);
-    setEditingSlot(null); showToast("時段設定成功！記得點擊右上角儲存以更新至前台。");
+    setEditingSlot(null); 
+    
+    // 自動儲存至雲端
+    syncToCloud({ designers: designers.map(d => d.id === activeDesignerId ? { ...d, schedules: updatedSchedules } : d) });
+    showToast("時段設定成功！已自動同步。");
   };
 
   const handleRemoveSlot = () => {
@@ -942,7 +988,10 @@ export default function App() {
     });
     updateActiveDesigner("schedules", updatedSchedules); 
     setEditingSlot(null);
-    showToast("已刪除該空檔！");
+    
+    // 自動儲存至雲端
+    syncToCloud({ designers: designers.map(d => d.id === activeDesignerId ? { ...d, schedules: updatedSchedules } : d) });
+    showToast("已刪除該空檔！已自動同步。");
   };
 
   const handleCopyBooking = () => {
@@ -965,7 +1014,9 @@ export default function App() {
   const handleChangePassword = () => {
     if (!newPasswordInput) return showToast("請輸入新密碼！");
     if (newPasswordInput.length < 4) return showToast("密碼長度至少需 4 碼！");
-    setAdminPassword(newPasswordInput); setNewPasswordInput(""); showToast("密碼修改成功！下次請使用新密碼登入。");
+    setAdminPassword(newPasswordInput); setNewPasswordInput(""); 
+    syncToCloud({ adminPassword: newPasswordInput });
+    showToast("密碼修改成功！下次請使用新密碼登入。");
   };
 
   // ==========================================
@@ -985,7 +1036,6 @@ export default function App() {
         <div className="md:hidden flex justify-between items-center p-4 bg-white border-b border-gray-200 z-20 shadow-sm">
           <h2 className="text-xl font-beauty font-black text-[#C59A5C] tracking-widest">L<span className="text-[#A87B7B]">&</span>B</h2>
           <div className="flex items-center gap-3">
-            {/* 新增：手機版儲存按鈕 */}
             {hasUnsavedChanges && (
                <button onClick={handleExplicitSave} className="bg-[#A87B7B] text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-md animate-pulse flex items-center gap-1">
                  <Save size={14} /> 儲存變更
@@ -1012,16 +1062,14 @@ export default function App() {
             <button onClick={() => { setActiveTab('settings'); setSelectedClient(null); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium text-sm ${activeTab === 'settings' ? 'bg-[#FDFBF7] text-[#A87B7B]' : 'text-gray-600 hover:bg-gray-50'}`}><Settings size={18} /> 系統設定</button>
           </nav>
           <div className="p-4 border-t border-gray-100 space-y-3">
-             {/* 新增：側邊欄常駐儲存按鈕 (僅在有未儲存變更時醒目提示) */}
             <button 
                onClick={handleExplicitSave} 
                className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition shadow-sm
                   ${hasUnsavedChanges ? 'bg-[#A87B7B] text-white hover:bg-[#8f6666] animate-pulse shadow-md border-2 border-[#C59A5C]' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}
                `}
             >
-               <Save size={16}/> {hasUnsavedChanges ? '儲存變更至前台' : '資料已同步'}
+               {hasUnsavedChanges ? <Save size={16}/> : <CheckCircle size={16}/>} {hasUnsavedChanges ? '儲存變更至前台' : '資料已同步'}
             </button>
-
             <button onClick={handleExitAdmin} className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white py-3 rounded-xl text-sm font-bold hover:bg-black transition"><Eye size={16}/> 退出看前台</button>
           </div>
         </div>
@@ -1032,7 +1080,7 @@ export default function App() {
           
           {/* Tab 1: 行事曆 (Google Calendar Style) */}
           {activeTab === 'calendar' && (
-            <div className="p-4 md:p-6 mx-auto h-full flex flex-col min-w-0 touch-none"> {/* 加入 touch-none 避免手勢衝突 */}
+            <div className="p-4 md:p-6 mx-auto h-full flex flex-col min-w-0 touch-none">
               <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
                 <div>
                   <h1 className="text-2xl font-bold text-gray-800">預約行事曆</h1>
@@ -1047,7 +1095,6 @@ export default function App() {
                   <button onClick={() => setShowAutoScheduleModal(true)} className="bg-white border border-gray-200 text-gray-700 text-sm font-bold px-3 py-1.5 rounded-lg hover:bg-gray-50 transition shadow-sm whitespace-nowrap flex items-center gap-1.5">
                     <Wand2 size={16} className="text-[#C59A5C]" /> 快速開班
                   </button>
-                  {/* 新增：桌面版頂部確認儲存按鈕 */}
                   {hasUnsavedChanges && (
                      <button onClick={handleExplicitSave} className="bg-[#A87B7B] text-white text-sm font-bold px-4 py-1.5 rounded-lg hover:bg-[#8f6666] transition shadow-md whitespace-nowrap flex items-center gap-1.5 animate-bounce ml-2">
                        <Save size={16} /> 儲存發布
@@ -1548,10 +1595,7 @@ export default function App() {
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                              <div>
                                 <label className="text-xs font-bold text-gray-500 block mb-1">客片完成照</label>
-                                <input type="file" accept="image/*" onChange={(e) => {
-                                  const file = e.target.files[0];
-                                  if (file) { const r = new FileReader(); r.onloadend = () => setNewVisit({ ...newVisit, photoUrl: r.result }); r.readAsDataURL(file); }
-                                }} className="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-[#F5E3E3] file:text-[#A87B7B] hover:file:bg-[#F0E6D8] cursor-pointer" />
+                                <input type="file" accept="image/*" onChange={handleImageUpload} className="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-[#F5E3E3] file:text-[#A87B7B] hover:file:bg-[#F0E6D8] cursor-pointer" />
                                 {newVisit.photoUrl && (
                                   <div className="mt-2 relative inline-block">
                                     <img src={newVisit.photoUrl} alt="預覽" className="h-16 w-16 object-cover rounded-lg border shadow-sm" />
@@ -1567,7 +1611,7 @@ export default function App() {
                            
                            <div className="flex justify-end pt-2">
                              <button onClick={handleAddVisit} className="bg-[#A87B7B] text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-sm hover:bg-[#8f6666] transition flex items-center gap-2">
-                               <Save size={16}/> {editingVisitId ? '暫存更新紀錄' : '暫存新紀錄'}
+                               <Save size={16}/> {editingVisitId ? '確認更新' : '確認儲存'}
                              </button>
                            </div>
                         </div>
