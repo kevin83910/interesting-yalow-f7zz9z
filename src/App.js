@@ -13,12 +13,14 @@ import {
 import { getFirestore, doc, setDoc, onSnapshot } from "firebase/firestore";
 
 // ==========================================
-// 全域雲端環境初始化
+// 全域雲端環境初始化 (修正為動態獲取環境 ID 以符合權限)
 // ==========================================
-let app, auth, db, appId = "lash-beauty-booking-official";
+let app, auth, db;
+const appId = typeof __app_id !== 'undefined' ? __app_id : "lash-beauty-booking-official";
 
 try {
-  const firebaseConfig = {
+  // 注意：系統環境內會自動覆蓋 Config，此處保留為備用結構
+  const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
     apiKey: "AIzaSyAMu5uINf-wS9FSuIgZHXA7fgnChmGqAus",
     authDomain: "lash-beauty-booking.firebaseapp.com",
     projectId: "lash-beauty-booking",
@@ -359,25 +361,26 @@ export default function App() {
     return () => unsubscribe();
   }, [user, isAdminMode]);
 
-  // 修改：移除自動存檔的 useEffect，改為純手動存檔
-  // useEffect(() => {
-  //   if (isAdminMode && isCloudLoaded && user && db) {
-  //     const timer = setTimeout(() => {
-  //       const docRef = doc(db, "artifacts", appId, "public", "data", "store_data", "main_config");
-  //       setDoc(docRef, { designers, adminPassword, lineOfficialId, clients, inventory, paymentMethods }).catch(console.error);
-  //     }, 1500);
-  //     return () => clearTimeout(timer);
-  //   }
-  // }, [designers, adminPassword, lineOfficialId, clients, inventory, paymentMethods, isAdminMode, isCloudLoaded, user]);
-
   const handleExplicitSave = async () => {
     if (user && db) {
       try {
+        // 防呆：使用 JSON 轉換去除所有可能的 undefined 屬性，避免 Firebase 報錯
+        const dataToSave = JSON.parse(JSON.stringify({ 
+          designers, 
+          adminPassword, 
+          lineOfficialId, 
+          clients, 
+          inventory, 
+          paymentMethods 
+        }));
+
         const docRef = doc(db, "artifacts", appId, "public", "data", "store_data", "main_config");
-        await setDoc(docRef, { designers, adminPassword, lineOfficialId, clients, inventory, paymentMethods });
+        await setDoc(docRef, dataToSave);
+        
         setHasUnsavedChanges(false);
         showToast("資料已成功儲存並更新至前台！");
       } catch (e) {
+        console.error("儲存失敗詳細錯誤:", e);
         showToast("儲存失敗，請稍後再試。");
       }
     }
@@ -814,9 +817,9 @@ export default function App() {
              const newVal = TIME_BLOCKS[newIdx];
              const existingIdx = currentTimes.findIndex(ct => ct.val === newVal);
              if (existingIdx >= 0) {
-               currentTimes[existingIdx] = { val: newVal, isFull: baseGroup.isFull, clientName: baseGroup.clientName, service: baseGroup.service, eventId: baseGroup.eventId, color: baseGroup.color };
+               currentTimes[existingIdx] = { val: newVal, isFull: baseGroup.isFull, clientName: baseGroup.clientName || '', service: baseGroup.service || '', eventId: baseGroup.eventId || '', color: baseGroup.color || 'default' };
              } else {
-               currentTimes.push({ val: newVal, isFull: baseGroup.isFull, clientName: baseGroup.clientName, service: baseGroup.service, eventId: baseGroup.eventId, color: baseGroup.color });
+               currentTimes.push({ val: newVal, isFull: baseGroup.isFull, clientName: baseGroup.clientName || '', service: baseGroup.service || '', eventId: baseGroup.eventId || '', color: baseGroup.color || 'default' });
              }
            }
         });
@@ -847,11 +850,11 @@ export default function App() {
           const existingIdx = currentTimes.findIndex(ct => ct.val === t);
           if (existingIdx >= 0) {
             currentTimes[existingIdx] = {
-              val: t, isFull: baseGroup.isFull, clientName: baseGroup.clientName, service: baseGroup.service, eventId: baseGroup.eventId || Date.now().toString(), color: baseGroup.color || 'default'
+              val: t, isFull: baseGroup.isFull, clientName: baseGroup.clientName || '', service: baseGroup.service || '', eventId: baseGroup.eventId || Date.now().toString(), color: baseGroup.color || 'default'
             };
           } else {
             currentTimes.push({
-              val: t, isFull: baseGroup.isFull, clientName: baseGroup.clientName, service: baseGroup.service, eventId: baseGroup.eventId || Date.now().toString(), color: baseGroup.color || 'default'
+              val: t, isFull: baseGroup.isFull, clientName: baseGroup.clientName || '', service: baseGroup.service || '', eventId: baseGroup.eventId || Date.now().toString(), color: baseGroup.color || 'default'
             });
           }
         });
@@ -915,9 +918,9 @@ export default function App() {
         slots.forEach(slotVal => {
           const idx = newTimes.findIndex(t => t.val === slotVal);
           if (idx >= 0) { 
-            newTimes[idx] = { ...newTimes[idx], val: slotVal, isFull, clientName, service, color, eventId: newEventId }; 
+            newTimes[idx] = { ...newTimes[idx], val: slotVal, isFull, clientName: clientName || '', service: service || '', color: color || 'default', eventId: newEventId }; 
           } else { 
-            newTimes.push({ val: slotVal, isFull, clientName, service, color, eventId: newEventId }); 
+            newTimes.push({ val: slotVal, isFull, clientName: clientName || '', service: service || '', color: color || 'default', eventId: newEventId }); 
           }
         });
         newTimes.sort((a,b) => a.val.localeCompare(b.val));
@@ -1029,7 +1032,7 @@ export default function App() {
           
           {/* Tab 1: 行事曆 (Google Calendar Style) */}
           {activeTab === 'calendar' && (
-            <div className="p-4 md:p-6 mx-auto h-full flex flex-col min-w-0">
+            <div className="p-4 md:p-6 mx-auto h-full flex flex-col min-w-0 touch-none"> {/* 加入 touch-none 避免手勢衝突 */}
               <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
                 <div>
                   <h1 className="text-2xl font-bold text-gray-800">預約行事曆</h1>
