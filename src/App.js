@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 // ==========================================
 // 雲端資料庫模組 (Firebase) 導入
@@ -81,14 +81,6 @@ const {
 } = Icons;
 
 // --- 表單常數設定 ---
-const SERVICE_OPTIONS = [
-  "日式單根(自然)", "日式單根(濃密)", "嬰兒彎(自然)", "嬰兒彎(濃密)",
-  "新中式設計款(自然)", "新中式設計款(濃密)", "漫畫款(自然)", "漫畫款(濃密)",
-  "柔霧泰顏(自然)", "柔霧泰顏(濃密)", "太陽花(自然)", "太陽花(濃密)",
-  "6D手工開花(自然)", "6D手工開花(濃密)", "客製款", "下睫毛", "根源矯正",
-  "彩色睫毛", "升級毛款", "本店卸除重接", "他店卸除重接", "本店卸除不重接", "他店卸除不重接"
-];
-
 const EVENT_COLORS = [
   { id: 'default', colorClass: 'bg-[#C59A5C] border-[#b08850] text-white', hex: '#C59A5C', name: '經典金' },
   { id: 'blue', colorClass: 'bg-blue-500 border-blue-600 text-white', hex: '#3B82F6', name: '深海藍' },
@@ -199,6 +191,14 @@ const initialInventory = [
   { id: 4, name: "睫毛SPA洗卸慕斯", category: "零售商品", stock: 15, threshold: 5, status: "充足" }
 ];
 
+const initialSavedServices = [
+  { name: "日式單根(自然)", price: 1500 }, { name: "嬰兒彎(濃密)", price: 1800 },
+  { name: "新中式設計款", price: 2200 }, { name: "角蛋白翹睫", price: 1200 },
+];
+
+const initialSavedProducts = [
+  { name: "睫毛雨衣", price: 500 }, { name: "睫毛SPA洗卸慕斯", price: 450 }, { name: "睫毛生長液", price: 1280 }
+];
 
 // ==========================================
 // 主程式 App
@@ -216,8 +216,6 @@ export default function App() {
   const [filterDate, setFilterDate] = useState("all");
   const [filterTime, setFilterTime] = useState("all");
   const [showCopyModal, setShowCopyModal] = useState(false);
-  
-  // --- 放大圖片狀態 ---
   const [enlargedImage, setEnlargedImage] = useState(null);
 
   // --- 登入與設定 ---
@@ -229,6 +227,9 @@ export default function App() {
   const [passwordError, setPasswordError] = useState("");
   const [newPasswordInput, setNewPasswordInput] = useState("");
 
+  // --- 系統設定全域共用 Alert 視窗 ---
+  const [confirmModal, setConfirmModal] = useState(null);
+
   // --- CRM / 後台狀態 ---
   const [activeTab, setActiveTab] = useState('calendar');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -239,6 +240,10 @@ export default function App() {
 
   const [clients, setClients] = useState(initialClients);
   const [inventory, setInventory] = useState(initialInventory);
+  
+  // --- 服務與付款動態清單 ---
+  const [savedServices, setSavedServices] = useState(initialSavedServices);
+  const [savedProducts, setSavedProducts] = useState(initialSavedProducts);
   const [paymentMethods, setPaymentMethods] = useState(['現金', '轉帳', '信用卡', 'Line Pay', '儲值金扣款', '扣除包堂']);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -352,10 +357,21 @@ export default function App() {
           if (data.clients) setClients(data.clients);
           if (data.inventory) setInventory(data.inventory);
           if (data.paymentMethods) setPaymentMethods(data.paymentMethods);
+          if (data.savedServices) setSavedServices(data.savedServices);
+          if (data.savedProducts) setSavedProducts(data.savedProducts);
         }
       } else {
         if (!isAdminMode) {
-          setDoc(docRef, { designers: initialDesigners, adminPassword: "admin", lineOfficialId: "", clients: initialClients, inventory: initialInventory, paymentMethods: ['現金', '轉帳', '信用卡', 'Line Pay', '儲值金扣款', '扣除包堂'] }).catch(console.error);
+          setDoc(docRef, { 
+             designers: initialDesigners, 
+             adminPassword: "admin", 
+             lineOfficialId: "", 
+             clients: initialClients, 
+             inventory: initialInventory, 
+             paymentMethods: ['現金', '轉帳', '信用卡', 'Line Pay', '儲值金扣款', '扣除包堂'],
+             savedServices: initialSavedServices,
+             savedProducts: initialSavedProducts
+          }).catch(console.error);
         }
       }
       setIsCloudLoaded(true);
@@ -374,6 +390,8 @@ export default function App() {
         clients: 'clients' in updates ? updates.clients : clients,
         inventory: 'inventory' in updates ? updates.inventory : inventory,
         paymentMethods: 'paymentMethods' in updates ? updates.paymentMethods : paymentMethods,
+        savedServices: 'savedServices' in updates ? updates.savedServices : savedServices,
+        savedProducts: 'savedProducts' in updates ? updates.savedProducts : savedProducts,
       };
       const dataToSave = JSON.parse(JSON.stringify(payload));
       const docRef = doc(db, "artifacts", appId, "public", "data", "store_data", "main_config");
@@ -724,7 +742,7 @@ export default function App() {
     setShowAutoScheduleModal(false);
     
     syncToCloud({ designers: newDesigners });
-    showToast(`批次開班成功！已為您將每天自動切段。`);
+    showToast(`批次開班成功！已自動儲存。`);
   };
 
   const toggleWorkDay = (dayIndex) => {
@@ -736,7 +754,7 @@ export default function App() {
     });
   };
 
-  // --- 改版：點擊輸入排班 (取代拖曳) ---
+  // --- 改版：純點擊輸入排班 (取代拖曳以支援移動裝置滾動) ---
   const handleCellClick = (dateStr, timeStr) => {
     setEditingSlot({
       isNew: true,
@@ -863,10 +881,56 @@ export default function App() {
     }
   };
 
-  const updateActiveDesigner = (field, value) => { 
-    const newDesigners = designers.map((d) => d.id === activeDesignerId ? { ...d, [field]: value } : d);
-    setDesigners(newDesigners); 
+  // --- 系統設定 (新增/編輯設計師與項目) ---
+  const handleAddNewDesigner = () => {
+    const newId = "d" + Date.now();
+    const newDesigners = [...designers, { id: newId, name: "新設計師", location: "北車店", schedules: [] }];
+    setDesigners(newDesigners);
     syncToCloud({ designers: newDesigners });
+    showToast("已新增設計師欄位，請修改名稱");
+  };
+
+  const handleUpdateDesignerItem = (id, field, value) => {
+    const newDesigners = designers.map(d => d.id === id ? { ...d, [field]: value } : d);
+    setDesigners(newDesigners);
+    setHasUnsavedChanges(true); // 提醒要按儲存
+  };
+
+  const handleDeleteDesigner = (id) => {
+    if (designers.length <= 1) return showToast("系統至少需保留一位設計師！");
+    const newDesigners = designers.filter(d => d.id !== id);
+    setDesigners(newDesigners);
+    if (activeDesignerId === id) setActiveDesignerId(newDesigners[0].id);
+    syncToCloud({ designers: newDesigners });
+    showToast("已刪除設計師！");
+  };
+
+  const [newServiceInput, setNewServiceInput] = useState({ name: '', price: '' });
+  const handleAddServiceSetting = () => {
+     if(!newServiceInput.name || !newServiceInput.price) return showToast("請填寫項目名稱與價格");
+     const newServices = [...savedServices, { name: newServiceInput.name, price: Number(newServiceInput.price) }];
+     setSavedServices(newServices);
+     setNewServiceInput({name: '', price: ''});
+     setHasUnsavedChanges(true);
+  };
+  const handleDeleteServiceSetting = (name) => {
+     setSavedServices(savedServices.filter(s => s.name !== name));
+     setHasUnsavedChanges(true);
+  };
+
+  const [newPaymentInput, setNewPaymentInput] = useState('');
+  const handleAddPaymentSetting = () => {
+     if(!newPaymentInput) return showToast("請填寫付款方式");
+     if(paymentMethods.includes(newPaymentInput)) return showToast("付款方式已存在");
+     const newMethods = [...paymentMethods, newPaymentInput];
+     setPaymentMethods(newMethods);
+     setNewPaymentInput('');
+     setHasUnsavedChanges(true);
+  };
+  const handleDeletePaymentSetting = (method) => {
+     if(['現金', '轉帳', '信用卡', 'Line Pay', '儲值金扣款', '扣除包堂'].includes(method)) return showToast("系統預設付款方式無法刪除！");
+     setPaymentMethods(paymentMethods.filter(m => m !== method));
+     setHasUnsavedChanges(true);
   };
 
   const handleChangePassword = () => {
@@ -907,7 +971,7 @@ export default function App() {
     const weekDates = getWeekDates(currentWeekStart);
 
     return (
-      <div className="h-screen bg-[#F8F9FA] flex flex-col md:flex-row font-sans overflow-hidden w-full select-none">
+      <div className="h-screen bg-[#F8F9FA] flex flex-col md:flex-row font-sans overflow-hidden w-full">
         {renderToast()}
         
         {/* 手機版頂部 */}
@@ -1309,7 +1373,7 @@ export default function App() {
                           <Edit size={16} />
                         </button>
                         <button 
-                          onClick={() => setShowDeleteClientModal(true)}
+                          onClick={() => setConfirmModal({ title: '刪除客戶', message: `刪除「${selectedClient.name}」後將無法復原，包含所有消費紀錄都會被移除。確定刪除嗎？`, onConfirm: handleDeleteClient })}
                           className="text-gray-400 hover:text-red-500 transition p-2 bg-gray-50 hover:bg-red-50 rounded-full"
                           title="刪除此客戶"
                         >
@@ -1371,19 +1435,19 @@ export default function App() {
                              </div>
                            </div>
 
-                           {/* 消費項目 (多選對齊原圖) */}
+                           {/* 消費項目 (動態讀取系統設定) */}
                            <div>
                              <label className="text-xs font-bold text-gray-500 block mb-2">消費項目 (可複選) *</label>
                              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 bg-white p-3 rounded-lg border border-gray-200">
-                                {SERVICE_OPTIONS.map(opt => (
-                                  <label key={opt} className="flex items-start gap-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-50 p-1 rounded transition">
+                                {savedServices.map(svc => (
+                                  <label key={svc.name} className="flex items-start gap-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-50 p-1 rounded transition">
                                     <input 
                                       type="checkbox" 
                                       className="mt-0.5 w-4 h-4 accent-[#A87B7B]"
-                                      checked={newVisit.services.includes(opt)}
-                                      onChange={() => handleServiceToggle(opt)}
+                                      checked={newVisit.services.includes(svc.name)}
+                                      onChange={() => handleServiceToggle(svc.name)}
                                     />
-                                    <span className="leading-snug">{opt}</span>
+                                    <span className="leading-snug">{svc.name}</span>
                                   </label>
                                 ))}
                              </div>
@@ -1568,21 +1632,93 @@ export default function App() {
             </div>
           )}
 
-          {/* Tab 3: 交易紀錄 */}
+          {/* Tab 3: 交易紀錄 (包含進階篩選) */}
           {activeTab === 'transactions' && (
             <div className="p-6 max-w-5xl mx-auto">
-               <div className="mb-6"><h1 className="text-2xl font-bold text-gray-800">交易紀錄</h1></div>
+               <div className="mb-6"><h1 className="text-2xl font-bold text-gray-800">交易紀錄與業績統計</h1></div>
+               
+               {/* --- 進階篩選區塊 --- */}
+               <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 mb-6 flex flex-col md:flex-row gap-4 md:items-end">
+                 <div className="flex items-center gap-2 mb-1 md:hidden">
+                    <Filter size={16} className="text-[#A87B7B]"/> 
+                    <span className="font-bold text-sm text-gray-700">篩選條件</span>
+                 </div>
+                 
+                 <div className="flex-1">
+                   <label className="block text-xs font-bold text-gray-500 mb-1">查詢區間</label>
+                   <select value={txFilterType} onChange={e => setTxFilterType(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]">
+                     <option value="month">單月查詢</option>
+                     <option value="day">單日查詢</option>
+                     <option value="custom">自訂區間</option>
+                     <option value="all">所有紀錄</option>
+                   </select>
+                 </div>
+                 
+                 {txFilterType === 'month' && (
+                   <div className="flex-1">
+                     <label className="block text-xs font-bold text-gray-500 mb-1">選擇月份</label>
+                     <input type="month" value={txFilterMonth} onChange={e=>setTxFilterMonth(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                   </div>
+                 )}
+                 {txFilterType === 'day' && (
+                   <div className="flex-1">
+                     <label className="block text-xs font-bold text-gray-500 mb-1">選擇日期</label>
+                     <input type="date" value={txFilterDate} onChange={e=>setTxFilterDate(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                   </div>
+                 )}
+                 {txFilterType === 'custom' && (
+                   <div className="flex-2 flex items-end gap-2">
+                     <div className="flex-1">
+                       <label className="block text-xs font-bold text-gray-500 mb-1">開始日期</label>
+                       <input type="date" value={txFilterStartDate} onChange={e=>setTxFilterStartDate(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                     </div>
+                     <span className="text-gray-400 mb-2">-</span>
+                     <div className="flex-1">
+                       <label className="block text-xs font-bold text-gray-500 mb-1">結束日期</label>
+                       <input type="date" value={txFilterEndDate} onChange={e=>setTxFilterEndDate(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                     </div>
+                   </div>
+                 )}
+
+                 <div className="flex-1">
+                   <label className="block text-xs font-bold text-gray-500 mb-1">指定設計師</label>
+                   <select value={txFilterDesignerId} onChange={e => setTxFilterDesignerId(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]">
+                     <option value="all">全部設計師 (總店)</option>
+                     {designers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                   </select>
+                 </div>
+               </div>
+
                <div className="grid grid-cols-2 gap-4 mb-6">
-                 <div className="bg-white p-5 rounded-2xl border shadow-sm"><p className="text-sm text-gray-500">總營業額</p><h2 className="text-3xl font-bold text-gray-800">${totalRevenue.toLocaleString()}</h2></div>
+                 <div className="bg-white p-5 rounded-2xl border shadow-sm"><p className="text-sm text-gray-500">期間總營業額</p><h2 className="text-3xl font-bold text-[#A87B7B]">${totalRevenue.toLocaleString()}</h2></div>
                  <div className="bg-white p-5 rounded-2xl border shadow-sm"><p className="text-sm text-gray-500">交易筆數</p><h2 className="text-3xl font-bold text-gray-800">{allTransactions.length}</h2></div>
                </div>
                <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
                  <table className="w-full text-left text-sm whitespace-nowrap">
-                   <thead className="bg-gray-50 text-gray-500"><tr><th className="p-4">日期</th><th className="p-4">客戶</th><th className="p-4">項目</th><th className="p-4">方式</th><th className="p-4 text-right">金額</th></tr></thead>
+                   <thead className="bg-gray-50 text-gray-500 border-b border-gray-100">
+                     <tr>
+                       <th className="p-4">日期</th>
+                       <th className="p-4">設計師</th>
+                       <th className="p-4">客戶</th>
+                       <th className="p-4">項目</th>
+                       <th className="p-4">方式</th>
+                       <th className="p-4 text-right">金額</th>
+                     </tr>
+                   </thead>
                    <tbody>
-                     {allTransactions.map(tx => (
-                       <tr key={tx.id} className="border-b hover:bg-gray-50"><td className="p-4 text-gray-600">{tx.date}</td><td className="p-4 font-bold">{tx.clientName}</td><td className="p-4 max-w-[200px] truncate" title={tx.service}>{tx.service}</td><td className="p-4"><span className="bg-gray-100 px-2 py-1 rounded text-xs">{tx.paymentMethod}</span></td><td className="p-4 text-right font-bold">${tx.totalAmount}</td></tr>
+                     {allTransactions.map((tx, index) => (
+                       <tr key={`${tx.id}-${index}`} className="border-b border-gray-50 hover:bg-gray-50">
+                         <td className="p-4 text-gray-600">{tx.date}</td>
+                         <td className="p-4 text-gray-600">{tx.designerName || '未指定'}</td>
+                         <td className="p-4 font-bold text-gray-800">{tx.clientName}</td>
+                         <td className="p-4 max-w-[150px] md:max-w-[200px] truncate" title={tx.service}>{tx.service}</td>
+                         <td className="p-4"><span className={`px-2 py-1 rounded text-xs ${tx.paymentMethod === '儲值金扣款' || tx.paymentMethod === '扣除包堂' ? 'bg-[#FDFBF7] text-[#A87B7B] border border-[#F0E6D8]' : 'bg-gray-100 text-gray-500'}`}>{tx.paymentMethod}</span></td>
+                         <td className="p-4 text-right font-bold">${tx.totalAmount.toLocaleString()}</td>
+                       </tr>
                      ))}
+                     {allTransactions.length === 0 && (
+                       <tr><td colSpan="6" className="text-center py-10 text-gray-400">該條件下尚無交易紀錄</td></tr>
+                     )}
                    </tbody>
                  </table>
                </div>
@@ -1606,29 +1742,99 @@ export default function App() {
             </div>
           )}
 
-          {/* Tab 5: 系統設定 */}
+          {/* Tab 5: 全新系統設定 */}
           {activeTab === 'settings' && (
-            <div className="p-6 max-w-3xl mx-auto space-y-6">
-              <div><h1 className="text-2xl font-bold text-gray-800 mb-1">系統設定</h1><p className="text-sm text-gray-500">System Preferences</p></div>
-              
-              <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
-                <h2 className="font-bold text-gray-800 mb-4 border-b pb-2">設計師管理</h2>
-                <div className="space-y-4">
-                  <div><label className="block text-xs font-bold text-gray-500 mb-1">名稱</label><input type="text" value={activeDesigner.name} onChange={e=>updateActiveDesigner("name",e.target.value)} className="w-full p-2 border rounded-lg text-sm" /></div>
-                  <div><label className="block text-xs font-bold text-gray-500 mb-1">地點</label><input type="text" value={activeDesigner.location} onChange={e=>updateActiveDesigner("location",e.target.value)} className="w-full p-2 border rounded-lg text-sm" /></div>
-                </div>
+            <div className="p-6 max-w-5xl mx-auto space-y-6">
+              <div className="mb-6">
+                <h1 className="text-2xl font-bold text-gray-800 mb-1">系統設定</h1>
+                <p className="text-sm text-gray-500">System Configuration & Management</p>
               </div>
-
-              <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
-                <h2 className="font-bold text-gray-800 mb-4 border-b pb-2">全域設定</h2>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-1">LINE 官方 ID (帶跳轉功能)</label>
-                    <input type="text" placeholder="@lashbeauty" value={lineOfficialId} onChange={e=>setLineOfficialId(e.target.value)} className="w-full p-2 border rounded-lg text-sm bg-gray-50" />
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* 左欄：設計師管理 */}
+                <div className="space-y-6">
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                    <div className="flex justify-between items-center mb-5 border-b border-gray-100 pb-3">
+                      <h2 className="font-bold text-gray-800 flex items-center gap-2"><Users size={18} className="text-[#A87B7B]"/> 設計師團隊管理</h2>
+                      <button onClick={handleAddNewDesigner} className="text-[#A87B7B] hover:text-[#8f6666] text-sm font-bold flex items-center gap-1"><Plus size={16}/> 新增</button>
+                    </div>
+                    <div className="space-y-4">
+                      {designers.map(d => (
+                        <div key={d.id} className="flex gap-3 items-center bg-gray-50 p-3 rounded-xl border border-gray-100">
+                          <div className="flex-1 space-y-2">
+                            <div><label className="text-[10px] text-gray-500 font-bold block">姓名</label><input type="text" value={d.name} onChange={e=>handleUpdateDesignerItem(d.id, "name", e.target.value)} className="w-full bg-white border border-gray-200 rounded p-1.5 text-sm outline-none focus:border-[#A87B7B]" /></div>
+                            <div><label className="text-[10px] text-gray-500 font-bold block">地點/備註</label><input type="text" value={d.location} onChange={e=>handleUpdateDesignerItem(d.id, "location", e.target.value)} className="w-full bg-white border border-gray-200 rounded p-1.5 text-sm outline-none focus:border-[#A87B7B]" /></div>
+                          </div>
+                          <button onClick={() => setConfirmModal({ title: '刪除設計師', message: `確定要刪除「${d.name}」嗎？這將同時刪除該設計師的所有排班紀錄，且無法復原。`, onConfirm: () => handleDeleteDesigner(d.id) })} className="text-gray-400 hover:text-red-500 p-2 bg-white rounded-lg border border-gray-200 hover:border-red-200 transition">
+                            <Trash2 size={16}/>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-1">變更後台密碼</label>
-                    <div className="flex gap-2"><input type="password" value={newPasswordInput} onChange={e=>setNewPasswordInput(e.target.value)} className="w-full p-2 border rounded-lg text-sm bg-gray-50" /><button onClick={handleChangePassword} className="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-bold">更新</button></div>
+                  
+                  {/* 付款方式管理 */}
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                    <h2 className="font-bold text-gray-800 mb-5 border-b border-gray-100 pb-3 flex items-center gap-2"><CreditCard size={18} className="text-[#A87B7B]"/> 付款方式管理</h2>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {paymentMethods.map(method => (
+                        <div key={method} className="flex items-center gap-1.5 bg-[#FDFBF7] border border-[#F0E6D8] text-gray-700 px-3 py-1.5 rounded-lg text-sm">
+                          <span>{method}</span>
+                          {!['現金', '轉帳', '信用卡', 'Line Pay', '儲值金扣款', '扣除包堂'].includes(method) && (
+                            <button onClick={() => setConfirmModal({ title: '刪除付款方式', message: `確定要刪除「${method}」嗎？`, onConfirm: () => handleDeletePaymentSetting(method) })} className="text-gray-400 hover:text-red-500 ml-1"><X size={14}/></button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <input type="text" placeholder="輸入新的付款方式" value={newPaymentInput} onChange={e=>setNewPaymentInput(e.target.value)} className="flex-1 p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                      <button onClick={handleAddPaymentSetting} className="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-black transition">新增</button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 右欄：服務價目與全域 */}
+                <div className="space-y-6">
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                    <div className="flex justify-between items-center mb-5 border-b border-gray-100 pb-3">
+                      <h2 className="font-bold text-gray-800 flex items-center gap-2"><BookmarkPlus size={18} className="text-[#A87B7B]"/> 常態服務價目表</h2>
+                    </div>
+                    <div className="max-h-60 overflow-y-auto pr-2 space-y-2 mb-4">
+                      {savedServices.map(svc => (
+                        <div key={svc.name} className="flex justify-between items-center bg-gray-50 border border-gray-100 p-2.5 rounded-lg">
+                          <span className="text-sm font-bold text-gray-700">{svc.name}</span>
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm text-[#A87B7B] font-bold">${svc.price.toLocaleString()}</span>
+                            <button onClick={() => setConfirmModal({ title: '刪除服務項目', message: `確定要從價目表中移除「${svc.name}」嗎？`, onConfirm: () => handleDeleteServiceSetting(svc.name) })} className="text-gray-400 hover:text-red-500"><X size={16}/></button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                      <label className="block text-[10px] font-bold text-gray-500 mb-2">快速新增服務</label>
+                      <div className="flex gap-2">
+                        <input type="text" placeholder="項目名稱" value={newServiceInput.name} onChange={e=>setNewServiceInput({...newServiceInput, name: e.target.value})} className="flex-[2] p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                        <input type="number" placeholder="預設價格" value={newServiceInput.price} onChange={e=>setNewServiceInput({...newServiceInput, price: e.target.value})} className="flex-1 p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                        <button onClick={handleAddServiceSetting} className="bg-[#A87B7B] text-white px-3 py-2 rounded-lg text-sm font-bold hover:bg-[#8f6666] transition shadow-sm"><Plus size={16}/></button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                    <h2 className="font-bold text-gray-800 mb-5 border-b border-gray-100 pb-3 flex items-center gap-2"><Settings size={18} className="text-[#A87B7B]"/> 全域系統設定</h2>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-1">LINE 官方帳號 ID (前台跳轉用)</label>
+                        <input type="text" placeholder="@lashbeauty" value={lineOfficialId} onChange={e=>{setLineOfficialId(e.target.value); setHasUnsavedChanges(true);}} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 outline-none focus:bg-white focus:border-[#A87B7B]" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-1">變更後台登入密碼</label>
+                        <div className="flex gap-2">
+                          <input type="password" placeholder="輸入新密碼" value={newPasswordInput} onChange={e=>setNewPasswordInput(e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 outline-none focus:bg-white focus:border-[#A87B7B]" />
+                          <button onClick={handleChangePassword} className="bg-gray-800 text-white px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-black transition">更新</button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1642,6 +1848,20 @@ export default function App() {
           <div className="fixed inset-0 bg-black/90 z-[300] flex items-center justify-center p-4 backdrop-blur-sm cursor-zoom-out" onClick={() => setEnlargedImage(null)}>
             <button className="absolute top-5 right-5 text-white/70 hover:text-white transition p-2"><X size={32}/></button>
             <img src={enlargedImage} alt="放大圖片" className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl cursor-default" onClick={e => e.stopPropagation()} />
+          </div>
+        )}
+
+        {/* 全域確認操作 Modal (防呆) */}
+        {confirmModal && (
+          <div className="fixed inset-0 bg-black/50 z-[400] flex items-center justify-center p-4 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative animate-in zoom-in duration-200">
+              <h3 className="text-xl font-bold text-gray-800 mb-2">{confirmModal.title}</h3>
+              <p className="text-sm text-gray-600 mb-6 leading-relaxed">{confirmModal.message}</p>
+              <div className="flex gap-3">
+                <button onClick={() => setConfirmModal(null)} className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-200 transition">取消</button>
+                <button onClick={() => { confirmModal.onConfirm(); setConfirmModal(null); }} className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 transition shadow-sm shadow-red-200">確定刪除</button>
+              </div>
+            </div>
           </div>
         )}
       </div>
