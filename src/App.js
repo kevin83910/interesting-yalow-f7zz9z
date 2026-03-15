@@ -43,7 +43,7 @@ const Icons = {
   AlertCircle: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>),
   CalendarCheck: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><path d="m9 16 2 2 4-4" /></svg>),
   ChevronRight: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="9 18 15 12 9 6" /></svg>),
-  Settings: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z" /></svg>),
+  Settings: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z" /></svg>),
   Save: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></svg>),
   Plus: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>),
   Trash2: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>),
@@ -173,6 +173,14 @@ const groupSlots = (times) => {
   return groups;
 };
 
+// 取得觸控或滑鼠的 Y 座標
+const getClientY = (e) => {
+  if (e.touches && e.touches.length > 0) {
+    return e.touches[0].clientY;
+  }
+  return e.clientY;
+};
+
 // --- 初始預設資料 ---
 const initialDesigners = [
   { id: "d1", name: "魚魚", location: "北車店 15樓", schedules: [] },
@@ -192,8 +200,11 @@ const initialInventory = [
 ];
 
 const initialSavedServices = [
-  { name: "日式單根(自然)", price: 1500 }, { name: "嬰兒彎(濃密)", price: 1800 },
-  { name: "新中式設計款", price: 2200 }, { name: "角蛋白翹睫", price: 1200 },
+  "日式單根(自然)", "日式單根(濃密)", "嬰兒彎(自然)", "嬰兒彎(濃密)",
+  "新中式設計款(自然)", "新中式設計款(濃密)", "漫畫款(自然)", "漫畫款(濃密)",
+  "柔霧泰顏(自然)", "柔霧泰顏(濃密)", "太陽花(自然)", "太陽花(濃密)",
+  "6D手工開花(自然)", "6D手工開花(濃密)", "客製款", "下睫毛", "根源矯正",
+  "彩色睫毛", "升級毛款", "本店卸除重接", "他店卸除重接", "本店卸除不重接", "他店卸除不重接"
 ];
 
 const initialSavedProducts = [
@@ -357,8 +368,12 @@ export default function App() {
           if (data.clients) setClients(data.clients);
           if (data.inventory) setInventory(data.inventory);
           if (data.paymentMethods) setPaymentMethods(data.paymentMethods);
-          if (data.savedServices) setSavedServices(data.savedServices);
           if (data.savedProducts) setSavedProducts(data.savedProducts);
+          if (data.savedServices) {
+            // 向後相容：如果舊資料有帶 price 的物件，會自動轉為純字串陣列
+            const migratedServices = data.savedServices.map(s => typeof s === 'string' ? s : s.name);
+            setSavedServices(migratedServices);
+          }
         }
       } else {
         if (!isAdminMode) {
@@ -754,7 +769,7 @@ export default function App() {
     });
   };
 
-  // --- 改版：純點擊輸入排班 (取代拖曳以支援移動裝置滾動) ---
+  // --- 改版：純點擊輸入排班 ---
   const handleCellClick = (dateStr, timeStr) => {
     setEditingSlot({
       isNew: true,
@@ -798,7 +813,6 @@ export default function App() {
     let scheduleIndex = updatedSchedules.findIndex(s => s.fullDate === date);
 
     if (scheduleIndex === -1) {
-      // 該日完全沒有排班，新增一天
       const d = new Date(date);
       const daysMap = ["日", "一", "二", "三", "四", "五", "六"];
       const newId = updatedSchedules.length > 0 ? Math.max(...updatedSchedules.map(s=>s.id)) + 1 : 1;
@@ -813,19 +827,14 @@ export default function App() {
       });
       updatedSchedules.sort((a, b) => new Date(a.fullDate) - new Date(b.fullDate));
     } else {
-      // 該日已存在
       let schedule = { ...updatedSchedules[scheduleIndex] };
       let currentTimes = [...schedule.times];
       
-      // 如果是編輯，先移除原本的時段
       if (!isNew && originalSlots) {
         currentTimes = currentTimes.filter(t => !originalSlots.includes(t.val));
       }
-      
-      // 移除任何與新時段重疊的部分 (自動覆蓋)
       currentTimes = currentTimes.filter(t => !newSlots.includes(t.val));
 
-      // 加入新時段
       newSlots.forEach(slotVal => {
         currentTimes.push({
           val: slotVal, isFull, clientName: clientName || '', service: service || '', color: color || 'default', eventId
@@ -893,7 +902,7 @@ export default function App() {
   const handleUpdateDesignerItem = (id, field, value) => {
     const newDesigners = designers.map(d => d.id === id ? { ...d, [field]: value } : d);
     setDesigners(newDesigners);
-    setHasUnsavedChanges(true); // 提醒要按儲存
+    setHasUnsavedChanges(true);
   };
 
   const handleDeleteDesigner = (id) => {
@@ -905,16 +914,17 @@ export default function App() {
     showToast("已刪除設計師！");
   };
 
-  const [newServiceInput, setNewServiceInput] = useState({ name: '', price: '' });
+  const [newServiceInput, setNewServiceInput] = useState('');
   const handleAddServiceSetting = () => {
-     if(!newServiceInput.name || !newServiceInput.price) return showToast("請填寫項目名稱與價格");
-     const newServices = [...savedServices, { name: newServiceInput.name, price: Number(newServiceInput.price) }];
+     if(!newServiceInput.trim()) return showToast("請填寫項目名稱");
+     if(savedServices.includes(newServiceInput.trim())) return showToast("該項目已存在");
+     const newServices = [...savedServices, newServiceInput.trim()];
      setSavedServices(newServices);
-     setNewServiceInput({name: '', price: ''});
+     setNewServiceInput('');
      setHasUnsavedChanges(true);
   };
   const handleDeleteServiceSetting = (name) => {
-     setSavedServices(savedServices.filter(s => s.name !== name));
+     setSavedServices(savedServices.filter(s => s !== name));
      setHasUnsavedChanges(true);
   };
 
@@ -1287,7 +1297,7 @@ export default function App() {
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-gray-600 mb-1">預約項目</label>
-                        <input type="text" value={editingSlot.service} onChange={e=>setEditingSlot({...editingSlot, service: e.target.value})} placeholder="例：單根150根" className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B] bg-white"/>
+                        <input type="text" value={editingSlot.service} onChange={e=>setEditingSlot({...editingSlot, service: e.target.value})} placeholder="例：日式單根(自然)" className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B] bg-white"/>
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-gray-600 mb-2">自訂標記顏色</label>
@@ -1438,16 +1448,16 @@ export default function App() {
                            {/* 消費項目 (動態讀取系統設定) */}
                            <div>
                              <label className="text-xs font-bold text-gray-500 block mb-2">消費項目 (可複選) *</label>
-                             <div className="grid grid-cols-2 md:grid-cols-3 gap-2 bg-white p-3 rounded-lg border border-gray-200">
+                             <div className="grid grid-cols-2 md:grid-cols-3 gap-2 bg-white p-3 rounded-lg border border-gray-200 max-h-[250px] overflow-y-auto">
                                 {savedServices.map(svc => (
-                                  <label key={svc.name} className="flex items-start gap-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-50 p-1 rounded transition">
+                                  <label key={svc} className="flex items-start gap-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-50 p-1 rounded transition">
                                     <input 
                                       type="checkbox" 
-                                      className="mt-0.5 w-4 h-4 accent-[#A87B7B]"
-                                      checked={newVisit.services.includes(svc.name)}
-                                      onChange={() => handleServiceToggle(svc.name)}
+                                      className="mt-0.5 w-4 h-4 accent-[#A87B7B] flex-shrink-0"
+                                      checked={newVisit.services.includes(svc)}
+                                      onChange={() => handleServiceToggle(svc)}
                                     />
-                                    <span className="leading-snug">{svc.name}</span>
+                                    <span className="leading-snug">{svc}</span>
                                   </label>
                                 ))}
                              </div>
@@ -1793,29 +1803,25 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* 右欄：服務價目與全域 */}
+                {/* 右欄：服務項目與全域 */}
                 <div className="space-y-6">
                   <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                     <div className="flex justify-between items-center mb-5 border-b border-gray-100 pb-3">
-                      <h2 className="font-bold text-gray-800 flex items-center gap-2"><BookmarkPlus size={18} className="text-[#A87B7B]"/> 常態服務價目表</h2>
+                      <h2 className="font-bold text-gray-800 flex items-center gap-2"><BookmarkPlus size={18} className="text-[#A87B7B]"/> 消費項目設定</h2>
                     </div>
                     <div className="max-h-60 overflow-y-auto pr-2 space-y-2 mb-4">
                       {savedServices.map(svc => (
-                        <div key={svc.name} className="flex justify-between items-center bg-gray-50 border border-gray-100 p-2.5 rounded-lg">
-                          <span className="text-sm font-bold text-gray-700">{svc.name}</span>
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm text-[#A87B7B] font-bold">${svc.price.toLocaleString()}</span>
-                            <button onClick={() => setConfirmModal({ title: '刪除服務項目', message: `確定要從價目表中移除「${svc.name}」嗎？`, onConfirm: () => handleDeleteServiceSetting(svc.name) })} className="text-gray-400 hover:text-red-500"><X size={16}/></button>
-                          </div>
+                        <div key={svc} className="flex justify-between items-center bg-gray-50 border border-gray-100 p-2.5 rounded-lg">
+                          <span className="text-sm font-bold text-gray-700">{svc}</span>
+                          <button onClick={() => setConfirmModal({ title: '刪除服務項目', message: `確定要移除「${svc}」嗎？`, onConfirm: () => handleDeleteServiceSetting(svc) })} className="text-gray-400 hover:text-red-500"><X size={16}/></button>
                         </div>
                       ))}
                     </div>
                     <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
-                      <label className="block text-[10px] font-bold text-gray-500 mb-2">快速新增服務</label>
+                      <label className="block text-[10px] font-bold text-gray-500 mb-2">快速新增項目</label>
                       <div className="flex gap-2">
-                        <input type="text" placeholder="項目名稱" value={newServiceInput.name} onChange={e=>setNewServiceInput({...newServiceInput, name: e.target.value})} className="flex-[2] p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
-                        <input type="number" placeholder="預設價格" value={newServiceInput.price} onChange={e=>setNewServiceInput({...newServiceInput, price: e.target.value})} className="flex-1 p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
-                        <button onClick={handleAddServiceSetting} className="bg-[#A87B7B] text-white px-3 py-2 rounded-lg text-sm font-bold hover:bg-[#8f6666] transition shadow-sm"><Plus size={16}/></button>
+                        <input type="text" placeholder="輸入項目名稱" value={newServiceInput} onChange={e=>setNewServiceInput(e.target.value)} className="flex-[2] p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                        <button onClick={handleAddServiceSetting} className="bg-[#A87B7B] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#8f6666] transition shadow-sm">新增</button>
                       </div>
                     </div>
                   </div>
