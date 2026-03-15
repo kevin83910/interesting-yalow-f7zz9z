@@ -71,13 +71,14 @@ const Icons = {
   Edit: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>),
   Wand2: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>),
   CheckCircle: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>),
-  Filter: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>)
+  Filter: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>),
+  Bell: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>)
 };
 
 const {
   MapPin, AlertCircle, CalendarCheck, ChevronRight, Settings, Save, Plus, Trash2, Eye, Lock, X, Key, Clock, MessageCircle, Cloud, Search, HelpCircle,
   Users, Receipt, Package, CalendarDays, MenuIcon, ChevronLeft, CreditCard, ShoppingBag, BookmarkPlus, CircleDollarSign, Edit,
-  ChevronLeftCircle, ChevronRightCircle, Wand2, CheckCircle, Filter
+  ChevronLeftCircle, ChevronRightCircle, Wand2, CheckCircle, Filter, Bell
 } = Icons;
 
 // --- 表單常數設定 ---
@@ -224,13 +225,14 @@ export default function App() {
   // --- 登入與設定 ---
   const [adminPassword, setAdminPassword] = useState("admin");
   const [lineOfficialId, setLineOfficialId] = useState("");
+  const [lineNotifyUrl, setLineNotifyUrl] = useState(""); // LINE Messaging API 推播網址
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [showForgotPrompt, setShowForgotPrompt] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [newPasswordInput, setNewPasswordInput] = useState("");
 
-  // --- 新增：今日提醒彈窗狀態 ---
+  // --- 今日提醒彈窗狀態 ---
   const [showTodayNotice, setShowTodayNotice] = useState(false);
 
   // --- 系統設定全域共用 Alert 視窗 ---
@@ -293,7 +295,6 @@ export default function App() {
 
   // --- 行事曆點擊編輯狀態 ---
   const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
-  // { isNew, date, startTime, endTime, isFull, clientName, clientPhone, service, color, eventId, originalSlots }
   const [editingSlot, setEditingSlot] = useState(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
@@ -360,12 +361,12 @@ export default function App() {
           }
           if (data.adminPassword) setAdminPassword(data.adminPassword);
           if (data.lineOfficialId !== undefined) setLineOfficialId(data.lineOfficialId);
+          if (data.lineNotifyUrl !== undefined) setLineNotifyUrl(data.lineNotifyUrl);
           if (data.clients) setClients(data.clients);
           if (data.inventory) setInventory(data.inventory);
           if (data.paymentMethods) setPaymentMethods(data.paymentMethods);
           if (data.savedProducts) setSavedProducts(data.savedProducts);
           if (data.savedServices) {
-            // 向後相容：如果舊資料有帶 price 的物件，會自動轉為純字串陣列
             const migratedServices = data.savedServices.map(s => typeof s === 'string' ? s : s.name);
             setSavedServices(migratedServices);
           }
@@ -376,6 +377,7 @@ export default function App() {
              designers: initialDesigners, 
              adminPassword: "admin", 
              lineOfficialId: "", 
+             lineNotifyUrl: "",
              clients: initialClients, 
              inventory: initialInventory, 
              paymentMethods: ['現金', '轉帳', '信用卡', 'Line Pay', '儲值金扣款', '扣除包堂'],
@@ -397,6 +399,7 @@ export default function App() {
         designers: 'designers' in updates ? updates.designers : designers,
         adminPassword: 'adminPassword' in updates ? updates.adminPassword : adminPassword,
         lineOfficialId: 'lineOfficialId' in updates ? updates.lineOfficialId : lineOfficialId,
+        lineNotifyUrl: 'lineNotifyUrl' in updates ? updates.lineNotifyUrl : lineNotifyUrl,
         clients: 'clients' in updates ? updates.clients : clients,
         inventory: 'inventory' in updates ? updates.inventory : inventory,
         paymentMethods: 'paymentMethods' in updates ? updates.paymentMethods : paymentMethods,
@@ -435,12 +438,53 @@ export default function App() {
     );
   };
 
+  // --- 發送 LINE Messaging API 推播 ---
+  const handleSendTodayScheduleToLine = async () => {
+    if (!lineNotifyUrl) return showToast("請先至「系統設定」填寫 LINE 推播網址！");
+    
+    let msg = `\n✨ 【Lash & Beauty 今日預約總表】 ✨\n📅 日期：${getTodayString()}\n`;
+    
+    let hasAnyAppointments = false;
+    designers.forEach(d => {
+      const todaySchedule = d.schedules.find(s => s.fullDate === getTodayString());
+      const todayAppointments = todaySchedule ? todaySchedule.times.filter(t => t.isFull) : [];
+      if (todayAppointments.length > 0) {
+        hasAnyAppointments = true;
+        msg += `\n🌸 設計師：${d.name}\n`;
+        const groups = groupSlots(todayAppointments);
+        groups.forEach(g => {
+          msg += ` ⏰ ${g.startTime} - ${g.clientName} (${g.service})\n`;
+        });
+      }
+    });
+
+    if (!hasAnyAppointments) {
+      msg += `\n今日尚無預約行程，好好休息吧！☕`;
+    }
+
+    try {
+      showToast("發送中...");
+      const response = await fetch(lineNotifyUrl, {
+        method: "POST",
+        body: JSON.stringify({ message: msg }),
+        headers: { "Content-Type": "text/plain;charset=utf-8" } 
+      });
+      if (response.ok || response.type === 'opaque') {
+        showToast("✅ 已成功觸發推播，請檢查您的 LINE！");
+      } else {
+        showToast("❌ 傳送失敗，請檢查網址是否正確。");
+      }
+    } catch (error) {
+      console.error(error);
+      showToast("✅ 已送出請求，請檢查 LINE 是否收到通知。");
+    }
+  };
+
   // --- 登入邏輯 ---
   const handleAdminLogin = () => {
     if (passwordInput === adminPassword) {
       setIsAdminMode(true); setShowPasswordPrompt(false); setPasswordInput(""); setPasswordError("");
       
-      // 檢查今日是否有預約，若有則跳出醒目提醒
       const todayStr = getTodayString();
       const hasTodayAppointments = designers.some(d => {
         const todaySchedule = d.schedules.find(s => s.fullDate === todayStr);
@@ -820,7 +864,6 @@ export default function App() {
     let finalClients = clients;
     let isNewClientCreated = false;
     if (isFull && clientName && clientPhone) {
-      // 依據電話號碼判斷是否為新客
       const exists = clients.find(c => c.phone === clientPhone);
       if (!exists) {
         const newClient = {
@@ -994,7 +1037,6 @@ export default function App() {
   // ==========================================
   const renderAdminView = () => {
     
-    // --- 交易紀錄進階篩選邏輯 ---
     let allTransactions = clients.flatMap(client => client.visits.map(visit => ({ 
       ...visit, 
       clientId: client.id, 
@@ -1353,7 +1395,7 @@ export default function App() {
                           </datalist>
                         </div>
                         <div>
-                          <label className="block text-xs font-bold text-gray-600 mb-1">聯絡電話 (自動帶入/建檔)</label>
+                          <label className="block text-xs font-bold text-gray-600 mb-1">聯絡電話 (自動建檔)</label>
                           <input 
                             type="tel" 
                             value={editingSlot.clientPhone || ''} 
@@ -1924,6 +1966,10 @@ export default function App() {
                         <input type="text" placeholder="@lashbeauty" value={lineOfficialId} onChange={e=>{setLineOfficialId(e.target.value); setHasUnsavedChanges(true);}} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 outline-none focus:bg-white focus:border-[#A87B7B]" />
                       </div>
                       <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-1">LINE 預約總表推播網址 (Google Apps Script)</label>
+                        <input type="text" placeholder="https://script.google.com/macros/s/..." value={lineNotifyUrl} onChange={e=>{setLineNotifyUrl(e.target.value); setHasUnsavedChanges(true);}} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 outline-none focus:bg-white focus:border-[#A87B7B]" />
+                      </div>
+                      <div>
                         <label className="block text-xs font-bold text-gray-500 mb-1">變更後台登入密碼</label>
                         <div className="flex gap-2">
                           <input type="password" placeholder="輸入新密碼" value={newPasswordInput} onChange={e=>setNewPasswordInput(e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 outline-none focus:bg-white focus:border-[#A87B7B]" />
@@ -2002,6 +2048,12 @@ export default function App() {
                 })}
               </div>
               <button onClick={() => setShowTodayNotice(false)} className="w-full bg-[#A87B7B] text-white py-3.5 rounded-xl text-lg font-bold hover:bg-[#8f6666] shadow-lg transition">我知道了，開始今天的工作！</button>
+              <button 
+                onClick={handleSendTodayScheduleToLine} 
+                className="w-full mt-3 bg-[#06C755] text-white py-3.5 rounded-xl text-lg font-bold hover:bg-[#05b34c] shadow-lg transition flex items-center justify-center gap-2"
+              >
+                <Bell size={20}/> 傳送今日總表至 LINE
+              </button>
             </div>
           </div>
         )}
