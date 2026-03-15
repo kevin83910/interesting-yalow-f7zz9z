@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 
 // ==========================================
 // 雲端資料庫模組 (Firebase) 導入
@@ -43,7 +43,7 @@ const Icons = {
   AlertCircle: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>),
   CalendarCheck: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><path d="m9 16 2 2 4-4" /></svg>),
   ChevronRight: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="9 18 15 12 9 6" /></svg>),
-  Settings: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z" /></svg>),
+  Settings: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z" /></svg>),
   Save: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></svg>),
   Plus: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>),
   Trash2: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>),
@@ -142,6 +142,17 @@ const getTopPx = (timeStr) => {
   return ((h - 9) * 60 + m) * 1.5; 
 };
 
+// 獲取範圍內的時間陣列
+const getSlotsInRange = (start, end) => {
+  let times = [];
+  let curr = start;
+  while(curr < end && TIME_BLOCKS.includes(curr)) {
+      times.push(curr);
+      curr = getNextTime(curr);
+  }
+  return times;
+};
+
 // 依照連續時間與 eventId 進行群組化
 const groupSlots = (times) => {
   if (!times || times.length === 0) return [];
@@ -168,14 +179,6 @@ const groupSlots = (times) => {
   currentGroup.endTime = getNextTime(currentGroup.slots[currentGroup.slots.length-1]);
   groups.push(currentGroup);
   return groups;
-};
-
-// 取得觸控或滑鼠的 Y 座標
-const getClientY = (e) => {
-  if (e.touches && e.touches.length > 0) {
-    return e.touches[0].clientY;
-  }
-  return e.clientY;
 };
 
 // --- 初始預設資料 ---
@@ -262,7 +265,7 @@ export default function App() {
   });
 
   // --- 交易紀錄篩選狀態 ---
-  const [txFilterType, setTxFilterType] = useState('month'); // 'all', 'month', 'day', 'custom'
+  const [txFilterType, setTxFilterType] = useState('month');
   const [txFilterMonth, setTxFilterMonth] = useState(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -277,27 +280,11 @@ export default function App() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   });
 
-  // --- 行事曆拖曳與編輯狀態 ---
+  // --- 行事曆點擊編輯狀態 ---
   const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
-  const [dragState, setDragState] = useState(null);
+  // { isNew, date, startTime, endTime, isFull, clientName, service, color, eventId, originalSlots }
   const [editingSlot, setEditingSlot] = useState(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-
-  // 用於區分手機短按與長按滑動
-  const touchTimer = useRef(null);
-
-  // --- 全域阻擋滾動 (當正在拖曳時) ---
-  useEffect(() => {
-    const handleTouchMoveGlobal = (e) => {
-      if (dragState) {
-        e.preventDefault(); 
-      }
-    };
-    document.addEventListener('touchmove', handleTouchMoveGlobal, { passive: false });
-    return () => {
-      document.removeEventListener('touchmove', handleTouchMoveGlobal);
-    };
-  }, [dragState]);
 
   // --- 批次自動開班設定狀態 ---
   const [showAutoScheduleModal, setShowAutoScheduleModal] = useState(false);
@@ -356,7 +343,6 @@ export default function App() {
               schedules: (d.schedules || []).filter(s => !s.fullDate || s.fullDate >= todayStr)
             }));
             setDesigners(cleanedDesigners);
-            // 當第一次載入或設計師資料更新時，預設選擇第一個設計師
             if (cleanedDesigners.length > 0 && !activeDesignerId) {
               setActiveDesignerId(cleanedDesigners[0].id);
             }
@@ -623,7 +609,6 @@ export default function App() {
           newVisits = [visitData, ...newVisits];
         }
         
-        // 依日期排序
         newVisits.sort((a,b) => new Date(b.date) - new Date(a.date));
 
         return { ...c, balance: newBalance, packages: newPackages, visits: newVisits };
@@ -739,7 +724,7 @@ export default function App() {
     setShowAutoScheduleModal(false);
     
     syncToCloud({ designers: newDesigners });
-    showToast(`批次開班成功！已自動儲存。`);
+    showToast(`批次開班成功！已為您將每天自動切段。`);
   };
 
   const toggleWorkDay = (dayIndex) => {
@@ -751,283 +736,89 @@ export default function App() {
     });
   };
 
-  // --- 行事曆拖曳邏輯 ---
-  const handleInteractionStart = (e, dateStr, timeStr, actionType, group = null) => {
-    if (actionType === 'add') {
-      setDragState({ date: dateStr, startTime: timeStr, endTime: timeStr, mode: 'add' });
-    } else if (actionType === 'resize' && group) {
-      e.stopPropagation();
-      setDragState({
-        date: dateStr,
-        startTime: group.startTime, 
-        endTime: group.slots[group.slots.length - 1],
-        mode: 'resize',
-        baseGroup: group 
-      });
-    } else if (actionType === 'move' && group) {
-      e.stopPropagation();
-      const y = getClientY(e) - e.currentTarget.getBoundingClientRect().top;
-      const clickedSlotIndex = Math.floor(y / 45); 
-      
-      const safeIndex = Math.max(0, Math.min(clickedSlotIndex, group.slots.length - 1));
-      const clickedTime = group.slots[safeIndex] || group.startTime;
-      
-      setDragState({
-        date: dateStr,
-        initialHoverTime: clickedTime,
-        currentHoverTime: clickedTime,
-        mode: 'move',
-        baseGroup: group
-      });
-    }
+  // --- 改版：點擊輸入排班 (取代拖曳) ---
+  const handleCellClick = (dateStr, timeStr) => {
+    setEditingSlot({
+      isNew: true,
+      date: dateStr,
+      startTime: timeStr,
+      endTime: getNextTime(timeStr), // 預設 30 分鐘
+      isFull: false,
+      clientName: '',
+      service: '',
+      color: 'default',
+      eventId: 'evt_' + Date.now().toString() + Math.random().toString(36).substr(2, 5),
+      originalSlots: []
+    });
   };
 
-  const handleGridMouseDown = (e, dateStr, timeStr) => handleInteractionStart(e, dateStr, timeStr, 'add');
-  const handleResizeMouseDown = (e, dateStr, group) => handleInteractionStart(e, dateStr, null, 'resize', group);
-  const handleMoveMouseDown = (e, dateStr, group) => handleInteractionStart(e, dateStr, null, 'move', group);
-
-  const handleGridTouchStart = (e, dateStr, timeStr) => {
-    touchTimer.current = setTimeout(() => {
-      touchTimer.current = null;
-      handleInteractionStart(e, dateStr, timeStr, 'add');
-    }, 200); 
-  };
-
-  const handleGridTouchEndLocal = (e, dateStr, timeStr) => {
-    if (touchTimer.current) {
-      clearTimeout(touchTimer.current);
-      touchTimer.current = null;
-      applyDragChanges({ date: dateStr, startTime: timeStr, endTime: timeStr, mode: 'add' });
-    }
-  };
-
-  const handleMoveTouchStart = (e, dateStr, group) => {
-    e.stopPropagation();
-    const rect = e.currentTarget.getBoundingClientRect();
-    const y = getClientY(e) - rect.top;
-    const clickedSlotIndex = Math.floor(y / 45); 
-    const safeIndex = Math.max(0, Math.min(clickedSlotIndex, group.slots.length - 1));
-    const clickedTime = group.slots[safeIndex] || group.startTime;
-
-    touchTimer.current = setTimeout(() => {
-      touchTimer.current = null;
-      setDragState({
-        date: dateStr,
-        initialHoverTime: clickedTime,
-        currentHoverTime: clickedTime,
-        mode: 'move',
-        baseGroup: group
-      });
-    }, 200);
-  };
-
-  const handleBlockTouchEndLocal = (e, dateStr, group) => {
-    if (touchTimer.current) {
-      clearTimeout(touchTimer.current);
-      touchTimer.current = null;
-      const schedule = activeDesigner?.schedules.find(s => s.fullDate === dateStr);
-      setEditingSlot({ ...group, date: dateStr, scheduleId: schedule?.id, color: group.color || 'default' });
-    }
-  };
-
-  const handleResizeTouchStart = (e, dateStr, group) => {
-    e.stopPropagation();
-    if (touchTimer.current) { clearTimeout(touchTimer.current); touchTimer.current = null; }
-    handleInteractionStart(e, dateStr, null, 'resize', group);
-  };
-
-  const handleInteractionMove = (e, dateStr, timeStr) => {
-    if (dragState && dragState.date === dateStr) {
-      if (dragState.mode === 'move') {
-        setDragState(prev => ({ ...prev, currentHoverTime: timeStr }));
-      } else {
-        setDragState(prev => ({ ...prev, endTime: timeStr }));
-      }
-    }
-  };
-
-  const handleTouchMoveWrapper = (e, dateStr) => {
-    if (touchTimer.current) {
-      clearTimeout(touchTimer.current);
-      touchTimer.current = null;
-    }
-
-    if (!dragState) return;
-    
-    const touch = e.touches[0];
-    const element = document.elementFromPoint(touch.clientX, touch.clientY);
-    if (element && element.dataset.time) {
-      const timeStr = element.dataset.time;
-      if (element.dataset.date === dateStr) {
-        handleInteractionMove(e, dateStr, timeStr);
-      }
-    }
-  };
-
-  const handleGridMouseEnter = (dateStr, timeStr) => handleInteractionMove({ cancelable: false }, dateStr, timeStr);
-
-  const handleInteractionEnd = () => {
-    if (dragState) {
-      applyDragChanges(dragState);
-      setDragState(null);
-    }
-  };
-
-  const applyDragChanges = (drag) => {
-    const { date, mode, baseGroup } = drag;
-
-    let newSchedules = [...activeDesigner.schedules];
-    let scheduleIndex = newSchedules.findIndex(s => s.fullDate === date);
-
-    if (mode === 'move') {
-      const { initialHoverTime, currentHoverTime } = drag;
-      const rawOffset = TIME_BLOCKS.indexOf(currentHoverTime) - TIME_BLOCKS.indexOf(initialHoverTime);
-      
-      if (rawOffset === 0) {
-        setEditingSlot({ ...baseGroup, date, scheduleId: scheduleIndex !== -1 ? newSchedules[scheduleIndex].id : null, color: baseGroup.color || 'default' });
-        return;
-      }
-
-      if (scheduleIndex !== -1) {
-        let schedule = { ...newSchedules[scheduleIndex] };
-        let currentTimes = [...schedule.times];
-
-        const baseStartIdx = TIME_BLOCKS.indexOf(baseGroup.slots[0]);
-        const baseEndIdx = TIME_BLOCKS.indexOf(baseGroup.slots[baseGroup.slots.length - 1]);
-        
-        let safeOffset = rawOffset;
-        if (baseStartIdx + safeOffset < 0) safeOffset = -baseStartIdx;
-        if (baseEndIdx + safeOffset >= TIME_BLOCKS.length) safeOffset = (TIME_BLOCKS.length - 1) - baseEndIdx;
-
-        currentTimes = currentTimes.filter(ct => !baseGroup.slots.includes(ct.val));
-
-        baseGroup.slots.forEach(t => {
-           const oldIdx = TIME_BLOCKS.indexOf(t);
-           const newIdx = oldIdx + safeOffset;
-           if (newIdx >= 0 && newIdx < TIME_BLOCKS.length) {
-             const newVal = TIME_BLOCKS[newIdx];
-             const existingIdx = currentTimes.findIndex(ct => ct.val === newVal);
-             if (existingIdx >= 0) {
-               currentTimes[existingIdx] = { val: newVal, isFull: baseGroup.isFull, clientName: baseGroup.clientName || '', service: baseGroup.service || '', eventId: baseGroup.eventId, color: baseGroup.color };
-             } else {
-               currentTimes.push({ val: newVal, isFull: baseGroup.isFull, clientName: baseGroup.clientName || '', service: baseGroup.service || '', eventId: baseGroup.eventId, color: baseGroup.color });
-             }
-           }
-        });
-
-        currentTimes.sort((a, b) => a.val.localeCompare(b.val));
-        schedule.times = currentTimes;
-        newSchedules[scheduleIndex] = schedule;
-        
-        const newDesigners = designers.map(d => d.id === activeDesignerId ? { ...d, schedules: newSchedules } : d);
-        setDesigners(newDesigners);
-        syncToCloud({ designers: newDesigners });
-      }
-      return;
-    }
-
-    if (mode === 'resize') {
-      const endIndex = TIME_BLOCKS.indexOf(drag.endTime);
-      const startIndex = TIME_BLOCKS.indexOf(baseGroup.startTime);
-      const safeEndIndex = Math.max(startIndex, endIndex); 
-
-      const timesToKeep = TIME_BLOCKS.slice(startIndex, safeEndIndex + 1);
-
-      if (scheduleIndex !== -1) {
-        let schedule = { ...newSchedules[scheduleIndex] };
-        let currentTimes = [...schedule.times];
-
-        const timesToRemove = baseGroup.slots.filter(t => !timesToKeep.includes(t));
-        currentTimes = currentTimes.filter(ct => !timesToRemove.includes(ct.val));
-
-        timesToKeep.forEach(t => {
-          const existingIdx = currentTimes.findIndex(ct => ct.val === t);
-          if (existingIdx >= 0) {
-            currentTimes[existingIdx] = {
-              val: t, isFull: baseGroup.isFull, clientName: baseGroup.clientName || '', service: baseGroup.service || '', eventId: baseGroup.eventId || Date.now().toString(), color: baseGroup.color || 'default'
-            };
-          } else {
-            currentTimes.push({
-              val: t, isFull: baseGroup.isFull, clientName: baseGroup.clientName || '', service: baseGroup.service || '', eventId: baseGroup.eventId || Date.now().toString(), color: baseGroup.color || 'default'
-            });
-          }
-        });
-        currentTimes.sort((a, b) => a.val.localeCompare(b.val));
-        schedule.times = currentTimes;
-        newSchedules[scheduleIndex] = schedule;
-        
-        const newDesigners = designers.map(d => d.id === activeDesignerId ? { ...d, schedules: newSchedules } : d);
-        setDesigners(newDesigners);
-        syncToCloud({ designers: newDesigners });
-      }
-      return;
-    }
-
-    const { startTime, endTime } = drag;
-    const startIndex = TIME_BLOCKS.indexOf(startTime);
-    const endIndex = TIME_BLOCKS.indexOf(endTime);
-    const minIndex = Math.min(startIndex, endIndex);
-    const maxIndex = Math.max(startIndex, endIndex);
-    const timesToModify = TIME_BLOCKS.slice(minIndex, maxIndex + 1);
-    
-    const newEventId = 'evt_' + Date.now().toString() + Math.random().toString(36).substr(2, 5);
-
-    if (scheduleIndex === -1) {
-      const d = new Date(date);
-      const daysMap = ["日", "一", "二", "三", "四", "五", "六"];
-      const newId = newSchedules.length > 0 ? Math.max(...newSchedules.map(s=>s.id)) + 1 : 1;
-      newSchedules.push({
-        id: newId,
-        fullDate: date,
-        date: `${d.getMonth() + 1}/${d.getDate()}`,
-        day: daysMap[d.getDay()],
-        times: timesToModify.map(t => ({ val: t, isFull: false, eventId: newEventId, color: 'default' }))
-      });
-    } else {
-      let schedule = { ...newSchedules[scheduleIndex] };
-      let currentTimes = [...schedule.times];
-      
-      timesToModify.forEach(t => {
-        const existingIdx = currentTimes.findIndex(ct => ct.val === t);
-        if (existingIdx >= 0) {
-          if (!currentTimes[existingIdx].isFull) {
-             currentTimes[existingIdx].eventId = newEventId;
-          }
-        } else {
-          currentTimes.push({ val: t, isFull: false, eventId: newEventId, color: 'default' });
-        }
-      });
-      currentTimes.sort((a, b) => a.val.localeCompare(b.val));
-      schedule.times = currentTimes;
-      newSchedules[scheduleIndex] = schedule;
-    }
-    const newDesigners = designers.map(d => d.id === activeDesignerId ? { ...d, schedules: newSchedules } : d);
-    setDesigners(newDesigners);
-    syncToCloud({ designers: newDesigners });
+  const handleGroupClick = (dateStr, group) => {
+    setEditingSlot({
+      isNew: false,
+      date: dateStr,
+      startTime: group.startTime,
+      endTime: group.endTime,
+      isFull: group.isFull,
+      clientName: group.clientName || '',
+      service: group.service || '',
+      color: group.color || 'default',
+      eventId: group.eventId,
+      originalSlots: group.slots
+    });
   };
 
   const handleSaveSlotEdit = () => {
     if (!editingSlot) return;
-    const { date, slots, isFull, clientName, service, color } = editingSlot;
-    const newEventId = editingSlot.eventId || 'evt_' + Date.now().toString();
-
-    const updatedSchedules = activeDesigner.schedules.map(s => {
-      if (s.fullDate === date) {
-        let newTimes = [...s.times];
-        slots.forEach(slotVal => {
-          const idx = newTimes.findIndex(t => t.val === slotVal);
-          if (idx >= 0) { 
-            newTimes[idx] = { ...newTimes[idx], val: slotVal, isFull, clientName: clientName || '', service: service || '', color: color || 'default', eventId: newEventId }; 
-          } else { 
-            newTimes.push({ val: slotVal, isFull, clientName: clientName || '', service: service || '', color: color || 'default', eventId: newEventId }); 
-          }
-        });
-        newTimes.sort((a,b) => a.val.localeCompare(b.val));
-        return { ...s, times: newTimes };
-      }
-      return s;
-    });
+    const { isNew, date, startTime, endTime, isFull, clientName, service, color, eventId, originalSlots } = editingSlot;
     
+    const newSlots = getSlotsInRange(startTime, endTime);
+    if (newSlots.length === 0) {
+      return showToast("結束時間必須大於起始時間！");
+    }
+
+    let updatedSchedules = [...activeDesigner.schedules];
+    let scheduleIndex = updatedSchedules.findIndex(s => s.fullDate === date);
+
+    if (scheduleIndex === -1) {
+      // 該日完全沒有排班，新增一天
+      const d = new Date(date);
+      const daysMap = ["日", "一", "二", "三", "四", "五", "六"];
+      const newId = updatedSchedules.length > 0 ? Math.max(...updatedSchedules.map(s=>s.id)) + 1 : 1;
+      updatedSchedules.push({
+        id: newId,
+        fullDate: date,
+        date: `${d.getMonth() + 1}/${d.getDate()}`,
+        day: daysMap[d.getDay()],
+        times: newSlots.map(slotVal => ({
+            val: slotVal, isFull, clientName: clientName || '', service: service || '', color: color || 'default', eventId
+        }))
+      });
+      updatedSchedules.sort((a, b) => new Date(a.fullDate) - new Date(b.fullDate));
+    } else {
+      // 該日已存在
+      let schedule = { ...updatedSchedules[scheduleIndex] };
+      let currentTimes = [...schedule.times];
+      
+      // 如果是編輯，先移除原本的時段
+      if (!isNew && originalSlots) {
+        currentTimes = currentTimes.filter(t => !originalSlots.includes(t.val));
+      }
+      
+      // 移除任何與新時段重疊的部分 (自動覆蓋)
+      currentTimes = currentTimes.filter(t => !newSlots.includes(t.val));
+
+      // 加入新時段
+      newSlots.forEach(slotVal => {
+        currentTimes.push({
+          val: slotVal, isFull, clientName: clientName || '', service: service || '', color: color || 'default', eventId
+        });
+      });
+
+      currentTimes.sort((a,b) => a.val.localeCompare(b.val));
+      schedule.times = currentTimes;
+      updatedSchedules[scheduleIndex] = schedule;
+    }
+
     const newDesigners = designers.map(d => d.id === activeDesignerId ? { ...d, schedules: updatedSchedules } : d);
     setDesigners(newDesigners);
     setEditingSlot(null); 
@@ -1036,10 +827,14 @@ export default function App() {
   };
 
   const handleRemoveSlot = () => {
-    if (!editingSlot) return;
+    if (!editingSlot || editingSlot.isNew) {
+      setEditingSlot(null);
+      return;
+    }
+    const { date, originalSlots } = editingSlot;
     const updatedSchedules = activeDesigner.schedules.map(s => {
-      if (s.fullDate === editingSlot.date) {
-        return { ...s, times: s.times.filter(t => !editingSlot.slots.includes(t.val)) };
+      if (s.fullDate === date) {
+        return { ...s, times: s.times.filter(t => !originalSlots.includes(t.val)) };
       }
       return s;
     });
@@ -1068,6 +863,20 @@ export default function App() {
     }
   };
 
+  const updateActiveDesigner = (field, value) => { 
+    const newDesigners = designers.map((d) => d.id === activeDesignerId ? { ...d, [field]: value } : d);
+    setDesigners(newDesigners); 
+    syncToCloud({ designers: newDesigners });
+  };
+
+  const handleChangePassword = () => {
+    if (!newPasswordInput) return showToast("請輸入新密碼！");
+    if (newPasswordInput.length < 4) return showToast("密碼長度至少需 4 碼！");
+    setAdminPassword(newPasswordInput); setNewPasswordInput(""); 
+    syncToCloud({ adminPassword: newPasswordInput });
+    showToast("密碼修改成功！下次請使用新密碼登入。");
+  };
+
   // ==========================================
   // 後台主畫面 Render
   // ==========================================
@@ -1081,12 +890,9 @@ export default function App() {
       totalAmount: (Number(visit.amount) || 0) + (Number(visit.productAmount) || 0) 
     })));
 
-    // 1. 篩選設計師
     if (txFilterDesignerId !== 'all') {
       allTransactions = allTransactions.filter(tx => tx.designerId === txFilterDesignerId);
     }
-
-    // 2. 篩選日期
     if (txFilterType === 'month') {
       allTransactions = allTransactions.filter(tx => tx.date.startsWith(txFilterMonth));
     } else if (txFilterType === 'day') {
@@ -1095,18 +901,13 @@ export default function App() {
       allTransactions = allTransactions.filter(tx => tx.date >= txFilterStartDate && tx.date <= txFilterEndDate);
     }
 
-    // 依照日期排序
     allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-    // 計算符合條件的總營業額
     const totalRevenue = allTransactions.filter(t => t.paymentMethod !== '儲值金扣款' && t.paymentMethod !== '扣除包堂').reduce((sum, t) => sum + t.totalAmount, 0);
-    
-    // 客戶列表搜尋
     const filteredClients = clients.filter(c => c.name.includes(searchQuery) || c.phone.includes(searchQuery));
     const weekDates = getWeekDates(currentWeekStart);
 
     return (
-      <div className="h-screen bg-[#F8F9FA] flex flex-col md:flex-row font-sans overflow-hidden w-full select-none" onMouseUp={handleInteractionEnd} onMouseLeave={handleInteractionEnd} onTouchEnd={handleInteractionEnd} onTouchCancel={handleInteractionEnd}>
+      <div className="h-screen bg-[#F8F9FA] flex flex-col md:flex-row font-sans overflow-hidden w-full select-none">
         {renderToast()}
         
         {/* 手機版頂部 */}
@@ -1155,13 +956,13 @@ export default function App() {
         {/* 主要內容區 */}
         <div className="flex-1 h-full overflow-y-auto relative z-10 w-full bg-gray-50/50">
           
-          {/* Tab 1: 行事曆 (Google Calendar Style) */}
+          {/* Tab 1: 行事曆 */}
           {activeTab === 'calendar' && (
-            <div className="p-4 md:p-6 mx-auto h-full flex flex-col min-w-0 touch-none">
+            <div className="p-4 md:p-6 mx-auto h-full flex flex-col min-w-0">
               <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
                 <div>
                   <h1 className="text-2xl font-bold text-gray-800">預約行事曆</h1>
-                  <p className="text-sm text-gray-500">短按新增/編輯；長按區塊可拖拉移動時間</p>
+                  <p className="text-sm text-gray-500">週視圖排班：點擊網格即可新增或編輯時段</p>
                 </div>
                 <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
                   {designers.map((d) => (
@@ -1206,8 +1007,8 @@ export default function App() {
                   ))}
                 </div>
 
-                {/* 時間格線 (可拖曳區) */}
-                <div className="flex-1 overflow-y-auto bg-gray-50/20 relative" style={{ overscrollBehaviorY: 'none' }}>
+                {/* 時間格線 (純點擊區) */}
+                <div className="flex-1 overflow-y-auto bg-gray-50/20 relative">
                   <div className="flex min-w-[700px]">
                     {/* 左側時間軸 */}
                     <div className="w-14 flex-shrink-0 border-r border-gray-200 bg-white sticky left-0 z-20">
@@ -1229,52 +1030,35 @@ export default function App() {
                           <div 
                             key={day.fullDate} 
                             className={`flex-1 border-r border-gray-100 relative min-w-[100px] ${day.isToday ? 'bg-[#FDFBF7]/40' : ''}`}
-                            onTouchMove={(e) => handleTouchMoveWrapper(e, day.fullDate)} 
                           >
-                            {/* 背景網格擷取拖曳事件 */}
+                            {/* 背景網格點擊事件 */}
                             <div className="absolute inset-0 flex flex-col z-0">
                               {TIME_BLOCKS.map(time => (
                                 <div key={time}
-                                     data-time={time} 
-                                     data-date={day.fullDate}
-                                     className={`h-[45px] border-b border-dashed border-gray-100 ${isPast ? 'bg-gray-100/50 cursor-not-allowed' : 'hover:bg-[#E8D3C8]/20 cursor-crosshair'}`}
-                                     onMouseDown={(e) => !isPast && handleGridMouseDown(e, day.fullDate, time)}
-                                     onMouseEnter={() => !isPast && handleGridMouseEnter(day.fullDate, time)}
-                                     onTouchStart={(e) => !isPast && handleGridTouchStart(e, day.fullDate, time)}
-                                     onTouchEnd={(e) => !isPast && handleGridTouchEndLocal(e, day.fullDate, time)}
+                                     className={`h-[45px] border-b border-dashed border-gray-100 transition-colors ${isPast ? 'bg-gray-100/50 cursor-not-allowed' : 'hover:bg-[#E8D3C8]/20 cursor-pointer'}`}
+                                     onClick={() => !isPast && handleCellClick(day.fullDate, time)}
                                 />
                               ))}
                             </div>
 
                             {/* 已建立的區塊層 */}
-                            <div className={`absolute inset-0 z-10 pointer-events-none ${dragState ? 'pointer-events-none' : ''}`}>
+                            <div className={`absolute inset-0 z-10 pointer-events-none`}>
                               {groups.map((group, i) => {
                                 const colorObj = EVENT_COLORS.find(c => c.id === group.color) || EVENT_COLORS[0];
                                 const isFullClass = group.isFull
                                   ? `${colorObj.colorClass} z-20 shadow-md`
                                   : 'bg-[#FDFBF7] text-[#A87B7B] border-[#E8D3C8] z-10 hover:bg-[#F5E3E3]';
-                                
-                                const isBeingMoved = dragState && dragState.mode === 'move' && dragState.date === day.fullDate && dragState.baseGroup.eventId === group.eventId;
 
                                 return (
                                   <div key={i}
                                       style={{ top: getTopPx(group.startTime), height: getTopPx(group.endTime) - getTopPx(group.startTime) }}
-                                      className={`absolute left-1 right-1 rounded-md border p-1.5 cursor-pointer overflow-hidden transition-all hover:z-30 hover:shadow-md
-                                          ${dragState ? 'pointer-events-none' : 'pointer-events-auto hover:scale-[1.02]'}
+                                      className={`absolute left-1 right-1 rounded-md border p-1.5 cursor-pointer overflow-hidden transition-all hover:z-30 hover:shadow-md pointer-events-auto hover:scale-[1.02]
                                           ${isFullClass}
-                                          ${isBeingMoved ? 'opacity-30' : 'opacity-100'}
                                       `}
-                                      onMouseDown={(e) => {
+                                      onClick={(e) => {
+                                        e.stopPropagation();
                                         if (isPast) return;
-                                        handleMoveMouseDown(e, day.fullDate, group);
-                                      }}
-                                      onTouchStart={(e) => {
-                                        if (isPast) return;
-                                        handleMoveTouchStart(e, day.fullDate, group);
-                                      }}
-                                      onTouchEnd={(e) => {
-                                        if (isPast) return;
-                                        handleBlockTouchEndLocal(e, day.fullDate, group);
+                                        handleGroupClick(day.fullDate, group);
                                       }}
                                   >
                                     <div className="text-[10px] font-bold leading-tight opacity-90 drop-shadow-sm pointer-events-none">
@@ -1286,91 +1070,9 @@ export default function App() {
                                     {group.isFull && group.service && (
                                       <div className="text-[10px] opacity-90 truncate mt-0.5 pointer-events-none">{group.service}</div>
                                     )}
-
-                                    {/* 拖曳把手 */}
-                                    {!dragState && !isPast && (
-                                      <div 
-                                        className="absolute bottom-0 left-0 right-0 h-5 cursor-ns-resize flex items-end justify-center pb-1 hover:bg-black/20 transition-colors z-30 touch-none"
-                                        onMouseDown={(e) => handleResizeMouseDown(e, day.fullDate, group)}
-                                        onTouchStart={(e) => handleResizeTouchStart(e, day.fullDate, group)}
-                                      >
-                                        <div className={`w-8 h-1.5 rounded-full ${group.isFull ? 'bg-white/50' : 'bg-black/20'}`}></div>
-                                      </div>
-                                    )}
                                   </div>
                                 );
                               })}
-
-                              {/* 正在拖拉顯示的預覽框 (新增空檔) */}
-                              {dragState && dragState.date === day.fullDate && dragState.mode === 'add' && (() => {
-                                  const idx1 = TIME_BLOCKS.indexOf(dragState.startTime);
-                                  const idx2 = TIME_BLOCKS.indexOf(dragState.endTime);
-                                  const minIdx = Math.min(idx1, idx2);
-                                  const maxIdx = Math.max(idx1, idx2);
-                                  const sTime = TIME_BLOCKS[minIdx];
-                                  const eTime = getNextTime(TIME_BLOCKS[maxIdx]);
-                                  return (
-                                    <div style={{ top: getTopPx(sTime), height: getTopPx(eTime) - getTopPx(sTime) }}
-                                         className="absolute left-1 right-1 bg-[#A87B7B]/20 border-2 border-[#A87B7B] rounded-md pointer-events-none z-30 flex items-center justify-center animate-pulse"
-                                    >
-                                        <span className="text-[#A87B7B] font-bold text-[10px] bg-white/90 px-1.5 py-0.5 rounded shadow-sm">新增空檔</span>
-                                    </div>
-                                  );
-                              })()}
-
-                              {/* 正在拖拉顯示的預覽框 (延長/縮短) */}
-                              {dragState && dragState.date === day.fullDate && dragState.mode === 'resize' && (() => {
-                                  const idx1 = TIME_BLOCKS.indexOf(dragState.baseGroup.startTime);
-                                  const idx2 = TIME_BLOCKS.indexOf(dragState.endTime);
-                                  
-                                  const safeEndIdx = Math.max(idx1, idx2);
-                                  const sTime = TIME_BLOCKS[idx1];
-                                  const eTime = getNextTime(TIME_BLOCKS[safeEndIdx]);
-                                  
-                                  const isShortening = idx2 < TIME_BLOCKS.indexOf(dragState.baseGroup.slots[dragState.baseGroup.slots.length - 1]);
-                                  const actionText = isShortening ? '縮短至' : '延長至';
-
-                                  return (
-                                    <div style={{ top: getTopPx(sTime), height: getTopPx(eTime) - getTopPx(sTime) }}
-                                         className={`absolute left-1 right-1 border-2 border-dashed rounded-md pointer-events-none z-40 flex items-end justify-center pb-1 animate-pulse
-                                            ${dragState.baseGroup.isFull ? 'bg-[#C59A5C]/30 border-[#C59A5C]' : 'bg-[#A87B7B]/30 border-[#A87B7B]'}
-                                         `}
-                                    >
-                                        <span className={`font-bold text-[10px] bg-white/90 px-1.5 py-0.5 rounded shadow-sm ${dragState.baseGroup.isFull ? 'text-[#C59A5C]' : 'text-[#A87B7B]'}`}>
-                                          {actionText} {eTime}
-                                        </span>
-                                    </div>
-                                  );
-                              })()}
-
-                              {/* 正在拖拉顯示的預覽框 (平移 Move) */}
-                              {dragState && dragState.date === day.fullDate && dragState.mode === 'move' && (() => {
-                                  const rawOffset = TIME_BLOCKS.indexOf(dragState.currentHoverTime) - TIME_BLOCKS.indexOf(dragState.initialHoverTime);
-                                  const baseStartIdx = TIME_BLOCKS.indexOf(dragState.baseGroup.slots[0]);
-                                  const baseEndIdx = TIME_BLOCKS.indexOf(dragState.baseGroup.slots[dragState.baseGroup.slots.length - 1]);
-                                  
-                                  let safeOffset = rawOffset;
-                                  if (baseStartIdx + safeOffset < 0) safeOffset = -baseStartIdx;
-                                  if (baseEndIdx + safeOffset >= TIME_BLOCKS.length) safeOffset = (TIME_BLOCKS.length - 1) - baseEndIdx;
-
-                                  const startIdx = baseStartIdx + safeOffset;
-                                  const endIdx = baseEndIdx + safeOffset;
-                                  
-                                  const sTime = TIME_BLOCKS[startIdx];
-                                  const eTime = getNextTime(TIME_BLOCKS[endIdx]);
-                                  
-                                  return (
-                                    <div style={{ top: getTopPx(sTime), height: getTopPx(eTime) - getTopPx(sTime) }}
-                                         className={`absolute left-1 right-1 border-2 border-dashed rounded-md pointer-events-none z-40 flex items-center justify-center animate-pulse
-                                            ${dragState.baseGroup.isFull ? 'bg-[#C59A5C]/40 border-[#C59A5C]' : 'bg-[#A87B7B]/40 border-[#A87B7B]'}
-                                         `}
-                                    >
-                                        <span className={`font-bold text-[10px] bg-white/90 px-1.5 py-0.5 rounded shadow-sm ${dragState.baseGroup.isFull ? 'text-[#C59A5C]' : 'text-[#A87B7B]'}`}>
-                                          移至 {sTime}
-                                        </span>
-                                    </div>
-                                  );
-                              })()}
                             </div>
                           </div>
                         )
@@ -1462,29 +1164,66 @@ export default function App() {
             </div>
           )}
 
-          {/* 編輯時段 Modal */}
+          {/* 編輯時段 Modal (全新改版：加入時間選擇器) */}
           {editingSlot && (
             <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-              <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative">
+              <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative animate-in zoom-in duration-200">
                 <button onClick={() => setEditingSlot(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><X size={20}/></button>
-                <h3 className="text-lg font-bold mb-4 border-b pb-2">管理時段：{editingSlot.date} <span className="text-[#A87B7B]">{editingSlot.startTime}-{editingSlot.endTime}</span></h3>
+                <h3 className="text-lg font-bold mb-4 border-b pb-2">
+                  {editingSlot.isNew ? '新增時段' : '管理時段'}：{editingSlot.date}
+                </h3>
+                
                 <div className="space-y-4 mt-4">
-                  <label className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer border transition-all ${editingSlot.isFull ? 'bg-[#FDFBF7] border-[#D4B8A8]' : 'bg-gray-50 border-gray-200'}`}>
+                  {/* 時間區間選擇 */}
+                  <div className="grid grid-cols-2 gap-3 mb-4 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                     <div>
+                       <label className="block text-xs font-bold text-gray-600 mb-1">起始時間</label>
+                       <select 
+                          value={editingSlot.startTime} 
+                          onChange={e => {
+                             const newStart = e.target.value;
+                             let newEnd = editingSlot.endTime;
+                             if (newStart >= newEnd) newEnd = getNextTime(newStart);
+                             setEditingSlot({...editingSlot, startTime: newStart, endTime: newEnd});
+                          }}
+                          className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B] bg-white"
+                       >
+                         {TIME_BLOCKS.map(t => <option key={t} value={t}>{t}</option>)}
+                       </select>
+                     </div>
+                     <div>
+                       <label className="block text-xs font-bold text-gray-600 mb-1">結束時間</label>
+                       <select 
+                          value={editingSlot.endTime} 
+                          onChange={e => setEditingSlot({...editingSlot, endTime: e.target.value})}
+                          className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B] bg-white"
+                       >
+                         {TIME_BLOCKS.map(t => {
+                           if (t <= editingSlot.startTime) return null;
+                           return <option key={t} value={t}>{t}</option>;
+                         })}
+                         <option value="21:00">21:00</option>
+                       </select>
+                     </div>
+                  </div>
+
+                  <label className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer border transition-all ${editingSlot.isFull ? 'bg-[#FDFBF7] border-[#D4B8A8]' : 'bg-white border-gray-200 hover:bg-gray-50'}`}>
                     <input type="checkbox" checked={editingSlot.isFull} onChange={e=>setEditingSlot({...editingSlot, isFull: e.target.checked})} className="w-5 h-5 accent-[#A87B7B]"/>
                     <div>
                       <span className="font-bold text-gray-800 block text-sm">標記為已預約 (滿檔)</span>
                       <span className="text-xs text-gray-500">客人在前台將無法點選這段時間</span>
                     </div>
                   </label>
+
                   {editingSlot.isFull && (
-                    <div className="space-y-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <div className="space-y-4 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                       <div>
                         <label className="block text-xs font-bold text-gray-600 mb-1">客戶姓名 / 備註</label>
-                        <input type="text" value={editingSlot.clientName} onChange={e=>setEditingSlot({...editingSlot, clientName: e.target.value})} placeholder="例：林語晴" className="w-full p-2.5 border rounded-lg text-sm outline-none focus:border-[#A87B7B] bg-white"/>
+                        <input type="text" value={editingSlot.clientName} onChange={e=>setEditingSlot({...editingSlot, clientName: e.target.value})} placeholder="例：林語晴" className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B] bg-white"/>
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-gray-600 mb-1">預約項目</label>
-                        <input type="text" value={editingSlot.service} onChange={e=>setEditingSlot({...editingSlot, service: e.target.value})} placeholder="例：單根150根" className="w-full p-2.5 border rounded-lg text-sm outline-none focus:border-[#A87B7B] bg-white"/>
+                        <input type="text" value={editingSlot.service} onChange={e=>setEditingSlot({...editingSlot, service: e.target.value})} placeholder="例：單根150根" className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B] bg-white"/>
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-gray-600 mb-2">自訂標記顏色</label>
@@ -1506,9 +1245,11 @@ export default function App() {
                   )}
                 </div>
                 <div className="mt-8 flex gap-3">
-                  <button onClick={handleRemoveSlot} className="px-4 py-2.5 bg-red-50 text-red-500 rounded-xl text-sm font-bold hover:bg-red-500 hover:text-white transition flex items-center gap-1"><Trash2 size={16}/> 刪除空檔</button>
+                  {!editingSlot.isNew && (
+                    <button onClick={handleRemoveSlot} className="px-4 py-2.5 bg-red-50 text-red-500 rounded-xl text-sm font-bold hover:bg-red-500 hover:text-white transition flex items-center gap-1"><Trash2 size={16}/> 刪除</button>
+                  )}
                   <div className="flex-1"></div>
-                  <button onClick={handleSaveSlotEdit} className="px-8 py-2.5 bg-[#A87B7B] text-white rounded-xl text-sm font-bold hover:bg-[#8f6666] shadow-sm">套用</button>
+                  <button onClick={handleSaveSlotEdit} className="px-8 py-2.5 bg-[#A87B7B] text-white rounded-xl text-sm font-bold hover:bg-[#8f6666] shadow-sm">套用時段</button>
                 </div>
               </div>
             </div>
@@ -1827,93 +1568,21 @@ export default function App() {
             </div>
           )}
 
-          {/* Tab 3: 交易紀錄 (包含進階篩選) */}
+          {/* Tab 3: 交易紀錄 */}
           {activeTab === 'transactions' && (
             <div className="p-6 max-w-5xl mx-auto">
-               <div className="mb-6"><h1 className="text-2xl font-bold text-gray-800">交易紀錄與業績統計</h1></div>
-               
-               {/* --- 新增：進階篩選區塊 --- */}
-               <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 mb-6 flex flex-col md:flex-row gap-4 md:items-end">
-                 <div className="flex items-center gap-2 mb-1 md:hidden">
-                    <Filter size={16} className="text-[#A87B7B]"/> 
-                    <span className="font-bold text-sm text-gray-700">篩選條件</span>
-                 </div>
-                 
-                 <div className="flex-1">
-                   <label className="block text-xs font-bold text-gray-500 mb-1">查詢區間</label>
-                   <select value={txFilterType} onChange={e => setTxFilterType(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]">
-                     <option value="month">單月查詢</option>
-                     <option value="day">單日查詢</option>
-                     <option value="custom">自訂區間</option>
-                     <option value="all">所有紀錄</option>
-                   </select>
-                 </div>
-                 
-                 {txFilterType === 'month' && (
-                   <div className="flex-1">
-                     <label className="block text-xs font-bold text-gray-500 mb-1">選擇月份</label>
-                     <input type="month" value={txFilterMonth} onChange={e=>setTxFilterMonth(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
-                   </div>
-                 )}
-                 {txFilterType === 'day' && (
-                   <div className="flex-1">
-                     <label className="block text-xs font-bold text-gray-500 mb-1">選擇日期</label>
-                     <input type="date" value={txFilterDate} onChange={e=>setTxFilterDate(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
-                   </div>
-                 )}
-                 {txFilterType === 'custom' && (
-                   <div className="flex-2 flex items-end gap-2">
-                     <div className="flex-1">
-                       <label className="block text-xs font-bold text-gray-500 mb-1">開始日期</label>
-                       <input type="date" value={txFilterStartDate} onChange={e=>setTxFilterStartDate(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
-                     </div>
-                     <span className="text-gray-400 mb-2">-</span>
-                     <div className="flex-1">
-                       <label className="block text-xs font-bold text-gray-500 mb-1">結束日期</label>
-                       <input type="date" value={txFilterEndDate} onChange={e=>setTxFilterEndDate(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
-                     </div>
-                   </div>
-                 )}
-
-                 <div className="flex-1">
-                   <label className="block text-xs font-bold text-gray-500 mb-1">指定設計師</label>
-                   <select value={txFilterDesignerId} onChange={e => setTxFilterDesignerId(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]">
-                     <option value="all">全部設計師 (總店)</option>
-                     {designers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                   </select>
-                 </div>
-               </div>
-
+               <div className="mb-6"><h1 className="text-2xl font-bold text-gray-800">交易紀錄</h1></div>
                <div className="grid grid-cols-2 gap-4 mb-6">
-                 <div className="bg-white p-5 rounded-2xl border shadow-sm"><p className="text-sm text-gray-500">期間總營業額</p><h2 className="text-3xl font-bold text-[#A87B7B]">${totalRevenue.toLocaleString()}</h2></div>
+                 <div className="bg-white p-5 rounded-2xl border shadow-sm"><p className="text-sm text-gray-500">總營業額</p><h2 className="text-3xl font-bold text-gray-800">${totalRevenue.toLocaleString()}</h2></div>
                  <div className="bg-white p-5 rounded-2xl border shadow-sm"><p className="text-sm text-gray-500">交易筆數</p><h2 className="text-3xl font-bold text-gray-800">{allTransactions.length}</h2></div>
                </div>
                <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
                  <table className="w-full text-left text-sm whitespace-nowrap">
-                   <thead className="bg-gray-50 text-gray-500 border-b border-gray-100">
-                     <tr>
-                       <th className="p-4">日期</th>
-                       <th className="p-4">設計師</th>
-                       <th className="p-4">客戶</th>
-                       <th className="p-4">項目</th>
-                       <th className="p-4">方式</th>
-                       <th className="p-4 text-right">金額</th>
-                     </tr>
-                   </thead>
+                   <thead className="bg-gray-50 text-gray-500"><tr><th className="p-4">日期</th><th className="p-4">客戶</th><th className="p-4">項目</th><th className="p-4">方式</th><th className="p-4 text-right">金額</th></tr></thead>
                    <tbody>
                      {allTransactions.map(tx => (
-                       <tr key={tx.id} className="border-b border-gray-50 hover:bg-gray-50">
-                         <td className="p-4 text-gray-600">{tx.date}</td>
-                         <td className="p-4 text-gray-600">{tx.designerName || '未指定'}</td>
-                         <td className="p-4 font-bold text-gray-800">{tx.clientName}</td>
-                         <td className="p-4 max-w-[150px] md:max-w-[200px] truncate" title={tx.service}>{tx.service}</td>
-                         <td className="p-4"><span className={`px-2 py-1 rounded text-xs ${tx.paymentMethod === '儲值金扣款' || tx.paymentMethod === '扣除包堂' ? 'bg-[#FDFBF7] text-[#A87B7B] border border-[#F0E6D8]' : 'bg-gray-100 text-gray-500'}`}>{tx.paymentMethod}</span></td>
-                         <td className="p-4 text-right font-bold">${tx.totalAmount.toLocaleString()}</td>
-                       </tr>
+                       <tr key={tx.id} className="border-b hover:bg-gray-50"><td className="p-4 text-gray-600">{tx.date}</td><td className="p-4 font-bold">{tx.clientName}</td><td className="p-4 max-w-[200px] truncate" title={tx.service}>{tx.service}</td><td className="p-4"><span className="bg-gray-100 px-2 py-1 rounded text-xs">{tx.paymentMethod}</span></td><td className="p-4 text-right font-bold">${tx.totalAmount}</td></tr>
                      ))}
-                     {allTransactions.length === 0 && (
-                       <tr><td colSpan="6" className="text-center py-10 text-gray-400">該條件下尚無交易紀錄</td></tr>
-                     )}
                    </tbody>
                  </table>
                </div>
