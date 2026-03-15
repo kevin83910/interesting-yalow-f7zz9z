@@ -230,6 +230,9 @@ export default function App() {
   const [passwordError, setPasswordError] = useState("");
   const [newPasswordInput, setNewPasswordInput] = useState("");
 
+  // --- 新增：今日提醒彈窗狀態 ---
+  const [showTodayNotice, setShowTodayNotice] = useState(false);
+
   // --- 系統設定全域共用 Alert 視窗 ---
   const [confirmModal, setConfirmModal] = useState(null);
 
@@ -436,6 +439,16 @@ export default function App() {
   const handleAdminLogin = () => {
     if (passwordInput === adminPassword) {
       setIsAdminMode(true); setShowPasswordPrompt(false); setPasswordInput(""); setPasswordError("");
+      
+      // 檢查今日是否有預約，若有則跳出醒目提醒
+      const todayStr = getTodayString();
+      const hasTodayAppointments = designers.some(d => {
+        const todaySchedule = d.schedules.find(s => s.fullDate === todayStr);
+        return todaySchedule && todaySchedule.times.some(t => t.isFull);
+      });
+      if (hasTodayAppointments) {
+        setShowTodayNotice(true);
+      }
     } else { setPasswordError("密碼錯誤，請重新輸入！"); setPasswordInput(""); }
   };
   const handleResetPassword = () => {
@@ -1944,6 +1957,51 @@ export default function App() {
                 <button onClick={() => setConfirmModal(null)} className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-200 transition">取消</button>
                 <button onClick={() => { confirmModal.onConfirm(); setConfirmModal(null); }} className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 transition shadow-sm shadow-red-200">確定刪除</button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* 新增：今日行程自動提醒 Modal */}
+        {showTodayNotice && (
+          <div className="fixed inset-0 bg-black/60 z-[500] flex items-center justify-center p-4 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative animate-in zoom-in duration-300">
+              <button onClick={() => setShowTodayNotice(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><X size={20}/></button>
+              <div className="flex flex-col items-center mb-6">
+                <div className="w-16 h-16 bg-[#FDFBF7] text-[#C59A5C] rounded-full flex items-center justify-center mb-3 shadow-sm border border-[#F0E6D8]">
+                  <CalendarCheck size={32} />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-800">今日行程提醒</h3>
+                <p className="text-sm text-gray-500 mt-1">您今天有專屬的美麗任務喔！</p>
+              </div>
+              <div className="max-h-[50vh] overflow-y-auto space-y-4 pr-2 mb-6 hide-scrollbar">
+                {designers.map(d => {
+                  const todayStr = getTodayString();
+                  const todaySchedule = d.schedules.find(s => s.fullDate === todayStr);
+                  const todayAppointments = todaySchedule ? todaySchedule.times.filter(t => t.isFull) : [];
+                  if (todayAppointments.length === 0) return null;
+                  
+                  // 將連續的時段群組化，讓畫面更簡潔
+                  const groups = groupSlots(todayAppointments);
+
+                  return (
+                    <div key={d.id} className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                      <h4 className="font-bold text-[#A87B7B] mb-3 flex items-center gap-1.5"><Users size={16}/> {d.name} 的預約</h4>
+                      <div className="space-y-3">
+                        {groups.map((g, i) => (
+                          <div key={i} className="flex gap-3 items-center bg-white p-3 rounded-lg shadow-sm border border-gray-50">
+                            <div className="font-bold text-gray-700 bg-gray-100 px-2 py-1 rounded text-sm">{g.startTime}</div>
+                            <div className="flex-1">
+                              <p className="font-bold text-gray-800 text-sm">{g.clientName}</p>
+                              <p className="text-xs text-gray-500">{g.service}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <button onClick={() => setShowTodayNotice(false)} className="w-full bg-[#A87B7B] text-white py-3.5 rounded-xl text-lg font-bold hover:bg-[#8f6666] shadow-lg transition">我知道了，開始今天的工作！</button>
             </div>
           </div>
         )}
