@@ -1,0 +1,21 @@
+{
+  "name": "Lash & Beauty 蓓緹美學",
+  "short_name": "蓓緹美學",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#F8F9FA",
+  "theme_color": "#A87B7B",
+  "description": "Lash & Beauty 蓓緹美學 - 專屬預約與會員管理系統",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
