@@ -173,14 +173,6 @@ const groupSlots = (times) => {
   return groups;
 };
 
-// 取得觸控或滑鼠的 Y 座標
-const getClientY = (e) => {
-  if (e.touches && e.touches.length > 0) {
-    return e.touches[0].clientY;
-  }
-  return e.clientY;
-};
-
 // --- 初始預設資料 ---
 const initialDesigners = [
   { id: "d1", name: "魚魚", location: "北車店 15樓", schedules: [] },
@@ -298,7 +290,7 @@ export default function App() {
 
   // --- 行事曆點擊編輯狀態 ---
   const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
-  // { isNew, date, startTime, endTime, isFull, clientName, service, color, eventId, originalSlots }
+  // { isNew, date, startTime, endTime, isFull, clientName, clientPhone, service, color, eventId, originalSlots }
   const [editingSlot, setEditingSlot] = useState(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
@@ -778,6 +770,7 @@ export default function App() {
       endTime: getNextTime(timeStr), // 預設 30 分鐘
       isFull: false,
       clientName: '',
+      clientPhone: '',
       service: '',
       color: 'default',
       eventId: 'evt_' + Date.now().toString() + Math.random().toString(36).substr(2, 5),
@@ -793,6 +786,7 @@ export default function App() {
       endTime: group.endTime,
       isFull: group.isFull,
       clientName: group.clientName || '',
+      clientPhone: group.clientPhone || '',
       service: group.service || '',
       color: group.color || 'default',
       eventId: group.eventId,
@@ -802,11 +796,36 @@ export default function App() {
 
   const handleSaveSlotEdit = () => {
     if (!editingSlot) return;
-    const { isNew, date, startTime, endTime, isFull, clientName, service, color, eventId, originalSlots } = editingSlot;
+    const { isNew, date, startTime, endTime, isFull, clientName, clientPhone, service, color, eventId, originalSlots } = editingSlot;
     
     const newSlots = getSlotsInRange(startTime, endTime);
     if (newSlots.length === 0) {
       return showToast("結束時間必須大於起始時間！");
+    }
+
+    // --- 自動建檔邏輯 ---
+    let finalClients = clients;
+    let isNewClientCreated = false;
+    if (isFull && clientName && clientPhone) {
+      // 依據電話號碼判斷是否為新客
+      const exists = clients.find(c => c.phone === clientPhone);
+      if (!exists) {
+        const newClient = {
+          id: Date.now(),
+          name: clientName,
+          phone: clientPhone,
+          birthday: '-',
+          joinDate: getTodayString(),
+          tags: ["新客"],
+          lashPreference: "尚未建立紀錄",
+          balance: 0,
+          packages: [],
+          visits: []
+        };
+        finalClients = [newClient, ...clients];
+        setClients(finalClients);
+        isNewClientCreated = true;
+      }
     }
 
     let updatedSchedules = [...activeDesigner.schedules];
@@ -822,7 +841,7 @@ export default function App() {
         date: `${d.getMonth() + 1}/${d.getDate()}`,
         day: daysMap[d.getDay()],
         times: newSlots.map(slotVal => ({
-            val: slotVal, isFull, clientName: clientName || '', service: service || '', color: color || 'default', eventId
+            val: slotVal, isFull, clientName: clientName || '', clientPhone: clientPhone || '', service: service || '', color: color || 'default', eventId
         }))
       });
       updatedSchedules.sort((a, b) => new Date(a.fullDate) - new Date(b.fullDate));
@@ -837,7 +856,7 @@ export default function App() {
 
       newSlots.forEach(slotVal => {
         currentTimes.push({
-          val: slotVal, isFull, clientName: clientName || '', service: service || '', color: color || 'default', eventId
+          val: slotVal, isFull, clientName: clientName || '', clientPhone: clientPhone || '', service: service || '', color: color || 'default', eventId
         });
       });
 
@@ -849,8 +868,14 @@ export default function App() {
     const newDesigners = designers.map(d => d.id === activeDesignerId ? { ...d, schedules: updatedSchedules } : d);
     setDesigners(newDesigners);
     setEditingSlot(null); 
-    syncToCloud({ designers: newDesigners });
-    showToast("時段設定成功！已自動同步。");
+    
+    syncToCloud({ designers: newDesigners, clients: finalClients });
+    
+    if (isNewClientCreated) {
+      showToast("時段設定成功！已為新客人自動建立檔案。");
+    } else {
+      showToast("時段設定成功！已自動同步。");
+    }
   };
 
   const handleRemoveSlot = () => {
@@ -1238,7 +1263,7 @@ export default function App() {
             </div>
           )}
 
-          {/* 編輯時段 Modal (全新改版：加入時間選擇器) */}
+          {/* 編輯時段 Modal */}
           {editingSlot && (
             <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
               <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative animate-in zoom-in duration-200">
@@ -1291,13 +1316,65 @@ export default function App() {
 
                   {editingSlot.isFull && (
                     <div className="space-y-4 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                      <div>
-                        <label className="block text-xs font-bold text-gray-600 mb-1">客戶姓名 / 備註</label>
-                        <input type="text" value={editingSlot.clientName} onChange={e=>setEditingSlot({...editingSlot, clientName: e.target.value})} placeholder="例：林語晴" className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B] bg-white"/>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-600 mb-1">客戶姓名 *</label>
+                          <input 
+                            type="text" 
+                            value={editingSlot.clientName || ''} 
+                            onChange={e => {
+                              const val = e.target.value;
+                              const matched = clients.find(c => c.name === val);
+                              setEditingSlot({
+                                ...editingSlot, 
+                                clientName: val,
+                                clientPhone: matched && (!editingSlot.clientPhone || editingSlot.clientPhone === '') ? matched.phone : editingSlot.clientPhone
+                              });
+                            }} 
+                            placeholder="例：林語晴" 
+                            list="calendar-client-names"
+                            className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B] bg-white"
+                          />
+                          <datalist id="calendar-client-names">
+                            {clients.map(c => <option key={c.id} value={c.name}>{c.phone}</option>)}
+                          </datalist>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-600 mb-1">聯絡電話 (自動帶入/建檔)</label>
+                          <input 
+                            type="tel" 
+                            value={editingSlot.clientPhone || ''} 
+                            onChange={e => {
+                              const val = e.target.value;
+                              const matched = clients.find(c => c.phone === val);
+                              setEditingSlot({
+                                ...editingSlot, 
+                                clientPhone: val,
+                                clientName: matched ? matched.name : editingSlot.clientName
+                              });
+                            }} 
+                            placeholder="例：0912345678" 
+                            list="calendar-client-phones"
+                            className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B] bg-white"
+                          />
+                          <datalist id="calendar-client-phones">
+                            {clients.map(c => <option key={c.id} value={c.phone}>{c.name}</option>)}
+                          </datalist>
+                        </div>
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-gray-600 mb-1">預約項目</label>
-                        <input type="text" value={editingSlot.service} onChange={e=>setEditingSlot({...editingSlot, service: e.target.value})} placeholder="例：日式單根(自然)" className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B] bg-white"/>
+                        <label className="block text-xs font-bold text-gray-600 mb-1">預約項目 / 備註</label>
+                        <input 
+                          type="text" 
+                          value={editingSlot.service || ''} 
+                          onChange={e=>setEditingSlot({...editingSlot, service: e.target.value})} 
+                          placeholder="例：日式單根(自然)" 
+                          list="calendar-services"
+                          className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B] bg-white"
+                        />
+                        <datalist id="calendar-services">
+                          {savedServices.map(s => <option key={s} value={s} />)}
+                        </datalist>
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-gray-600 mb-2">自訂標記顏色</label>
