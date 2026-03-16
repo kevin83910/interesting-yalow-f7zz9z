@@ -1167,18 +1167,20 @@ export default function App() {
 
                 {/* --- 統一 X/Y 滾動區塊 --- */}
                 <div className="flex-1 overflow-auto bg-gray-50/20 relative">
-                  <div className="flex flex-col min-w-[700px]">
+                  <div className="flex flex-col min-w-[800px]">
                     
                     {/* 星期標頭 (跟著 X 軸滾動，Y 軸固定) */}
                     <div className="flex border-b border-gray-200 bg-gray-50 sticky top-0 z-40 shadow-sm">
                       {/* 左上角空白處也要固定 X 軸，確保不會被後面的時間軸蓋住 */}
                       <div className="w-14 border-r border-gray-200 flex-shrink-0 bg-gray-50 sticky left-0 z-50"></div>
-                      {weekDates.map(day => (
-                        <div key={day.fullDate} className={`flex-1 text-center py-2.5 border-r border-gray-100 ${day.isToday ? 'bg-[#FDFBF7]' : ''}`}>
-                          <p className={`text-[11px] font-bold ${day.isToday ? 'text-[#A87B7B]' : 'text-gray-500'}`}>{day.dayStr}</p>
-                          <p className={`text-lg mt-0.5 mx-auto font-bold flex items-center justify-center w-7 h-7 rounded-full ${day.isToday ? 'bg-[#A87B7B] text-white shadow-sm' : 'text-gray-800'}`}>{day.dateNum}</p>
-                        </div>
-                      ))}
+                      <div className="flex flex-1">
+                        {weekDates.map(day => (
+                          <div key={day.fullDate} className={`flex-1 min-w-[100px] text-center py-2.5 border-r border-gray-100 ${day.isToday ? 'bg-[#FDFBF7]' : ''}`}>
+                            <p className={`text-[11px] font-bold ${day.isToday ? 'text-[#A87B7B]' : 'text-gray-500'}`}>{day.dayStr}</p>
+                            <p className={`text-lg mt-0.5 mx-auto font-bold flex items-center justify-center w-7 h-7 rounded-full ${day.isToday ? 'bg-[#A87B7B] text-white shadow-sm' : 'text-gray-800'}`}>{day.dateNum}</p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
 
                     {/* 時間格線 (純點擊區) */}
