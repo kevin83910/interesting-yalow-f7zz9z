@@ -174,6 +174,14 @@ const groupSlots = (times) => {
   return groups;
 };
 
+// 取得觸控或滑鼠的 Y 座標
+const getClientY = (e) => {
+  if (e.touches && e.touches.length > 0) {
+    return e.touches[0].clientY;
+  }
+  return e.clientY;
+};
+
 // --- 初始預設資料 ---
 const initialDesigners = [
   { id: "d1", name: "魚魚", location: "北車店 15樓", schedules: [] },
@@ -826,15 +834,11 @@ export default function App() {
 
     newSchedules.sort((a, b) => new Date(a.fullDate) - new Date(b.fullDate));
     const newDesigners = designers.map(d => d.id === activeDesignerId ? { ...d, schedules: newSchedules } : d);
+    setDesigners(newDesigners);
+    setShowAutoScheduleModal(false);
     
-    showToast("排班資料產生中...");
-    const success = await syncToCloud({ designers: newDesigners });
-    
-    if (success) {
-      setDesigners(newDesigners);
-      setShowAutoScheduleModal(false);
-      showToast(`批次開班成功！已自動儲存。`);
-    }
+    syncToCloud({ designers: newDesigners });
+    showToast(`批次開班成功！已自動儲存。`);
   };
 
   const toggleWorkDay = (dayIndex) => {
