@@ -235,7 +235,8 @@ export default function App() {
   const [lineOfficialId, setLineOfficialId] = useState("");
   const [lineNotifyUrl, setLineNotifyUrl] = useState(""); // LINE Messaging API 推播網址
   const [lineUserIds, setLineUserIds] = useState(""); // 支援多個 User ID
-  const [imgbbApiKey, setImgbbApiKey] = useState(""); // 圖床 API Key
+  const [imgbbApiKey, setImgbbApiKey] = useState(""); // 圖床 API Key (相容舊版)
+  const [gdriveApiUrl, setGdriveApiUrl] = useState(""); // 新增：Google Drive 圖床 Webhook 網址
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [showForgotPrompt, setShowForgotPrompt] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
@@ -376,6 +377,7 @@ export default function App() {
           if (data.lineNotifyUrl !== undefined) setLineNotifyUrl(data.lineNotifyUrl);
           if (data.lineUserIds !== undefined) setLineUserIds(data.lineUserIds);
           if (data.imgbbApiKey !== undefined) setImgbbApiKey(data.imgbbApiKey);
+          if (data.gdriveApiUrl !== undefined) setGdriveApiUrl(data.gdriveApiUrl);
           if (data.clients) setClients(data.clients);
           if (data.inventory) setInventory(data.inventory);
           if (data.paymentMethods) setPaymentMethods(data.paymentMethods);
@@ -394,6 +396,7 @@ export default function App() {
              lineNotifyUrl: "",
              lineUserIds: "",
              imgbbApiKey: "",
+             gdriveApiUrl: "",
              clients: initialClients, 
              inventory: initialInventory, 
              paymentMethods: ['現金', '轉帳', '信用卡', 'Line Pay', '儲值金扣款', '扣除包堂'],
@@ -418,6 +421,7 @@ export default function App() {
         lineNotifyUrl: 'lineNotifyUrl' in updates ? updates.lineNotifyUrl : lineNotifyUrl,
         lineUserIds: 'lineUserIds' in updates ? updates.lineUserIds : lineUserIds,
         imgbbApiKey: 'imgbbApiKey' in updates ? updates.imgbbApiKey : imgbbApiKey,
+        gdriveApiUrl: 'gdriveApiUrl' in updates ? updates.gdriveApiUrl : gdriveApiUrl,
         clients: 'clients' in updates ? updates.clients : clients,
         inventory: 'inventory' in updates ? updates.inventory : inventory,
         paymentMethods: 'paymentMethods' in updates ? updates.paymentMethods : paymentMethods,
@@ -607,7 +611,7 @@ export default function App() {
     }));
   };
 
-  // --- 全新升級：ImgBB 專業圖床高畫質上傳引擎 ---
+  // --- 全新升級：雙重圖床智慧上傳引擎 (Google Drive / ImgBB) ---
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -641,23 +645,41 @@ export default function App() {
 
         try {
           const base64Data = compressedBase64.split(',')[1];
-          const formData = new FormData();
-          formData.append('image', base64Data);
           
-          // 使用系統內建的公共 ImgBB 金鑰，或用戶自行設定的
-          const apiKey = imgbbApiKey || "71a62dc5cebbd7ecbdab72a4467bc068";
-          const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
-            method: 'POST',
-            body: formData
-          });
-          
-          const json = await res.json();
-          if (json.success) {
-            // 只存極短的雲端圖片網址進資料庫，徹底解決容量限制
-            setNewVisit(prev => ({ ...prev, photoUrl: json.data.url }));
-            showToast("圖片上傳成功！");
+          if (gdriveApiUrl) {
+            // 策略 A：上傳至使用者的 Google Drive (最佳推薦)
+            const response = await fetch(gdriveApiUrl, {
+              method: 'POST',
+              body: JSON.stringify({ 
+                image: base64Data,
+                name: `LashBeauty_${selectedClient?.name || 'Client'}_${Date.now()}.jpg`,
+                mimeType: 'image/jpeg'
+              }),
+              headers: { "Content-Type": "text/plain;charset=utf-8" } 
+            });
+            const json = await response.json();
+            if (json.success) {
+              setNewVisit(prev => ({ ...prev, photoUrl: json.url }));
+              showToast("圖片上傳 Google 雲端成功！");
+            } else {
+              showToast("上傳失敗，請檢查 Google Apps Script 設定。");
+            }
           } else {
-            showToast("圖片處理失敗，請稍後再試。");
+            // 策略 B：若未設定 Google Drive，退回使用 ImgBB
+            const formData = new FormData();
+            formData.append('image', base64Data);
+            const apiKey = imgbbApiKey || "71a62dc5cebbd7ecbdab72a4467bc068";
+            const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+              method: 'POST',
+              body: formData
+            });
+            const json = await res.json();
+            if (json.success) {
+              setNewVisit(prev => ({ ...prev, photoUrl: json.data.url }));
+              showToast("圖片上傳圖床成功！");
+            } else {
+              showToast("圖片處理失敗，請稍後再試。");
+            }
           }
         } catch (error) {
           console.error(error);
@@ -2072,9 +2094,10 @@ export default function App() {
                         <label className="block text-xs font-bold text-gray-500 mb-1">接收推播的 LINE User ID (多人請用半形逗號 , 分隔)</label>
                         <input type="text" placeholder="例: U123..., U456..." value={lineUserIds} onChange={e=>{setLineUserIds(e.target.value); setHasUnsavedChanges(true);}} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 outline-none focus:bg-white focus:border-[#A87B7B]" />
                       </div>
-                      <div>
-                        <label className="block text-xs font-bold text-gray-500 mb-1">圖床 API 金鑰 (系統已預設，可留空)</label>
-                        <input type="text" placeholder="留空將使用系統預設金鑰" value={imgbbApiKey} onChange={e=>{setImgbbApiKey(e.target.value); setHasUnsavedChanges(true);}} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 outline-none focus:bg-white focus:border-[#A87B7B]" />
+                      <div className="p-3 bg-[#FDFBF7] border border-[#F0E6D8] rounded-xl">
+                        <label className="block text-xs font-bold text-[#A87B7B] mb-1">Google 雲端硬碟圖床網址 (Apps Script) ✨新功能</label>
+                        <input type="text" placeholder="https://script.google.com/macros/s/..." value={gdriveApiUrl} onChange={e=>{setGdriveApiUrl(e.target.value); setHasUnsavedChanges(true);}} className="w-full p-2.5 border border-[#E8D3C8] rounded-lg text-sm bg-white outline-none focus:border-[#A87B7B]" />
+                        <p className="text-[10px] text-gray-500 mt-1.5 leading-tight">填寫此欄位後，照片將優先上傳至您的 Google 雲端硬碟，保留最高畫質且不佔 Firebase 空間。</p>
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-gray-500 mb-1">變更後台登入密碼</label>
