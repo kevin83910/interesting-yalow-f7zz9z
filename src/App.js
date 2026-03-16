@@ -235,6 +235,7 @@ export default function App() {
   const [lineOfficialId, setLineOfficialId] = useState("");
   const [lineNotifyUrl, setLineNotifyUrl] = useState(""); // LINE Messaging API 推播網址
   const [lineUserIds, setLineUserIds] = useState(""); // 支援多個 User ID
+  const [imgbbApiKey, setImgbbApiKey] = useState(""); // 圖床 API Key
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [showForgotPrompt, setShowForgotPrompt] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
@@ -266,6 +267,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedClient, setSelectedClient] = useState(null);
   const [isAddingVisit, setIsAddingVisit] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false); // 圖片上傳中狀態
   const [editingVisitId, setEditingVisitId] = useState(null); 
   const [showAddClientModal, setShowAddClientModal] = useState(false);
   const [showDeleteClientModal, setShowDeleteClientModal] = useState(false);
@@ -373,6 +375,7 @@ export default function App() {
           if (data.lineOfficialId !== undefined) setLineOfficialId(data.lineOfficialId);
           if (data.lineNotifyUrl !== undefined) setLineNotifyUrl(data.lineNotifyUrl);
           if (data.lineUserIds !== undefined) setLineUserIds(data.lineUserIds);
+          if (data.imgbbApiKey !== undefined) setImgbbApiKey(data.imgbbApiKey);
           if (data.clients) setClients(data.clients);
           if (data.inventory) setInventory(data.inventory);
           if (data.paymentMethods) setPaymentMethods(data.paymentMethods);
@@ -390,6 +393,7 @@ export default function App() {
              lineOfficialId: "", 
              lineNotifyUrl: "",
              lineUserIds: "",
+             imgbbApiKey: "",
              clients: initialClients, 
              inventory: initialInventory, 
              paymentMethods: ['現金', '轉帳', '信用卡', 'Line Pay', '儲值金扣款', '扣除包堂'],
@@ -413,6 +417,7 @@ export default function App() {
         lineOfficialId: 'lineOfficialId' in updates ? updates.lineOfficialId : lineOfficialId,
         lineNotifyUrl: 'lineNotifyUrl' in updates ? updates.lineNotifyUrl : lineNotifyUrl,
         lineUserIds: 'lineUserIds' in updates ? updates.lineUserIds : lineUserIds,
+        imgbbApiKey: 'imgbbApiKey' in updates ? updates.imgbbApiKey : imgbbApiKey,
         clients: 'clients' in updates ? updates.clients : clients,
         inventory: 'inventory' in updates ? updates.inventory : inventory,
         paymentMethods: 'paymentMethods' in updates ? updates.paymentMethods : paymentMethods,
@@ -426,7 +431,7 @@ export default function App() {
       return true;
     } catch (e) {
       console.error("同步失敗:", e);
-      showToast("儲存失敗！照片可能過大導致雲端容量已滿，請嘗試不附照片或刪除舊紀錄照片。");
+      showToast("儲存失敗！資料庫容量已滿或網路不穩。");
       return false;
     }
   };
@@ -602,18 +607,22 @@ export default function App() {
     }));
   };
 
-  const handleImageUpload = (e) => {
+  // --- 全新升級：ImgBB 專業圖床高畫質上傳引擎 ---
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    setIsUploadingImage(true);
+
     const reader = new FileReader();
     reader.onloadend = () => {
       const img = new Image();
-      img.onload = () => {
+      img.onload = async () => {
         const canvas = document.createElement('canvas');
         
-        // 提升解析度至 1080x1080 (IG 高畫質標準)
-        const MAX_WIDTH = 1080;
-        const MAX_HEIGHT = 1080;
+        // 恢復高解析度：寬高最大 1600px，保留睫毛所有細節
+        const MAX_WIDTH = 1600;
+        const MAX_HEIGHT = 1600;
         let width = img.width;
         let height = img.height;
 
@@ -627,9 +636,35 @@ export default function App() {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
         
-        // 提升 JPEG 品質至 0.8 (80%)，保留睫毛細節
-        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
-        setNewVisit({ ...newVisit, photoUrl: compressedBase64 });
+        // 提升 JPEG 品質至 0.85 (85%)
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+
+        try {
+          const base64Data = compressedBase64.split(',')[1];
+          const formData = new FormData();
+          formData.append('image', base64Data);
+          
+          // 使用系統內建的公共 ImgBB 金鑰，或用戶自行設定的
+          const apiKey = imgbbApiKey || "71a62dc5cebbd7ecbdab72a4467bc068";
+          const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+            method: 'POST',
+            body: formData
+          });
+          
+          const json = await res.json();
+          if (json.success) {
+            // 只存極短的雲端圖片網址進資料庫，徹底解決容量限制
+            setNewVisit(prev => ({ ...prev, photoUrl: json.data.url }));
+            showToast("圖片上傳成功！");
+          } else {
+            showToast("圖片處理失敗，請稍後再試。");
+          }
+        } catch (error) {
+          console.error(error);
+          showToast("網路錯誤，圖片無法上傳。");
+        } finally {
+          setIsUploadingImage(false);
+        }
       };
       img.src = reader.result;
     };
@@ -1697,8 +1732,13 @@ export default function App() {
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                              <div>
                                 <label className="text-xs font-bold text-gray-500 block mb-1">客片完成照</label>
-                                <input type="file" accept="image/*" onChange={handleImageUpload} className="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-[#F5E3E3] file:text-[#A87B7B] hover:file:bg-[#F0E6D8] cursor-pointer" />
-                                {newVisit.photoUrl && (
+                                <input type="file" accept="image/*" onChange={handleImageUpload} disabled={isUploadingImage} className="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-[#F5E3E3] file:text-[#A87B7B] hover:file:bg-[#F0E6D8] cursor-pointer disabled:opacity-50" />
+                                {isUploadingImage && (
+                                  <div className="mt-2 text-xs text-[#A87B7B] font-bold animate-pulse flex items-center gap-1">
+                                    <Cloud size={14}/> 高畫質上傳中，請稍候...
+                                  </div>
+                                )}
+                                {newVisit.photoUrl && !isUploadingImage && (
                                   <div className="mt-2 relative inline-block">
                                     <img src={newVisit.photoUrl} alt="預覽" className="h-16 w-16 object-cover rounded-lg border shadow-sm" />
                                     <button onClick={() => setNewVisit({...newVisit, photoUrl: ''})} className="absolute -top-1.5 -right-1.5 bg-gray-800 text-white rounded-full p-0.5 hover:bg-red-500"><X size={12} /></button>
@@ -1712,7 +1752,7 @@ export default function App() {
                            </div>
                            
                            <div className="flex justify-end pt-2">
-                             <button onClick={handleAddVisit} className="bg-[#A87B7B] text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-sm hover:bg-[#8f6666] transition flex items-center gap-2">
+                             <button onClick={handleAddVisit} disabled={isUploadingImage} className="bg-[#A87B7B] text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-sm hover:bg-[#8f6666] disabled:bg-gray-400 disabled:cursor-not-allowed transition flex items-center gap-2">
                                <Save size={16}/> {editingVisitId ? '確認更新' : '確認儲存'}
                              </button>
                            </div>
@@ -2031,6 +2071,10 @@ export default function App() {
                       <div>
                         <label className="block text-xs font-bold text-gray-500 mb-1">接收推播的 LINE User ID (多人請用半形逗號 , 分隔)</label>
                         <input type="text" placeholder="例: U123..., U456..." value={lineUserIds} onChange={e=>{setLineUserIds(e.target.value); setHasUnsavedChanges(true);}} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 outline-none focus:bg-white focus:border-[#A87B7B]" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-1">圖床 API 金鑰 (系統已預設，可留空)</label>
+                        <input type="text" placeholder="留空將使用系統預設金鑰" value={imgbbApiKey} onChange={e=>{setImgbbApiKey(e.target.value); setHasUnsavedChanges(true);}} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 outline-none focus:bg-white focus:border-[#A87B7B]" />
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-gray-500 mb-1">變更後台登入密碼</label>
