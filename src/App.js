@@ -610,9 +610,10 @@ export default function App() {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        // 大幅強化手機端高畫素照片的壓縮率 (500x500)，避免超出雲端限制
-        const MAX_WIDTH = 500;
-        const MAX_HEIGHT = 500;
+        
+        // 提升解析度至 1080x1080 (IG 高畫質標準)
+        const MAX_WIDTH = 1080;
+        const MAX_HEIGHT = 1080;
         let width = img.width;
         let height = img.height;
 
@@ -625,8 +626,9 @@ export default function App() {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
-        // 品質調降至 0.5 (有效降低 Base64 長度)
-        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.5);
+        
+        // 提升 JPEG 品質至 0.8 (80%)，保留睫毛細節
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
         setNewVisit({ ...newVisit, photoUrl: compressedBase64 });
       };
       img.src = reader.result;
