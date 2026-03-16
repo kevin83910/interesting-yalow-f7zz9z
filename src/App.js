@@ -43,7 +43,7 @@ const Icons = {
   AlertCircle: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>),
   CalendarCheck: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /><path d="m9 16 2 2 4-4" /></svg>),
   ChevronRight: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="9 18 15 12 9 6" /></svg>),
-  Settings: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z" /></svg>),
+  Settings: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z" /></svg>),
   Save: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></svg>),
   Plus: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>),
   Trash2: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>),
@@ -174,6 +174,14 @@ const groupSlots = (times) => {
   return groups;
 };
 
+// 取得觸控或滑鼠的 Y 座標
+const getClientY = (e) => {
+  if (e.touches && e.touches.length > 0) {
+    return e.touches[0].clientY;
+  }
+  return e.clientY;
+};
+
 // --- 初始預設資料 ---
 const initialDesigners = [
   { id: "d1", name: "魚魚", location: "北車店 15樓", schedules: [] },
@@ -226,6 +234,7 @@ export default function App() {
   const [adminPassword, setAdminPassword] = useState("admin");
   const [lineOfficialId, setLineOfficialId] = useState("");
   const [lineNotifyUrl, setLineNotifyUrl] = useState(""); // LINE Messaging API 推播網址
+  const [lineUserIds, setLineUserIds] = useState(""); // 新增：支援多個 User ID
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [showForgotPrompt, setShowForgotPrompt] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
@@ -295,6 +304,7 @@ export default function App() {
 
   // --- 行事曆點擊編輯狀態 ---
   const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
+  // { isNew, date, startTime, endTime, isFull, clientName, clientPhone, service, color, eventId, originalSlots }
   const [editingSlot, setEditingSlot] = useState(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
@@ -362,6 +372,7 @@ export default function App() {
           if (data.adminPassword) setAdminPassword(data.adminPassword);
           if (data.lineOfficialId !== undefined) setLineOfficialId(data.lineOfficialId);
           if (data.lineNotifyUrl !== undefined) setLineNotifyUrl(data.lineNotifyUrl);
+          if (data.lineUserIds !== undefined) setLineUserIds(data.lineUserIds);
           if (data.clients) setClients(data.clients);
           if (data.inventory) setInventory(data.inventory);
           if (data.paymentMethods) setPaymentMethods(data.paymentMethods);
@@ -378,6 +389,7 @@ export default function App() {
              adminPassword: "admin", 
              lineOfficialId: "", 
              lineNotifyUrl: "",
+             lineUserIds: "",
              clients: initialClients, 
              inventory: initialInventory, 
              paymentMethods: ['現金', '轉帳', '信用卡', 'Line Pay', '儲值金扣款', '扣除包堂'],
@@ -400,6 +412,7 @@ export default function App() {
         adminPassword: 'adminPassword' in updates ? updates.adminPassword : adminPassword,
         lineOfficialId: 'lineOfficialId' in updates ? updates.lineOfficialId : lineOfficialId,
         lineNotifyUrl: 'lineNotifyUrl' in updates ? updates.lineNotifyUrl : lineNotifyUrl,
+        lineUserIds: 'lineUserIds' in updates ? updates.lineUserIds : lineUserIds,
         clients: 'clients' in updates ? updates.clients : clients,
         inventory: 'inventory' in updates ? updates.inventory : inventory,
         paymentMethods: 'paymentMethods' in updates ? updates.paymentMethods : paymentMethods,
@@ -441,6 +454,8 @@ export default function App() {
   // --- 發送 LINE Messaging API 推播 ---
   const handleSendTodayScheduleToLine = async () => {
     if (!lineNotifyUrl) return showToast("請先至「系統設定」填寫 LINE 推播網址！");
+    const idsArray = lineUserIds.split(',').map(id => id.trim()).filter(id => id);
+    if (idsArray.length === 0) return showToast("請先至「系統設定」填寫接收者的 User ID！");
     
     let msg = `\n✨ 【Lash & Beauty 今日預約總表】 ✨\n📅 日期：${getTodayString()}\n`;
     
@@ -466,7 +481,7 @@ export default function App() {
       showToast("發送中...");
       const response = await fetch(lineNotifyUrl, {
         method: "POST",
-        body: JSON.stringify({ message: msg }),
+        body: JSON.stringify({ message: msg, userIds: idsArray }),
         headers: { "Content-Type": "text/plain;charset=utf-8" } 
       });
       if (response.ok || response.type === 'opaque') {
@@ -1138,7 +1153,7 @@ export default function App() {
               {/* 日曆主體 */}
               <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col overflow-hidden relative">
                 {/* 頂部日期切換 */}
-                <div className="flex items-center justify-between p-3 border-b border-gray-100 bg-gray-50">
+                <div className="flex items-center justify-between p-3 border-b border-gray-100 bg-gray-50 z-10 relative">
                   <div className="flex gap-1">
                     <button onClick={() => { const d = new Date(currentWeekStart); d.setDate(d.getDate() - 7); setCurrentWeekStart(d); }} className="p-1.5 text-gray-500 hover:bg-gray-200 rounded-md transition"><ChevronLeftCircle size={20}/></button>
                     <button onClick={() => setCurrentWeekStart(new Date())} className="px-3 py-1.5 text-sm font-bold text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-100 transition shadow-sm">本週</button>
@@ -1150,74 +1165,54 @@ export default function App() {
                   <div className="w-20"></div> {/* 佔位平衡 */}
                 </div>
 
-                {/* 星期標頭 */}
-                <div className="flex border-b border-gray-200 bg-gray-50 sticky top-0 z-30 shadow-sm">
-                  <div className="w-14 border-r border-gray-200 flex-shrink-0 bg-gray-50"></div>
-                  {weekDates.map(day => (
-                    <div key={day.fullDate} className={`flex-1 text-center py-2.5 border-r border-gray-100 ${day.isToday ? 'bg-[#FDFBF7]' : ''}`}>
-                      <p className={`text-[11px] font-bold ${day.isToday ? 'text-[#A87B7B]' : 'text-gray-500'}`}>{day.dayStr}</p>
-                      <p className={`text-lg mt-0.5 mx-auto font-bold flex items-center justify-center w-7 h-7 rounded-full ${day.isToday ? 'bg-[#A87B7B] text-white shadow-sm' : 'text-gray-800'}`}>{day.dateNum}</p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* 時間格線 (純點擊區) */}
-                <div className="flex-1 overflow-y-auto bg-gray-50/20 relative">
-                  <div className="flex min-w-[700px]">
-                    {/* 左側時間軸 */}
-                    <div className="w-14 flex-shrink-0 border-r border-gray-200 bg-white sticky left-0 z-20">
-                      {Array.from({length: 13}).map((_, i) => (
-                        <div key={i} className="h-[90px] border-b border-gray-100 text-right pr-2 pt-1 text-xs text-gray-400 font-medium">
-                          {String(i+9).padStart(2,'0')}:00
+                {/* --- 統一 X/Y 滾動區塊 --- */}
+                <div className="flex-1 overflow-auto bg-gray-50/20 relative">
+                  <div className="flex flex-col min-w-[700px]">
+                    
+                    {/* 星期標頭 (跟著 X 軸滾動，Y 軸固定) */}
+                    <div className="flex border-b border-gray-200 bg-gray-50 sticky top-0 z-40 shadow-sm">
+                      {/* 左上角空白處也要固定 X 軸，確保不會被後面的時間軸蓋住 */}
+                      <div className="w-14 border-r border-gray-200 flex-shrink-0 bg-gray-50 sticky left-0 z-50"></div>
+                      {weekDates.map(day => (
+                        <div key={day.fullDate} className={`flex-1 text-center py-2.5 border-r border-gray-100 ${day.isToday ? 'bg-[#FDFBF7]' : ''}`}>
+                          <p className={`text-[11px] font-bold ${day.isToday ? 'text-[#A87B7B]' : 'text-gray-500'}`}>{day.dayStr}</p>
+                          <p className={`text-lg mt-0.5 mx-auto font-bold flex items-center justify-center w-7 h-7 rounded-full ${day.isToday ? 'bg-[#A87B7B] text-white shadow-sm' : 'text-gray-800'}`}>{day.dateNum}</p>
                         </div>
                       ))}
                     </div>
 
-                    {/* 右側天數行 */}
-                    <div className="flex flex-1 relative">
-                      {weekDates.map((day) => {
-                        const schedule = activeDesigner?.schedules.find(s => s.fullDate === day.fullDate);
-                        const groups = groupSlots(schedule?.times);
-                        const isPast = day.fullDate < getTodayString();
+                    {/* 時間格線 (純點擊區) */}
+                    <div className="flex flex-1">
+                      {/* 左側時間軸 */}
+                      <div className="w-14 flex-shrink-0 border-r border-gray-200 bg-white sticky left-0 z-30">
+                        {Array.from({length: 13}).map((_, i) => (
+                          <div key={i} className="h-[90px] border-b border-gray-100 text-right pr-2 pt-1 text-xs text-gray-400 font-medium">
+                            {String(i+9).padStart(2,'0')}:00
+                          </div>
+                        ))}
+                      </div>
 
-                        return (
-                          <div 
-                            key={day.fullDate} 
-                            className={`flex-1 border-r border-gray-100 relative min-w-[100px] ${day.isToday ? 'bg-[#FDFBF7]/40' : ''}`}
-                          >
-                            {/* 背景網格點擊事件 */}
-                            <div className="absolute inset-0 flex flex-col z-0">
-                              {TIME_BLOCKS.map(time => (
-                                <div key={time}
-                                     className={`h-[45px] border-b border-dashed border-gray-100 transition-colors ${isPast ? 'bg-gray-100/50 cursor-not-allowed' : 'hover:bg-[#E8D3C8]/20 cursor-pointer'}`}
-                                     onClick={() => !isPast && handleCellClick(day.fullDate, time)}
-                                />
-                              ))}
-                            </div>
-
-                            {/* 已建立的區塊層 */}
-                            <div className={`absolute inset-0 z-10 pointer-events-none`}>
-                              {groups.map((group, i) => {
-                                const colorObj = EVENT_COLORS.find(c => c.id === group.color) || EVENT_COLORS[0];
-                                const isFullClass = group.isFull
-                                  ? `${colorObj.colorClass} z-20 shadow-md`
-                                  : 'bg-[#FDFBF7] text-[#A87B7B] border-[#E8D3C8] z-10 hover:bg-[#F5E3E3]';
-
-                                return (
-                                  <div key={i}
-                                      style={{ top: getTopPx(group.startTime), height: getTopPx(group.endTime) - getTopPx(group.startTime) }}
-                                      className={`absolute left-1 right-1 rounded-md border p-1.5 cursor-pointer overflow-hidden transition-all hover:z-30 hover:shadow-md pointer-events-auto hover:scale-[1.02]
-                                          ${isFullClass}
-                                      `}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (isPast) return;
-                                        handleGroupClick(day.fullDate, group);
-                                      }}
-                                  >
-                                    <div className="text-[10px] font-bold leading-tight opacity-90 drop-shadow-sm pointer-events-none">
-                                      {group.startTime} - {group.endTime}
-                                    </div>
+                      {/* 右側天數行 */}
+                      <div className="flex flex-1 relative">
+                        {weekDates.map((day) => {
+                          const schedule = activeDesigner?.schedules.find(s => s.fullDate === day.fullDate);
+                          const groups = groupSlots(schedule?.times);
+                          const isPast = day.fullDate < getTodayString();
+                          
+                          return (
+                            <div 
+                              key={day.fullDate} 
+                              className={`flex-1 border-r border-gray-100 relative min-w-[100px] ${day.isToday ? 'bg-[#FDFBF7]/40' : ''}`}
+                            >
+                              {/* 背景網格點擊事件 */}
+                              <div className="absolute inset-0 flex flex-col z-0">
+                                {TIME_BLOCKS.map(time => (
+                                  <div key={time}
+                                       className={`h-[45px] border-b border-dashed border-gray-100 transition-colors ${isPast ? 'bg-gray-100/50 cursor-not-allowed' : 'hover:bg-[#E8D3C8]/20 cursor-pointer'}`}
+                                       onClick={() => !isPast && handleCellClick(day.fullDate, time)}
+                                  />
+                                ))}
+                              </div>
                                     <div className="text-xs font-bold truncate mt-0.5 pointer-events-none">
                                       {group.isFull ? (group.clientName || '已預約') : '開放預約'}
                                     </div>
@@ -1968,6 +1963,10 @@ export default function App() {
                       <div>
                         <label className="block text-xs font-bold text-gray-500 mb-1">LINE 預約總表推播網址 (Google Apps Script)</label>
                         <input type="text" placeholder="https://script.google.com/macros/s/..." value={lineNotifyUrl} onChange={e=>{setLineNotifyUrl(e.target.value); setHasUnsavedChanges(true);}} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 outline-none focus:bg-white focus:border-[#A87B7B]" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-1">接收推播的 LINE User ID (多人請用半形逗號 , 分隔)</label>
+                        <input type="text" placeholder="例: U123..., U456..." value={lineUserIds} onChange={e=>{setLineUserIds(e.target.value); setHasUnsavedChanges(true);}} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 outline-none focus:bg-white focus:border-[#A87B7B]" />
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-gray-500 mb-1">變更後台登入密碼</label>
