@@ -1213,19 +1213,44 @@ export default function App() {
                                   />
                                 ))}
                               </div>
-                                    <div className="text-xs font-bold truncate mt-0.5 pointer-events-none">
-                                      {group.isFull ? (group.clientName || '已預約') : '開放預約'}
+
+                              {/* 已建立的區塊層 */}
+                              <div className={`absolute inset-0 z-10 pointer-events-none`}>
+                                {groups.map((group, i) => {
+                                  const colorObj = EVENT_COLORS.find(c => c.id === group.color) || EVENT_COLORS[0];
+                                  const isFullClass = group.isFull
+                                    ? `${colorObj.colorClass} z-20 shadow-md`
+                                    : 'bg-[#FDFBF7] text-[#A87B7B] border-[#E8D3C8] z-10 hover:bg-[#F5E3E3]';
+
+                                  return (
+                                    <div key={i}
+                                        style={{ top: getTopPx(group.startTime), height: getTopPx(group.endTime) - getTopPx(group.startTime) }}
+                                        className={`absolute left-1 right-1 rounded-md border p-1.5 cursor-pointer overflow-hidden transition-all hover:z-30 hover:shadow-md pointer-events-auto hover:scale-[1.02]
+                                            ${isFullClass}
+                                        `}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (isPast) return;
+                                          handleGroupClick(day.fullDate, group);
+                                        }}
+                                    >
+                                      <div className="text-[10px] font-bold leading-tight opacity-90 drop-shadow-sm pointer-events-none">
+                                        {group.startTime} - {group.endTime}
+                                      </div>
+                                      <div className="text-xs font-bold truncate mt-0.5 pointer-events-none">
+                                        {group.isFull ? (group.clientName || '已預約') : '開放預約'}
+                                      </div>
+                                      {group.isFull && group.service && (
+                                        <div className="text-[10px] opacity-90 truncate mt-0.5 pointer-events-none">{group.service}</div>
+                                      )}
                                     </div>
-                                    {group.isFull && group.service && (
-                                      <div className="text-[10px] opacity-90 truncate mt-0.5 pointer-events-none">{group.service}</div>
-                                    )}
-                                  </div>
-                                );
-                              })}
+                                  );
+                                })}
+                              </div>
                             </div>
-                          </div>
-                        )
-                      })}
+                          )
+                        })}
+                      </div>
                     </div>
                   </div>
                 </div>
