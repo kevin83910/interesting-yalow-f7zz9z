@@ -174,14 +174,6 @@ const groupSlots = (times) => {
   return groups;
 };
 
-// 取得觸控或滑鼠的 Y 座標
-const getClientY = (e) => {
-  if (e.touches && e.touches.length > 0) {
-    return e.touches[0].clientY;
-  }
-  return e.clientY;
-};
-
 // --- 初始預設資料 ---
 const initialDesigners = [
   { id: "d1", name: "魚魚", location: "北車店 15樓", schedules: [] },
@@ -234,7 +226,7 @@ export default function App() {
   const [adminPassword, setAdminPassword] = useState("admin");
   const [lineOfficialId, setLineOfficialId] = useState("");
   const [lineNotifyUrl, setLineNotifyUrl] = useState(""); // LINE Messaging API 推播網址
-  const [lineUserIds, setLineUserIds] = useState(""); // 新增：支援多個 User ID
+  const [lineUserIds, setLineUserIds] = useState(""); // 支援多個 User ID
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [showForgotPrompt, setShowForgotPrompt] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
@@ -426,12 +418,13 @@ export default function App() {
       return true;
     } catch (e) {
       console.error("同步失敗:", e);
-      showToast("雲端同步失敗，請檢查網路或照片是否過大！");
+      showToast("儲存失敗！照片可能過大導致雲端容量已滿，請嘗試不附照片或刪除舊紀錄照片。");
       return false;
     }
   };
 
   const handleExplicitSave = async () => {
+    showToast("資料儲存中...");
     const success = await syncToCloud();
     if(success) showToast("資料已成功儲存並更新至前台！");
   };
@@ -517,12 +510,13 @@ export default function App() {
   };
 
   // --- CRM 功能 ---
-  const handleSaveClient = () => {
+  const handleSaveClient = async () => {
     if(!newClientData.name || !newClientData.phone) return showToast("姓名與電話為必填！");
     const tagsArray = newClientData.tags ? newClientData.tags.split(',').map(t => t.trim()) : ["新客"];
     
+    let updatedClients = [...clients];
     if (editingClientId) {
-      const updatedClients = clients.map(c => {
+      updatedClients = clients.map(c => {
         if (c.id === editingClientId) {
           return {
             ...c,
@@ -535,21 +529,27 @@ export default function App() {
         }
         return c;
       });
-      setClients(updatedClients);
-      setSelectedClient(updatedClients.find(c => c.id === editingClientId));
-      syncToCloud({ clients: updatedClients });
-      showToast("客戶資料已更新！");
     } else {
       const client = {
         id: Date.now(), name: newClientData.name, phone: newClientData.phone, birthday: newClientData.birthday || '-', joinDate: getTodayString(),
         tags: tagsArray, lashPreference: newClientData.lashPreference || "尚未建立紀錄", balance: 0, packages: [], visits: []
       };
-      const updatedClients = [client, ...clients];
-      setClients(updatedClients); 
-      syncToCloud({ clients: updatedClients });
-      showToast("已建立新客戶檔案！");
+      updatedClients = [client, ...clients];
     }
-    closeClientModal();
+
+    showToast("資料儲存中...");
+    const success = await syncToCloud({ clients: updatedClients });
+    
+    if (success) {
+      setClients(updatedClients);
+      if (editingClientId) {
+        setSelectedClient(updatedClients.find(c => c.id === editingClientId));
+        showToast("客戶資料已更新！");
+      } else {
+        showToast("已建立新客戶檔案！");
+      }
+      closeClientModal();
+    }
   };
 
   const closeClientModal = () => {
@@ -570,14 +570,19 @@ export default function App() {
     setShowAddClientModal(true);
   };
 
-  const handleDeleteClient = () => {
+  const handleDeleteClient = async () => {
     if (!selectedClient) return;
     const updatedClients = clients.filter(c => c.id !== selectedClient.id);
-    setClients(updatedClients);
-    setSelectedClient(null);
-    setShowDeleteClientModal(false);
-    syncToCloud({ clients: updatedClients });
-    showToast("已成功刪除該客戶所有資料！");
+    
+    showToast("資料刪除中...");
+    const success = await syncToCloud({ clients: updatedClients });
+    
+    if (success) {
+      setClients(updatedClients);
+      setSelectedClient(null);
+      setShowDeleteClientModal(false);
+      showToast("已成功刪除該客戶所有資料！");
+    }
   };
 
   const handleServiceToggle = (serviceName) => {
@@ -597,8 +602,9 @@ export default function App() {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 800;
-        const MAX_HEIGHT = 800;
+        // 大幅強化手機端高畫素照片的壓縮率 (500x500)，避免超出雲端限制
+        const MAX_WIDTH = 500;
+        const MAX_HEIGHT = 500;
         let width = img.width;
         let height = img.height;
 
@@ -611,7 +617,8 @@ export default function App() {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
-        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+        // 品質調降至 0.5 (有效降低 Base64 長度)
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.5);
         setNewVisit({ ...newVisit, photoUrl: compressedBase64 });
       };
       img.src = reader.result;
@@ -641,7 +648,7 @@ export default function App() {
     }
   };
 
-  const handleAddVisit = () => {
+  const handleAddVisit = async () => {
     if (!newVisit.date || newVisit.services.length === 0 || !newVisit.size || !newVisit.amount || !newVisit.designerId) {
       return showToast("請完整填寫日期、設計師、項目、尺寸與總金額！");
     }
@@ -716,23 +723,25 @@ export default function App() {
     let updatedPaymentMethods = [...paymentMethods];
     if(newVisit.paymentMethod === '自訂' && customPayment && !paymentMethods.includes(customPayment)){
        updatedPaymentMethods.push(customPayment);
-       setPaymentMethods(updatedPaymentMethods);
     }
     
-    setClients(updatedClients); 
-    setSelectedClient(updatedClients.find(c => c.id === selectedClient.id)); 
-    setIsAddingVisit(false);
-    setEditingVisitId(null);
+    showToast("資料儲存中，請稍候...");
+    const success = await syncToCloud({ clients: updatedClients, paymentMethods: updatedPaymentMethods });
     
-    syncToCloud({ clients: updatedClients, paymentMethods: updatedPaymentMethods });
-    
-    setNewVisit({ date: getTodayString(), services: [], size: '', amount: '', paymentMethod: '現金', accountLast5: '', deductPackageId: '', notes: '', photoUrl: '', designerId: activeDesignerId || '' });
-    setCustomPayment(''); 
-    showToast(editingVisitId ? "消費紀錄已成功更新並儲存！" : "消費紀錄已成功儲存！");
+    if (success) {
+      setClients(updatedClients); 
+      setSelectedClient(updatedClients.find(c => c.id === selectedClient.id)); 
+      setPaymentMethods(updatedPaymentMethods);
+      setIsAddingVisit(false);
+      setEditingVisitId(null);
+      setNewVisit({ date: getTodayString(), services: [], size: '', amount: '', paymentMethod: '現金', accountLast5: '', deductPackageId: '', notes: '', photoUrl: '', designerId: activeDesignerId || '' });
+      setCustomPayment(''); 
+      showToast(editingVisitId ? "消費紀錄已成功更新並儲存！" : "消費紀錄已成功儲存！");
+    }
   };
 
   // --- 排班管理 (批次自動開班) ---
-  const handleApplyAutoSchedule = () => {
+  const handleApplyAutoSchedule = async () => {
     if (!activeDesigner || !generateMonth) return showToast("請先選擇月份！");
     const [yearStr, monthStr] = generateMonth.split("-"); 
     const year = parseInt(yearStr, 10); 
@@ -817,11 +826,15 @@ export default function App() {
 
     newSchedules.sort((a, b) => new Date(a.fullDate) - new Date(b.fullDate));
     const newDesigners = designers.map(d => d.id === activeDesignerId ? { ...d, schedules: newSchedules } : d);
-    setDesigners(newDesigners);
-    setShowAutoScheduleModal(false);
     
-    syncToCloud({ designers: newDesigners });
-    showToast(`批次開班成功！已自動儲存。`);
+    showToast("排班資料產生中...");
+    const success = await syncToCloud({ designers: newDesigners });
+    
+    if (success) {
+      setDesigners(newDesigners);
+      setShowAutoScheduleModal(false);
+      showToast(`批次開班成功！已自動儲存。`);
+    }
   };
 
   const toggleWorkDay = (dayIndex) => {
@@ -866,7 +879,7 @@ export default function App() {
     });
   };
 
-  const handleSaveSlotEdit = () => {
+  const handleSaveSlotEdit = async () => {
     if (!editingSlot) return;
     const { isNew, date, startTime, endTime, isFull, clientName, clientPhone, service, color, eventId, originalSlots } = editingSlot;
     
@@ -894,7 +907,6 @@ export default function App() {
           visits: []
         };
         finalClients = [newClient, ...clients];
-        setClients(finalClients);
         isNewClientCreated = true;
       }
     }
@@ -937,19 +949,23 @@ export default function App() {
     }
 
     const newDesigners = designers.map(d => d.id === activeDesignerId ? { ...d, schedules: updatedSchedules } : d);
-    setDesigners(newDesigners);
-    setEditingSlot(null); 
     
-    syncToCloud({ designers: newDesigners, clients: finalClients });
+    showToast("排班資料儲存中...");
+    const success = await syncToCloud({ designers: newDesigners, clients: finalClients });
     
-    if (isNewClientCreated) {
-      showToast("時段設定成功！已為新客人自動建立檔案。");
-    } else {
-      showToast("時段設定成功！已自動同步。");
+    if (success) {
+      setDesigners(newDesigners);
+      setClients(finalClients);
+      setEditingSlot(null); 
+      if (isNewClientCreated) {
+        showToast("時段設定成功！已為新客人自動建立檔案。");
+      } else {
+        showToast("時段設定成功！已自動同步。");
+      }
     }
   };
 
-  const handleRemoveSlot = () => {
+  const handleRemoveSlot = async () => {
     if (!editingSlot || editingSlot.isNew) {
       setEditingSlot(null);
       return;
@@ -963,10 +979,15 @@ export default function App() {
     });
     
     const newDesigners = designers.map(d => d.id === activeDesignerId ? { ...d, schedules: updatedSchedules } : d);
-    setDesigners(newDesigners);
-    setEditingSlot(null);
-    syncToCloud({ designers: newDesigners });
-    showToast("已刪除該空檔！已自動同步。");
+    
+    showToast("空檔刪除中...");
+    const success = await syncToCloud({ designers: newDesigners });
+    
+    if (success) {
+      setDesigners(newDesigners);
+      setEditingSlot(null);
+      showToast("已刪除該空檔！已自動同步。");
+    }
   };
 
   const handleCopyBooking = () => {
@@ -987,12 +1008,17 @@ export default function App() {
   };
 
   // --- 系統設定 (新增/編輯設計師與項目) ---
-  const handleAddNewDesigner = () => {
+  const handleAddNewDesigner = async () => {
     const newId = "d" + Date.now();
     const newDesigners = [...designers, { id: newId, name: "新設計師", location: "北車店", schedules: [] }];
-    setDesigners(newDesigners);
-    syncToCloud({ designers: newDesigners });
-    showToast("已新增設計師欄位，請修改名稱");
+    
+    showToast("新增中...");
+    const success = await syncToCloud({ designers: newDesigners });
+    
+    if (success) {
+      setDesigners(newDesigners);
+      showToast("已新增設計師欄位，請修改名稱");
+    }
   };
 
   const handleUpdateDesignerItem = (id, field, value) => {
@@ -1001,13 +1027,18 @@ export default function App() {
     setHasUnsavedChanges(true);
   };
 
-  const handleDeleteDesigner = (id) => {
+  const handleDeleteDesigner = async (id) => {
     if (designers.length <= 1) return showToast("系統至少需保留一位設計師！");
     const newDesigners = designers.filter(d => d.id !== id);
-    setDesigners(newDesigners);
-    if (activeDesignerId === id) setActiveDesignerId(newDesigners[0].id);
-    syncToCloud({ designers: newDesigners });
-    showToast("已刪除設計師！");
+    
+    showToast("刪除中...");
+    const success = await syncToCloud({ designers: newDesigners });
+    
+    if (success) {
+      setDesigners(newDesigners);
+      if (activeDesignerId === id) setActiveDesignerId(newDesigners[0].id);
+      showToast("已刪除設計師！");
+    }
   };
 
   const [newServiceInput, setNewServiceInput] = useState('');
@@ -1676,7 +1707,7 @@ export default function App() {
                            
                            <div className="flex justify-end pt-2">
                              <button onClick={handleAddVisit} className="bg-[#A87B7B] text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-sm hover:bg-[#8f6666] transition flex items-center gap-2">
-                               <Save size={16}/> {editingVisitId ? '暫存更新紀錄' : '暫存新紀錄'}
+                               <Save size={16}/> {editingVisitId ? '確認更新' : '確認儲存'}
                              </button>
                            </div>
                         </div>
