@@ -414,6 +414,17 @@ export default function App() {
   const syncToCloud = async (updates = {}) => {
     if (!user || !db) return false;
     try {
+      // ⚠️ 終極救援機制：自動清理過大的 Base64 舊照片，拯救 Firebase 1MB 容量限制
+      const safeClients = ('clients' in updates ? updates.clients : clients).map(c => ({
+        ...c,
+        visits: c.visits.map(v => ({
+          ...v,
+          // 如果照片是舊版的 data:image 開頭且大於 5 萬字元，自動轉為空白以釋放空間
+          photos: v.photos ? v.photos.filter(p => !(p.startsWith('data:image') && p.length > 50000)) : [],
+          photoUrl: (v.photoUrl && v.photoUrl.startsWith('data:image') && v.photoUrl.length > 50000) ? '' : (v.photoUrl || '')
+        }))
+      }));
+
       const payload = {
         designers: 'designers' in updates ? updates.designers : designers,
         adminPassword: 'adminPassword' in updates ? updates.adminPassword : adminPassword,
@@ -422,12 +433,13 @@ export default function App() {
         lineUserIds: 'lineUserIds' in updates ? updates.lineUserIds : lineUserIds,
         imgbbApiKey: 'imgbbApiKey' in updates ? updates.imgbbApiKey : imgbbApiKey,
         gdriveApiUrl: 'gdriveApiUrl' in updates ? updates.gdriveApiUrl : gdriveApiUrl,
-        clients: 'clients' in updates ? updates.clients : clients,
+        clients: safeClients,
         inventory: 'inventory' in updates ? updates.inventory : inventory,
         paymentMethods: 'paymentMethods' in updates ? updates.paymentMethods : paymentMethods,
         savedServices: 'savedServices' in updates ? updates.savedServices : savedServices,
         savedProducts: 'savedProducts' in updates ? updates.savedProducts : savedProducts,
       };
+      
       const dataToSave = JSON.parse(JSON.stringify(payload));
       const docRef = doc(db, "artifacts", appId, "public", "data", "store_data", "main_config");
       await setDoc(docRef, dataToSave);
@@ -435,7 +447,7 @@ export default function App() {
       return true;
     } catch (e) {
       console.error("同步失敗:", e);
-      showToast("儲存失敗！資料庫容量已滿或網路不穩。");
+      showToast("儲存失敗！照片可能過大導致雲端容量已滿，請嘗試不附照片或刪除舊紀錄照片。");
       return false;
     }
   };
@@ -616,6 +628,11 @@ export default function App() {
     const file = e.target.files[0];
     if (!file) return;
 
+    // 請使用者務必確認系統設定中「Google 雲端硬碟網址」欄位有確實填寫
+    if (!gdriveApiUrl && !imgbbApiKey) {
+      return showToast("請先至「系統設定」填寫 Google 雲端硬碟圖床網址，才能上傳照片喔！");
+    }
+
     setIsUploadingImage(true);
 
     const reader = new FileReader();
@@ -665,7 +682,7 @@ export default function App() {
               showToast("上傳失敗，請檢查 Google Apps Script 設定。");
             }
           } else {
-            // 策略 B：若未設定 Google Drive，退回使用 ImgBB
+            // 策略 B：退回使用 ImgBB
             const formData = new FormData();
             formData.append('image', base64Data);
             const apiKey = imgbbApiKey || "71a62dc5cebbd7ecbdab72a4467bc068";
@@ -678,12 +695,13 @@ export default function App() {
               setNewVisit(prev => ({ ...prev, photoUrl: json.data.url }));
               showToast("圖片上傳圖床成功！");
             } else {
-              showToast("圖片處理失敗，請稍後再試。");
+              // 若 ImgBB API Key 失效或被阻擋，就會出現這個錯誤
+              showToast("圖床處理失敗，建議改用 Google 雲端硬碟圖床！");
             }
           }
         } catch (error) {
           console.error(error);
-          showToast("網路錯誤，圖片無法上傳。");
+          showToast("網路錯誤，或網址設定錯誤，請稍後再試。");
         } finally {
           setIsUploadingImage(false);
         }
@@ -716,8 +734,9 @@ export default function App() {
   };
 
   const handleAddVisit = async () => {
-    if (!newVisit.date || newVisit.services.length === 0 || !newVisit.size || !newVisit.amount || !newVisit.designerId) {
-      return showToast("請完整填寫日期、設計師、項目、尺寸與總金額！");
+    // 💡 終極救援：尺寸 (size) 改為非必填，避免客人忘了填而儲存失敗
+    if (!newVisit.date || newVisit.services.length === 0 || !newVisit.amount || !newVisit.designerId) {
+      return showToast("請完整填寫日期、設計師、項目與總金額！");
     }
     
     const serviceAmt = Number(newVisit.amount) || 0;
@@ -744,7 +763,7 @@ export default function App() {
       designerId: newVisit.designerId,
       designerName: selectedDesignerName,
       service: serviceStr, 
-      size: newVisit.size,
+      size: newVisit.size || '', // 若無填寫則保留空白
       amount: serviceAmt, 
       paymentMethod: finalPaymentMethod, 
       accountLast5: newVisit.paymentMethod === '轉帳' ? newVisit.accountLast5 : '',
@@ -1713,7 +1732,7 @@ export default function App() {
 
                            <div className="grid grid-cols-1 gap-4">
                              <div>
-                               <label className="text-xs font-bold text-gray-500 block mb-1">尺寸 *</label>
+                               <label className="text-xs font-bold text-gray-500 block mb-1">尺寸 / 根數 / 規格</label>
                                <input type="text" placeholder="例：C翹度 0.15 10-11-12" value={newVisit.size} onChange={e=>setNewVisit({...newVisit,size:e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
                              </div>
                            </div>
@@ -1753,11 +1772,11 @@ export default function App() {
                            {/* 客片完成照 & 備註 */}
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                              <div>
-                                <label className="text-xs font-bold text-gray-500 block mb-1">客片完成照</label>
+                                <label className="text-xs font-bold text-gray-500 block mb-1">客片完成照 (自動壓縮防爆)</label>
                                 <input type="file" accept="image/*" onChange={handleImageUpload} disabled={isUploadingImage} className="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-[#F5E3E3] file:text-[#A87B7B] hover:file:bg-[#F0E6D8] cursor-pointer disabled:opacity-50" />
                                 {isUploadingImage && (
                                   <div className="mt-2 text-xs text-[#A87B7B] font-bold animate-pulse flex items-center gap-1">
-                                    <Cloud size={14}/> 高畫質上傳中，請稍候...
+                                    <Cloud size={14}/> 圖片處理上傳中，請稍候...
                                   </div>
                                 )}
                                 {newVisit.photoUrl && !isUploadingImage && (
