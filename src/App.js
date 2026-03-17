@@ -182,6 +182,21 @@ const getClientY = (e) => {
   return e.clientY;
 };
 
+// ✅ 將 Google Drive 原始網址轉換為可顯示的高畫質縮圖網址，徹底解決破圖問題！
+const getDisplayImageUrl = (url) => {
+  if (!url) return '';
+  if (url.includes('drive.google.com')) {
+    try {
+      const match = url.match(/id=([^&]+)/);
+      if (match && match[1]) {
+        // 使用 Google Thumbnail 服務，強制要求寬度 1000px 的高畫質縮圖，完美繞過預覽限制
+        return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
+      }
+    } catch(e) { console.error("圖片網址轉換失敗", e); }
+  }
+  return url;
+};
+
 // --- 初始預設資料 ---
 const initialDesigners = [
   { id: "d1", name: "魚魚", location: "北車店 15樓", schedules: [] },
@@ -411,12 +426,10 @@ export default function App() {
   const syncToCloud = async (updates = {}) => {
     if (!user || !db) return false;
     try {
-      // ⚠️ 終極救援機制：自動清理過大的 Base64 舊照片，拯救 Firebase 1MB 容量限制
       const safeClients = ('clients' in updates ? updates.clients : clients).map(c => ({
         ...c,
         visits: c.visits.map(v => ({
           ...v,
-          // 如果照片是舊版的 data:image 開頭且大於 5 萬字元，自動轉為空白以釋放空間
           photos: v.photos ? v.photos.filter(p => !(p.startsWith('data:image') && p.length > 50000)) : [],
           photoUrl: (v.photoUrl && v.photoUrl.startsWith('data:image') && v.photoUrl.length > 50000) ? '' : (v.photoUrl || '')
         }))
@@ -618,7 +631,7 @@ export default function App() {
     }));
   };
 
-  // --- 全新升級：無敵表單傳輸 Google Drive 隱私圖床引擎 ---
+  // --- 全新升級：純 Google Drive 隱私圖床引擎 ---
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -686,7 +699,7 @@ export default function App() {
           }
         } catch (error) {
           console.error(error);
-          showToast("❌ 網路跨域錯誤，請檢查您的 Google Apps Script 佈署權限設定。");
+          showToast("❌ 網路錯誤，請檢查您的 Google Apps Script 佈署設定。");
         } finally {
           setIsUploadingImage(false);
         }
@@ -1766,7 +1779,7 @@ export default function App() {
                                 )}
                                 {newVisit.photoUrl && !isUploadingImage && (
                                   <div className="mt-2 relative inline-block">
-                                    <img src={newVisit.photoUrl} alt="預覽" className="h-16 w-16 object-cover rounded-lg border shadow-sm" />
+                                    <img src={getDisplayImageUrl(newVisit.photoUrl)} alt="預覽" className="h-16 w-16 object-cover rounded-lg border shadow-sm" />
                                     <button onClick={() => setNewVisit({...newVisit, photoUrl: ''})} className="absolute -top-1.5 -right-1.5 bg-gray-800 text-white rounded-full p-0.5 hover:bg-red-500"><X size={12} /></button>
                                   </div>
                                 )}
@@ -1828,7 +1841,7 @@ export default function App() {
                               {visit.photos.map((photo, i) => (
                                 <img 
                                   key={i} 
-                                  src={photo} 
+                                  src={getDisplayImageUrl(photo)} 
                                   alt="客片" 
                                   onClick={() => setEnlargedImage(photo)}
                                   className="w-20 h-20 object-cover rounded-lg border border-gray-200 shadow-sm cursor-pointer hover:opacity-80 transition" 
@@ -2123,7 +2136,7 @@ export default function App() {
         {enlargedImage && (
           <div className="fixed inset-0 bg-black/90 z-[300] flex items-center justify-center p-4 backdrop-blur-sm cursor-zoom-out" onClick={() => setEnlargedImage(null)}>
             <button className="absolute top-5 right-5 text-white/70 hover:text-white transition p-2"><X size={32}/></button>
-            <img src={enlargedImage} alt="放大圖片" className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl cursor-default" onClick={e => e.stopPropagation()} />
+            <img src={getDisplayImageUrl(enlargedImage)} alt="放大圖片" className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl cursor-default" onClick={e => e.stopPropagation()} />
           </div>
         )}
 
