@@ -679,7 +679,13 @@ export default function App() {
             json = JSON.parse(text);
           } catch(e) {
             console.error("Google 原始回傳內容 (非 JSON):", text);
-            throw new Error("跨域讀取失敗或遇到多帳號衝突");
+            // 精準除錯：如果回傳的是 HTML 或是登入畫面，100% 是因為 GAS 部署的執行身分設定錯誤
+            if (text.toLowerCase().includes("<html") || text.toLowerCase().includes("sign in")) {
+                showToast("❌ 雲端權限設定錯誤！請回 GAS 檢查「執行身分」必須為「我(Me)」");
+            } else {
+                showToast("❌ 雲端連線失敗，請檢查網址是否有誤。");
+            }
+            return setIsUploadingImage(false);
           }
 
           if (json.success) {
@@ -690,8 +696,7 @@ export default function App() {
           }
         } catch (error) {
           console.error(error);
-          // 若真的發生跨域阻擋，但圖片有傳出去
-          showToast("圖片已傳至雲端，但回傳網址被瀏覽器擋下，請確認未登入多個 Google 帳號或使用無痕模式操作。");
+          showToast("❌ 網路跨域錯誤，請檢查 Google 雲端網址，或更換瀏覽器。");
         } finally {
           setIsUploadingImage(false);
         }
