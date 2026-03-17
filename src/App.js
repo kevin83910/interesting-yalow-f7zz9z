@@ -500,10 +500,11 @@ export default function App() {
       const response = await fetch(lineNotifyUrl, {
         method: "POST",
         body: JSON.stringify({ message: msg, userIds: idsArray }),
+        credentials: 'omit',
         headers: { "Content-Type": "text/plain;charset=utf-8" } 
       });
       if (response.ok || response.type === 'opaque') {
-        showToast("✅ 已成功觸推播，請檢查您的 LINE！");
+        showToast("✅ 已成功觸發推播，請檢查您的 LINE！");
       } else {
         showToast("❌ 傳送失敗，請檢查網址是否正確。");
       }
@@ -665,7 +666,11 @@ export default function App() {
               image: base64Data,
               name: `LashBeauty_${selectedClient?.name || 'Client'}_${Date.now()}.jpg`,
               mimeType: 'image/jpeg'
-            })
+            }),
+            credentials: 'omit',
+            headers: {
+              'Content-Type': 'text/plain;charset=utf-8'
+            }
           });
           
           const text = await response.text();
