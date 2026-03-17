@@ -499,8 +499,7 @@ export default function App() {
       showToast("發送中...");
       const response = await fetch(lineNotifyUrl, {
         method: "POST",
-        body: JSON.stringify({ message: msg, userIds: idsArray }),
-        headers: { "Content-Type": "text/plain;charset=utf-8" } 
+        body: JSON.stringify({ message: msg, userIds: idsArray })
       });
       if (response.ok || response.type === 'opaque') {
         showToast("✅ 已成功觸發推播，請檢查您的 LINE！");
@@ -659,17 +658,14 @@ export default function App() {
           const base64Data = compressedBase64.split(',')[1];
           const cleanUrl = gdriveApiUrl.trim();
           
-          // 使用最純粹的 POST + text/plain 繞過 OPTIONS 預檢
+          // ✅ 終極安全解法：移除所有自訂 header 與 credentials，讓瀏覽器視為最單純的請求，不觸發 CORS
           const response = await fetch(cleanUrl, {
             method: 'POST',
             body: JSON.stringify({ 
               image: base64Data,
               name: `LashBeauty_${selectedClient?.name || 'Client'}_${Date.now()}.jpg`,
               mimeType: 'image/jpeg'
-            }),
-            headers: {
-              'Content-Type': 'text/plain;charset=utf-8'
-            }
+            })
           });
           
           const text = await response.text();
