@@ -500,7 +500,6 @@ export default function App() {
       const response = await fetch(lineNotifyUrl, {
         method: "POST",
         body: JSON.stringify({ message: msg, userIds: idsArray }),
-        credentials: 'omit',
         headers: { "Content-Type": "text/plain;charset=utf-8" } 
       });
       if (response.ok || response.type === 'opaque') {
@@ -660,16 +659,17 @@ export default function App() {
           const base64Data = compressedBase64.split(',')[1];
           const cleanUrl = gdriveApiUrl.trim();
           
-          // 終極無敵表單傳輸模式 (URLSearchParams)，完全避開 JSON 格式引發的 CORS 預檢攔截
-          const formData = new URLSearchParams();
-          formData.append('image', base64Data);
-          formData.append('name', `LashBeauty_${selectedClient?.name || 'Client'}_${Date.now()}.jpg`);
-          formData.append('mimeType', 'image/jpeg');
-          
+          // 使用最純粹的 POST + text/plain 繞過 OPTIONS 預檢
           const response = await fetch(cleanUrl, {
             method: 'POST',
-            body: formData
-            // 不加自訂 headers 與 credentials，偽裝成最普通的網頁表單送出
+            body: JSON.stringify({ 
+              image: base64Data,
+              name: `LashBeauty_${selectedClient?.name || 'Client'}_${Date.now()}.jpg`,
+              mimeType: 'image/jpeg'
+            }),
+            headers: {
+              'Content-Type': 'text/plain;charset=utf-8'
+            }
           });
           
           const text = await response.text();
@@ -677,13 +677,8 @@ export default function App() {
           try {
             json = JSON.parse(text);
           } catch(e) {
-            console.error("Google 原始回傳內容 (非 JSON):", text);
-            // 精準除錯：如果回傳的是 HTML 或是登入畫面，100% 是因為 GAS 部署的執行身分設定錯誤
-            if (text.toLowerCase().includes("<html") || text.toLowerCase().includes("sign in")) {
-                showToast("❌ 雲端權限設定錯誤！請回 GAS 檢查「執行身分」必須為「我(Me)」");
-            } else {
-                showToast("❌ 雲端連線失敗，請檢查網址是否有誤。");
-            }
+            console.error("Google 原始回傳:", text);
+            showToast("❌ 雲端回傳格式異常，請檢查 GAS 程式碼是否為最新版。");
             return setIsUploadingImage(false);
           }
 
