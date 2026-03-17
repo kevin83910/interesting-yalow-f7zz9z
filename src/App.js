@@ -665,21 +665,31 @@ export default function App() {
           
           if (gdriveApiUrl) {
             // 策略 A：上傳至使用者的 Google Drive (最佳推薦)
-            const response = await fetch(gdriveApiUrl, {
+            const cleanUrl = gdriveApiUrl.trim();
+            const response = await fetch(cleanUrl, {
               method: 'POST',
               body: JSON.stringify({ 
                 image: base64Data,
                 name: `LashBeauty_${selectedClient?.name || 'Client'}_${Date.now()}.jpg`,
                 mimeType: 'image/jpeg'
-              }),
-              headers: { "Content-Type": "text/plain;charset=utf-8" } 
+              })
+              // 移除 custom headers，強制讓瀏覽器以最單純的 text/plain 送出，避免觸發 OPTIONS 預檢被擋
             });
-            const json = await response.json();
+            
+            const text = await response.text();
+            let json;
+            try {
+              json = JSON.parse(text);
+            } catch(e) {
+              console.error("Google 原始回傳內容 (非 JSON):", text);
+              throw new Error("跨域讀取失敗或遇到多帳號衝突");
+            }
+
             if (json.success) {
               setNewVisit(prev => ({ ...prev, photoUrl: json.url }));
               showToast("圖片上傳 Google 雲端成功！");
             } else {
-              showToast("上傳失敗，請檢查 Google Apps Script 設定。");
+              showToast("Google回傳錯誤：" + json.message);
             }
           } else {
             // 策略 B：退回使用 ImgBB
@@ -701,7 +711,8 @@ export default function App() {
           }
         } catch (error) {
           console.error(error);
-          showToast("網路錯誤，或網址設定錯誤，請稍後再試。");
+          // 若真的發生跨域阻擋，但圖片有傳出去
+          showToast("圖片已傳至雲端，但回傳網址被瀏覽器擋下，建議您確認未登入多個 Google 帳號。");
         } finally {
           setIsUploadingImage(false);
         }
