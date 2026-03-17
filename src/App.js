@@ -620,13 +620,13 @@ export default function App() {
     }));
   };
 
-  // --- 全新升級：純 Google Drive 隱私圖床引擎 ---
+  // --- 全新升級：無敵表單傳輸 Google Drive 隱私圖床引擎 ---
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     if (!gdriveApiUrl) {
-      return showToast("請先至「系統設定」填寫 Google 雲端硬碟圖床網址，才能上傳照片喔！基於隱私安全，系統已全面停用外部圖床。");
+      return showToast("請先至「系統設定」填寫 Google 雲端硬碟圖床網址，才能上傳照片喔！");
     }
 
     setIsUploadingImage(true);
@@ -660,17 +660,16 @@ export default function App() {
           const base64Data = compressedBase64.split(',')[1];
           const cleanUrl = gdriveApiUrl.trim();
           
+          // 終極無敵表單傳輸模式 (URLSearchParams)，完全避開 JSON 格式引發的 CORS 預檢攔截
+          const formData = new URLSearchParams();
+          formData.append('image', base64Data);
+          formData.append('name', `LashBeauty_${selectedClient?.name || 'Client'}_${Date.now()}.jpg`);
+          formData.append('mimeType', 'image/jpeg');
+          
           const response = await fetch(cleanUrl, {
             method: 'POST',
-            body: JSON.stringify({ 
-              image: base64Data,
-              name: `LashBeauty_${selectedClient?.name || 'Client'}_${Date.now()}.jpg`,
-              mimeType: 'image/jpeg'
-            }),
-            credentials: 'omit',
-            headers: {
-              'Content-Type': 'text/plain;charset=utf-8'
-            }
+            body: formData
+            // 不加自訂 headers 與 credentials，偽裝成最普通的網頁表單送出
           });
           
           const text = await response.text();
@@ -696,7 +695,7 @@ export default function App() {
           }
         } catch (error) {
           console.error(error);
-          showToast("❌ 網路跨域錯誤，請檢查 Google 雲端網址，或更換瀏覽器。");
+          showToast("❌ 網路跨域錯誤，請檢查您的 Google Apps Script 佈署權限設定。");
         } finally {
           setIsUploadingImage(false);
         }
