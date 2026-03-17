@@ -662,36 +662,36 @@ export default function App() {
 
         try {
           const base64Data = compressedBase64.split(',')[1];
+          let uploadSuccess = false;
           
           if (gdriveApiUrl) {
             // 策略 A：上傳至使用者的 Google Drive (最佳推薦)
             const cleanUrl = gdriveApiUrl.trim();
-            const response = await fetch(cleanUrl, {
-              method: 'POST',
-              body: JSON.stringify({ 
-                image: base64Data,
-                name: `LashBeauty_${selectedClient?.name || 'Client'}_${Date.now()}.jpg`,
-                mimeType: 'image/jpeg'
-              })
-              // 移除 custom headers，強制讓瀏覽器以最單純的 text/plain 送出，避免觸發 OPTIONS 預檢被擋
-            });
-            
-            const text = await response.text();
-            let json;
             try {
-              json = JSON.parse(text);
-            } catch(e) {
-              console.error("Google 原始回傳內容 (非 JSON):", text);
-              throw new Error("跨域讀取失敗或遇到多帳號衝突");
+              const response = await fetch(cleanUrl, {
+                method: 'POST',
+                body: JSON.stringify({ 
+                  image: base64Data,
+                  name: `LashBeauty_${selectedClient?.name || 'Client'}_${Date.now()}.jpg`,
+                  mimeType: 'image/jpeg'
+                })
+              });
+              
+              const text = await response.text();
+              const json = JSON.parse(text);
+              
+              if (json.success) {
+                setNewVisit(prev => ({ ...prev, photoUrl: json.url }));
+                showToast("圖片上傳 Google 雲端成功！");
+                uploadSuccess = true;
+              }
+            } catch (err) {
+              console.warn("Google Drive Upload Blocked:", err);
+              showToast("⚠️ 雲端網址被瀏覽器阻擋，自動切換備用圖床...");
             }
-
-            if (json.success) {
-              setNewVisit(prev => ({ ...prev, photoUrl: json.url }));
-              showToast("圖片上傳 Google 雲端成功！");
-            } else {
-              showToast("Google回傳錯誤：" + json.message);
-            }
-          } else {
+          } 
+          
+          if (!uploadSuccess) {
             // 策略 B：退回使用 ImgBB
             const formData = new FormData();
             formData.append('image', base64Data);
@@ -703,16 +703,14 @@ export default function App() {
             const json = await res.json();
             if (json.success) {
               setNewVisit(prev => ({ ...prev, photoUrl: json.data.url }));
-              showToast("圖片上傳圖床成功！");
+              showToast("備用圖床處理成功！");
             } else {
-              // 若 ImgBB API Key 失效或被阻擋，就會出現這個錯誤
-              showToast("圖床處理失敗，建議改用 Google 雲端硬碟圖床！");
+              showToast("圖床處理失敗，建議更換瀏覽器再試！");
             }
           }
         } catch (error) {
           console.error(error);
-          // 若真的發生跨域阻擋，但圖片有傳出去
-          showToast("圖片已傳至雲端，但回傳網址被瀏覽器擋下，建議您確認未登入多個 Google 帳號。");
+          showToast("網路錯誤，圖片無法上傳。");
         } finally {
           setIsUploadingImage(false);
         }
