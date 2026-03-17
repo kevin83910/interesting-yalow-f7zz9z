@@ -235,8 +235,7 @@ export default function App() {
   const [lineOfficialId, setLineOfficialId] = useState("");
   const [lineNotifyUrl, setLineNotifyUrl] = useState(""); // LINE Messaging API 推播網址
   const [lineUserIds, setLineUserIds] = useState(""); // 支援多個 User ID
-  const [imgbbApiKey, setImgbbApiKey] = useState(""); // 圖床 API Key (相容舊版)
-  const [gdriveApiUrl, setGdriveApiUrl] = useState(""); // 新增：Google Drive 圖床 Webhook 網址
+  const [gdriveApiUrl, setGdriveApiUrl] = useState(""); // Google Drive 圖床 Webhook 網址
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [showForgotPrompt, setShowForgotPrompt] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
@@ -376,7 +375,6 @@ export default function App() {
           if (data.lineOfficialId !== undefined) setLineOfficialId(data.lineOfficialId);
           if (data.lineNotifyUrl !== undefined) setLineNotifyUrl(data.lineNotifyUrl);
           if (data.lineUserIds !== undefined) setLineUserIds(data.lineUserIds);
-          if (data.imgbbApiKey !== undefined) setImgbbApiKey(data.imgbbApiKey);
           if (data.gdriveApiUrl !== undefined) setGdriveApiUrl(data.gdriveApiUrl);
           if (data.clients) setClients(data.clients);
           if (data.inventory) setInventory(data.inventory);
@@ -395,7 +393,6 @@ export default function App() {
              lineOfficialId: "", 
              lineNotifyUrl: "",
              lineUserIds: "",
-             imgbbApiKey: "",
              gdriveApiUrl: "",
              clients: initialClients, 
              inventory: initialInventory, 
@@ -431,7 +428,6 @@ export default function App() {
         lineOfficialId: 'lineOfficialId' in updates ? updates.lineOfficialId : lineOfficialId,
         lineNotifyUrl: 'lineNotifyUrl' in updates ? updates.lineNotifyUrl : lineNotifyUrl,
         lineUserIds: 'lineUserIds' in updates ? updates.lineUserIds : lineUserIds,
-        imgbbApiKey: 'imgbbApiKey' in updates ? updates.imgbbApiKey : imgbbApiKey,
         gdriveApiUrl: 'gdriveApiUrl' in updates ? updates.gdriveApiUrl : gdriveApiUrl,
         clients: safeClients,
         inventory: 'inventory' in updates ? updates.inventory : inventory,
@@ -507,7 +503,7 @@ export default function App() {
         headers: { "Content-Type": "text/plain;charset=utf-8" } 
       });
       if (response.ok || response.type === 'opaque') {
-        showToast("✅ 已成功觸發推播，請檢查您的 LINE！");
+        showToast("✅ 已成功觸推播，請檢查您的 LINE！");
       } else {
         showToast("❌ 傳送失敗，請檢查網址是否正確。");
       }
@@ -623,14 +619,13 @@ export default function App() {
     }));
   };
 
-  // --- 全新升級：雙重圖床智慧上傳引擎 (Google Drive / ImgBB) ---
+  // --- 全新升級：純 Google Drive 隱私圖床引擎 ---
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // 請使用者務必確認系統設定中「Google 雲端硬碟網址」欄位有確實填寫
-    if (!gdriveApiUrl && !imgbbApiKey) {
-      return showToast("請先至「系統設定」填寫 Google 雲端硬碟圖床網址，才能上傳照片喔！");
+    if (!gdriveApiUrl) {
+      return showToast("請先至「系統設定」填寫 Google 雲端硬碟圖床網址，才能上傳照片喔！基於隱私安全，系統已全面停用外部圖床。");
     }
 
     setIsUploadingImage(true);
@@ -662,55 +657,36 @@ export default function App() {
 
         try {
           const base64Data = compressedBase64.split(',')[1];
-          let uploadSuccess = false;
+          const cleanUrl = gdriveApiUrl.trim();
           
-          if (gdriveApiUrl) {
-            // 策略 A：上傳至使用者的 Google Drive (最佳推薦)
-            const cleanUrl = gdriveApiUrl.trim();
-            try {
-              const response = await fetch(cleanUrl, {
-                method: 'POST',
-                body: JSON.stringify({ 
-                  image: base64Data,
-                  name: `LashBeauty_${selectedClient?.name || 'Client'}_${Date.now()}.jpg`,
-                  mimeType: 'image/jpeg'
-                })
-              });
-              
-              const text = await response.text();
-              const json = JSON.parse(text);
-              
-              if (json.success) {
-                setNewVisit(prev => ({ ...prev, photoUrl: json.url }));
-                showToast("圖片上傳 Google 雲端成功！");
-                uploadSuccess = true;
-              }
-            } catch (err) {
-              console.warn("Google Drive Upload Blocked:", err);
-              showToast("⚠️ 雲端網址被瀏覽器阻擋，自動切換備用圖床...");
-            }
-          } 
+          const response = await fetch(cleanUrl, {
+            method: 'POST',
+            body: JSON.stringify({ 
+              image: base64Data,
+              name: `LashBeauty_${selectedClient?.name || 'Client'}_${Date.now()}.jpg`,
+              mimeType: 'image/jpeg'
+            })
+          });
           
-          if (!uploadSuccess) {
-            // 策略 B：退回使用 ImgBB
-            const formData = new FormData();
-            formData.append('image', base64Data);
-            const apiKey = imgbbApiKey || "71a62dc5cebbd7ecbdab72a4467bc068";
-            const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
-              method: 'POST',
-              body: formData
-            });
-            const json = await res.json();
-            if (json.success) {
-              setNewVisit(prev => ({ ...prev, photoUrl: json.data.url }));
-              showToast("備用圖床處理成功！");
-            } else {
-              showToast("圖床處理失敗，建議更換瀏覽器再試！");
-            }
+          const text = await response.text();
+          let json;
+          try {
+            json = JSON.parse(text);
+          } catch(e) {
+            console.error("Google 原始回傳內容 (非 JSON):", text);
+            throw new Error("跨域讀取失敗或遇到多帳號衝突");
+          }
+
+          if (json.success) {
+            setNewVisit(prev => ({ ...prev, photoUrl: json.url }));
+            showToast("圖片上傳 Google 雲端成功！");
+          } else {
+            showToast("Google回傳錯誤：" + json.message);
           }
         } catch (error) {
           console.error(error);
-          showToast("網路錯誤，圖片無法上傳。");
+          // 若真的發生跨域阻擋，但圖片有傳出去
+          showToast("圖片已傳至雲端，但回傳網址被瀏覽器擋下，請確認未登入多個 Google 帳號或使用無痕模式操作。");
         } finally {
           setIsUploadingImage(false);
         }
@@ -1781,7 +1757,7 @@ export default function App() {
                            {/* 客片完成照 & 備註 */}
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                              <div>
-                                <label className="text-xs font-bold text-gray-500 block mb-1">客片完成照 (自動壓縮防爆)</label>
+                                <label className="text-xs font-bold text-gray-500 block mb-1">客片完成照 (已啟用安全隱私保護)</label>
                                 <input type="file" accept="image/*" onChange={handleImageUpload} disabled={isUploadingImage} className="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-[#F5E3E3] file:text-[#A87B7B] hover:file:bg-[#F0E6D8] cursor-pointer disabled:opacity-50" />
                                 {isUploadingImage && (
                                   <div className="mt-2 text-xs text-[#A87B7B] font-bold animate-pulse flex items-center gap-1">
