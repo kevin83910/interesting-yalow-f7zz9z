@@ -189,7 +189,6 @@ const getDisplayImageUrl = (url) => {
     try {
       const match = url.match(/id=([^&]+)/);
       if (match && match[1]) {
-        // 使用 Google Thumbnail 服務，強制要求寬度 1000px 的高畫質縮圖，完美繞過預覽限制
         return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
       }
     } catch(e) { console.error("圖片網址轉換失敗", e); }
@@ -287,16 +286,15 @@ export default function App() {
   const [showAddClientModal, setShowAddClientModal] = useState(false);
   const [showDeleteClientModal, setShowDeleteClientModal] = useState(false);
   const [newClientData, setNewClientData] = useState({ name: '', phone: '', birthday: '', tags: '', lashPreference: '' });
-  const [customPayment, setCustomPayment] = useState("");
   const [editingClientId, setEditingClientId] = useState(null); 
   
+  // ✅ 全新升級：支援多重付款方式模組 (payments array)
   const [newVisit, setNewVisit] = useState({ 
     date: getTodayString(), 
     services: [], 
     size: '',
     amount: '', 
-    paymentMethod: '現金', 
-    accountLast5: '',
+    payments: [{ method: '現金', amount: '', accountLast5: '', customName: '' }], // 動態付款陣列
     deductPackageId: '', 
     notes: '', 
     photoUrl: '',
@@ -671,7 +669,7 @@ export default function App() {
           const base64Data = compressedBase64.split(',')[1];
           const cleanUrl = gdriveApiUrl.trim();
           
-          // ✅ 終極安全解法：移除所有自訂 header 與 credentials，讓瀏覽器視為最單純的請求，不觸發 CORS
+          // 使用最單純的 POST + text/plain 繞過 OPTIONS 預檢
           const response = await fetch(cleanUrl, {
             method: 'POST',
             body: JSON.stringify({ 
@@ -712,23 +710,33 @@ export default function App() {
   const handleEditVisitClick = (visit) => {
     setIsAddingVisit(true);
     setEditingVisitId(visit.id);
+    
+    // 將舊版單筆 paymentMethod 轉換相容至新的 payments 陣列
+    let paymentsToSet = visit.payments && visit.payments.length > 0 
+      ? visit.payments.map(p => ({
+          method: paymentMethods.includes(p.method) ? p.method : '自訂',
+          amount: p.amount,
+          accountLast5: p.accountLast5 || '',
+          customName: paymentMethods.includes(p.method) ? '' : p.method
+        }))
+      : [{
+          method: paymentMethods.includes(visit.paymentMethod) ? visit.paymentMethod : '自訂',
+          amount: visit.amount || '',
+          accountLast5: visit.accountLast5 || '',
+          customName: paymentMethods.includes(visit.paymentMethod) ? '' : visit.paymentMethod
+        }];
+
     setNewVisit({
       date: visit.date || getTodayString(),
       services: visit.service ? visit.service.split(', ') : [],
       size: visit.size || '',
       amount: visit.amount || '',
-      paymentMethod: paymentMethods.includes(visit.paymentMethod) ? visit.paymentMethod : '自訂',
-      accountLast5: visit.accountLast5 || '',
+      payments: paymentsToSet,
       deductPackageId: visit.deductPackageId || '',
       notes: visit.notes || '',
       photoUrl: visit.photos && visit.photos.length > 0 ? visit.photos[0] : '',
       designerId: visit.designerId || (designers.length > 0 ? designers[0].id : '')
     });
-    if (visit.paymentMethod && !paymentMethods.includes(visit.paymentMethod)) {
-      setCustomPayment(visit.paymentMethod);
-    } else {
-      setCustomPayment('');
-    }
   };
 
   const handleAddVisit = async () => {
@@ -738,22 +746,45 @@ export default function App() {
     }
     
     const serviceAmt = Number(newVisit.amount) || 0;
-    const finalPaymentMethod = newVisit.paymentMethod === '自訂' ? customPayment : newVisit.paymentMethod;
     
+    // 驗證：付款分配總額必須等於總金額
+    const totalPaymentsAmt = newVisit.payments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+    if (totalPaymentsAmt !== serviceAmt) {
+        return showToast(`付款分配總額 ($${totalPaymentsAmt}) 必須等於您設定的總金額 ($${serviceAmt})！`);
+    }
+
     let tempBalance = selectedClient.balance;
+    // 如果是編輯模式，先把舊紀錄扣掉的儲值金加回來
     if (editingVisitId) {
        const oldVisit = selectedClient.visits.find(v => v.id === editingVisitId);
-       if (oldVisit && oldVisit.paymentMethod === '儲值金扣款') {
-           tempBalance += (Number(oldVisit.amount) || 0);
+       if (oldVisit) {
+           if (oldVisit.payments) {
+               oldVisit.payments.forEach(p => {
+                   if (p.method === '儲值金扣款') tempBalance += (Number(p.amount) || 0);
+               });
+           } else if (oldVisit.paymentMethod === '儲值金扣款') {
+               tempBalance += (Number(oldVisit.amount) || 0);
+           }
        }
     }
 
-    if (finalPaymentMethod === '儲值金扣款' && tempBalance < serviceAmt) {
-       return showToast("儲值金餘額不足！");
+    let totalDeduct = 0;
+    const finalPayments = newVisit.payments.map(p => {
+        const method = p.method === '自訂' ? (p.customName || '自訂') : p.method;
+        const amt = Number(p.amount) || 0;
+        if (method === '儲值金扣款') totalDeduct += amt;
+        return { method, amount: amt, accountLast5: p.accountLast5 || '' };
+    });
+
+    if (totalDeduct > tempBalance) {
+       return showToast(`儲值金餘額不足！目前可用餘額：$${tempBalance}`);
     }
 
     const serviceStr = newVisit.services.join(', ');
     const selectedDesignerName = designers.find(d => d.id === newVisit.designerId)?.name || '';
+    
+    // 為了舊版相容性，將多種付款方式組合為字串
+    const finalPaymentMethodString = finalPayments.map(p => p.method).join(' + ');
 
     const visitData = { 
       id: editingVisitId || Date.now(), 
@@ -761,10 +792,11 @@ export default function App() {
       designerId: newVisit.designerId,
       designerName: selectedDesignerName,
       service: serviceStr, 
-      size: newVisit.size || '', // 若無填寫則保留空白
+      size: newVisit.size || '', 
       amount: serviceAmt, 
-      paymentMethod: finalPaymentMethod, 
-      accountLast5: newVisit.paymentMethod === '轉帳' ? newVisit.accountLast5 : '',
+      payments: finalPayments, // ✅ 儲存詳細分配金額陣列
+      paymentMethod: finalPaymentMethodString, 
+      accountLast5: finalPayments.find(p => p.method === '轉帳')?.accountLast5 || '', 
       deductPackageId: newVisit.deductPackageId,
       notes: newVisit.notes, 
       photos: newVisit.photoUrl ? [newVisit.photoUrl] : [] 
@@ -772,22 +804,19 @@ export default function App() {
 
     const updatedClients = clients.map(c => {
       if (c.id === selectedClient.id) {
-        let newBalance = c.balance; 
+        let newBalance = tempBalance - totalDeduct; 
         let newPackages = [...c.packages];
         let newVisits = [...c.visits];
 
         if (editingVisitId) {
           const oldVisit = newVisits.find(v => v.id === editingVisitId);
-          if (oldVisit) {
-            if (oldVisit.paymentMethod === '儲值金扣款') newBalance += (Number(oldVisit.amount) || 0);
-            if (oldVisit.paymentMethod === '扣除包堂' && oldVisit.deductPackageId) {
-              newPackages = newPackages.map(pkg => pkg.id === oldVisit.deductPackageId ? { ...pkg, remaining: pkg.remaining + 1 } : pkg);
-            }
+          if (oldVisit && oldVisit.paymentMethod === '扣除包堂' && oldVisit.deductPackageId) {
+            newPackages = newPackages.map(pkg => pkg.id === oldVisit.deductPackageId ? { ...pkg, remaining: pkg.remaining + 1 } : pkg);
           }
         }
 
-        if (finalPaymentMethod === '儲值金扣款') newBalance -= serviceAmt;
-        if (finalPaymentMethod === '扣除包堂' && newVisit.deductPackageId) {
+        const hasPackageDeduct = finalPayments.some(p => p.method === '扣除包堂');
+        if (hasPackageDeduct && newVisit.deductPackageId) {
           newPackages = newPackages.map(pkg => pkg.id === newVisit.deductPackageId ? { ...pkg, remaining: pkg.remaining - 1 } : pkg);
         }
 
@@ -805,9 +834,11 @@ export default function App() {
     });
 
     let updatedPaymentMethods = [...paymentMethods];
-    if(newVisit.paymentMethod === '自訂' && customPayment && !paymentMethods.includes(customPayment)){
-       updatedPaymentMethods.push(customPayment);
-    }
+    finalPayments.forEach(p => {
+       if (p.method && !updatedPaymentMethods.includes(p.method)) {
+           updatedPaymentMethods.push(p.method);
+       }
+    });
     
     showToast("資料儲存中，請稍候...");
     const success = await syncToCloud({ clients: updatedClients, paymentMethods: updatedPaymentMethods });
@@ -818,8 +849,8 @@ export default function App() {
       setPaymentMethods(updatedPaymentMethods);
       setIsAddingVisit(false);
       setEditingVisitId(null);
-      setNewVisit({ date: getTodayString(), services: [], size: '', amount: '', paymentMethod: '現金', accountLast5: '', deductPackageId: '', notes: '', photoUrl: '', designerId: activeDesignerId || '' });
-      setCustomPayment(''); 
+      // 清空表單並重置 payments 陣列
+      setNewVisit({ date: getTodayString(), services: [], size: '', amount: '', payments: [{ method: '現金', amount: '', accountLast5: '', customName: '' }], deductPackageId: '', notes: '', photoUrl: '', designerId: activeDesignerId || '' });
       showToast(editingVisitId ? "消費紀錄已成功更新並儲存！" : "消費紀錄已成功儲存！");
     }
   };
@@ -1182,7 +1213,25 @@ export default function App() {
     }
 
     allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
-    const totalRevenue = allTransactions.filter(t => t.paymentMethod !== '儲值金扣款' && t.paymentMethod !== '扣除包堂').reduce((sum, t) => sum + t.totalAmount, 0);
+    
+    // ✅ 營業額精準計算：動態加總非儲值金扣款的 payments 陣列金額
+    const totalRevenue = allTransactions.reduce((sum, t) => {
+        let rev = 0;
+        if (t.payments && t.payments.length > 0) {
+            t.payments.forEach(p => {
+                if (p.method !== '儲值金扣款' && p.method !== '扣除包堂') {
+                    rev += (Number(p.amount) || 0);
+                }
+            });
+        } else {
+            // 相容舊版資料
+            if (t.paymentMethod !== '儲值金扣款' && t.paymentMethod !== '扣除包堂') {
+                rev += t.totalAmount;
+            }
+        }
+        return sum + rev;
+    }, 0);
+
     const filteredClients = clients.filter(c => c.name.includes(searchQuery) || c.phone.includes(searchQuery));
     const weekDates = getWeekDates(currentWeekStart);
 
@@ -1677,7 +1726,7 @@ export default function App() {
                         if (isAddingVisit) {
                           setIsAddingVisit(false);
                           setEditingVisitId(null);
-                          setNewVisit({ date: getTodayString(), services: [], size: '', amount: '', paymentMethod: '現金', accountLast5: '', deductPackageId: '', notes: '', photoUrl: '', designerId: activeDesignerId || '' });
+                          setNewVisit({ date: getTodayString(), services: [], size: '', amount: '', payments: [{ method: '現金', amount: '', accountLast5: '', customName: '' }], deductPackageId: '', notes: '', photoUrl: '', designerId: activeDesignerId || '' });
                           setCustomPayment('');
                         } else {
                           setIsAddingVisit(true);
@@ -1735,35 +1784,77 @@ export default function App() {
                              </div>
                            </div>
 
-                           {/* 金額與支付方式 */}
-                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                           {/* ✅ 升級：純數字鍵盤與連動金額輸入 */}
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-white p-4 rounded-lg border border-gray-100">
                              <div>
-                               <label className="text-xs font-bold text-gray-500 block mb-1">總金額 *</label>
+                               <label className="text-xs font-bold text-gray-500 block mb-1">本次服務總金額 *</label>
                                <div className="relative">
                                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                                  <input type="number" placeholder="0" value={newVisit.amount} onChange={e=>setNewVisit({...newVisit,amount:e.target.value})} className="w-full pl-7 p-2.5 border border-gray-200 rounded-lg text-sm font-bold text-[#A87B7B] outline-none focus:border-[#A87B7B]" />
+                                  <input type="text" inputMode="numeric" pattern="[0-9]*" placeholder="0" value={newVisit.amount} onChange={e => {
+                                      const val = e.target.value.replace(/\D/g, '');
+                                      const newPayments = [...newVisit.payments];
+                                      if (newPayments.length === 1) {
+                                          newPayments[0].amount = val;
+                                      }
+                                      setNewVisit({...newVisit, amount: val, payments: newPayments});
+                                  }} className="w-full pl-7 p-2.5 border border-gray-200 rounded-lg text-lg font-bold text-[#A87B7B] outline-none focus:border-[#A87B7B]" />
                                </div>
+                               <p className="text-[10px] text-gray-400 mt-2">輸入總金額後，右側會自動帶入。若需拆分付款請再手動修改右側金額。</p>
                              </div>
+                             
                              <div>
-                               <label className="text-xs font-bold text-gray-500 block mb-1">支付方式 *</label>
-                               <select value={newVisit.paymentMethod} onChange={e=>setNewVisit({...newVisit,paymentMethod:e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]">
-                                 {paymentMethods.map(m=><option key={m} value={m}>{m}</option>)}
-                                 <option value="自訂">+ 新增自訂...</option>
-                               </select>
-                             </div>
-                             <div>
-                               {newVisit.paymentMethod === '轉帳' && (
-                                 <>
-                                   <label className="text-xs font-bold text-gray-500 block mb-1">帳號後五碼</label>
-                                   <input type="text" maxLength="5" placeholder="後 5 碼" value={newVisit.accountLast5} onChange={e=>setNewVisit({...newVisit,accountLast5:e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
-                                 </>
-                               )}
-                               {newVisit.paymentMethod === '自訂' && (
-                                 <>
-                                   <label className="text-xs font-bold text-gray-500 block mb-1">自訂方式名稱</label>
-                                   <input type="text" placeholder="輸入方式" value={customPayment} onChange={e=>setCustomPayment(e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
-                                 </>
-                               )}
+                                <div className="flex justify-between items-end mb-2">
+                                    <label className="text-xs font-bold text-gray-500 block">支付方式與分配金額 *</label>
+                                    <button onClick={() => setNewVisit({...newVisit, payments: [...(newVisit.payments || []), { method: '現金', amount: '', accountLast5: '', customName: '' }]})} className="text-[11px] text-[#A87B7B] font-bold hover:bg-[#FDFBF7] px-2 py-0.5 rounded border border-[#A87B7B]/30 hover:border-[#A87B7B] transition">+ 新增</button>
+                                </div>
+                                <div className="space-y-2">
+                                   {(newVisit.payments || []).map((payment, idx) => (
+                                       <div key={idx} className="flex flex-wrap gap-2 p-2.5 bg-gray-50 rounded-lg border border-gray-100 relative group">
+                                           {newVisit.payments.length > 1 && (
+                                               <button onClick={() => {
+                                                   const newP = [...newVisit.payments];
+                                                   newP.splice(idx, 1);
+                                                   setNewVisit({...newVisit, payments: newP});
+                                               }} className="absolute -top-1.5 -right-1.5 bg-white text-gray-400 hover:text-red-500 rounded-full shadow-sm border border-gray-200 w-5 h-5 flex items-center justify-center"><X size={12}/></button>
+                                           )}
+                                           <div className="flex w-full gap-2">
+                                             <select value={payment.method} onChange={e => {
+                                                 const newP = [...newVisit.payments];
+                                                 newP[idx].method = e.target.value;
+                                                 setNewVisit({...newVisit, payments: newP});
+                                             }} className="flex-[3] p-2 border border-gray-200 rounded-md text-xs outline-none focus:border-[#A87B7B] bg-white">
+                                                 {paymentMethods.map(m=><option key={m} value={m}>{m}</option>)}
+                                                 <option value="自訂">+ 新增自訂...</option>
+                                             </select>
+                                             <div className="relative flex-[2]">
+                                                 <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
+                                                 <input type="text" inputMode="numeric" pattern="[0-9]*" placeholder="金額" value={payment.amount} onChange={e => {
+                                                     const val = e.target.value.replace(/\D/g, '');
+                                                     const newP = [...newVisit.payments];
+                                                     newP[idx].amount = val;
+                                                     setNewVisit({...newVisit, payments: newP});
+                                                 }} className="w-full pl-5 p-2 border border-gray-200 rounded-md text-xs font-bold outline-none focus:border-[#A87B7B]" />
+                                             </div>
+                                           </div>
+                                           
+                                           {payment.method === '轉帳' && (
+                                               <input type="text" inputMode="numeric" pattern="[0-9]*" maxLength="5" placeholder="輸入帳號後五碼" value={payment.accountLast5} onChange={e => {
+                                                   const val = e.target.value.replace(/\D/g, '');
+                                                   const newP = [...newVisit.payments];
+                                                   newP[idx].accountLast5 = val;
+                                                   setNewVisit({...newVisit, payments: newP});
+                                               }} className="w-full p-2 border border-gray-200 rounded-md text-xs outline-none focus:border-[#A87B7B]" />
+                                           )}
+                                           {payment.method === '自訂' && (
+                                               <input type="text" placeholder="請輸入自訂方式名稱" value={payment.customName} onChange={e => {
+                                                   const newP = [...newVisit.payments];
+                                                   newP[idx].customName = e.target.value;
+                                                   setNewVisit({...newVisit, payments: newP});
+                                               }} className="w-full p-2 border border-gray-200 rounded-md text-xs outline-none focus:border-[#A87B7B] bg-yellow-50 focus:bg-white" />
+                                           )}
+                                       </div>
+                                   ))}
+                                </div>
                              </div>
                            </div>
 
@@ -1981,8 +2072,8 @@ export default function App() {
                        <th className="p-4">設計師</th>
                        <th className="p-4">客戶</th>
                        <th className="p-4">項目</th>
-                       <th className="p-4">方式</th>
-                       <th className="p-4 text-right">金額</th>
+                       <th className="p-4">付款明細</th>
+                       <th className="p-4 text-right">總金額</th>
                      </tr>
                    </thead>
                    <tbody>
@@ -1992,8 +2083,20 @@ export default function App() {
                          <td className="p-4 text-gray-600">{tx.designerName || '未指定'}</td>
                          <td className="p-4 font-bold text-gray-800">{tx.clientName}</td>
                          <td className="p-4 max-w-[150px] md:max-w-[200px] truncate" title={tx.service}>{tx.service}</td>
-                         <td className="p-4"><span className={`px-2 py-1 rounded text-xs ${tx.paymentMethod === '儲值金扣款' || tx.paymentMethod === '扣除包堂' ? 'bg-[#FDFBF7] text-[#A87B7B] border border-[#F0E6D8]' : 'bg-gray-100 text-gray-500'}`}>{tx.paymentMethod}</span></td>
-                         <td className="p-4 text-right font-bold">${tx.totalAmount.toLocaleString()}</td>
+                         <td className="p-4">
+                           {tx.payments && tx.payments.length > 0 ? (
+                             <div className="flex flex-col gap-1">
+                               {tx.payments.map((p, i) => (
+                                 <span key={i} className={`px-2 py-0.5 rounded text-[11px] w-fit ${p.method === '儲值金扣款' || p.method === '扣除包堂' ? 'bg-[#FDFBF7] text-[#A87B7B] border border-[#F0E6D8]' : 'bg-gray-100 text-gray-500 border border-gray-200'}`}>
+                                   {p.method} ${p.amount}
+                                 </span>
+                               ))}
+                             </div>
+                           ) : (
+                             <span className={`px-2 py-1 rounded text-[11px] border ${tx.paymentMethod === '儲值金扣款' || tx.paymentMethod === '扣除包堂' ? 'bg-[#FDFBF7] text-[#A87B7B] border-[#F0E6D8]' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>{tx.paymentMethod}</span>
+                           )}
+                         </td>
+                         <td className="p-4 text-right font-bold text-[#A87B7B]">${tx.totalAmount.toLocaleString()}</td>
                        </tr>
                      ))}
                      {allTransactions.length === 0 && (
