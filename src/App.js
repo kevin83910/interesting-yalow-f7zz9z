@@ -620,6 +620,64 @@ export default function App() {
     }
   };
 
+  // ✅ 新增：刪除單筆消費紀錄與智慧退款機制
+  const handleDeleteVisit = async (visitId) => {
+    const visitToDelete = selectedClient.visits.find(v => v.id === visitId);
+    if (!visitToDelete) return;
+
+    let updatedBalance = selectedClient.balance;
+    let updatedPackages = [...selectedClient.packages];
+
+    // 自動退還被扣除的儲值金或包堂
+    if (visitToDelete.payments && visitToDelete.payments.length > 0) {
+      visitToDelete.payments.forEach(p => {
+        if (p.method === '儲值金扣款') {
+          updatedBalance += (Number(p.amount) || 0);
+        }
+        if (p.method === '扣除包堂' && visitToDelete.deductPackageId) {
+          updatedPackages = updatedPackages.map(pkg => 
+            pkg.id === visitToDelete.deductPackageId ? { ...pkg, remaining: pkg.remaining + 1 } : pkg
+          );
+        }
+      });
+    } else {
+      // 舊版單一付款方式相容
+      if (visitToDelete.paymentMethod === '儲值金扣款') {
+        updatedBalance += (Number(visitToDelete.amount) || 0);
+      }
+      if (visitToDelete.paymentMethod === '扣除包堂' && visitToDelete.deductPackageId) {
+        updatedPackages = updatedPackages.map(pkg => 
+          pkg.id === visitToDelete.deductPackageId ? { ...pkg, remaining: pkg.remaining + 1 } : pkg
+        );
+      }
+    }
+
+    const updatedVisits = selectedClient.visits.filter(v => v.id !== visitId);
+
+    const updatedClients = clients.map(c => {
+      if (c.id === selectedClient.id) {
+        return { ...c, balance: updatedBalance, packages: updatedPackages, visits: updatedVisits };
+      }
+      return c;
+    });
+
+    showToast("紀錄刪除中...");
+    const success = await syncToCloud({ clients: updatedClients });
+    
+    if (success) {
+      setClients(updatedClients);
+      setSelectedClient(updatedClients.find(c => c.id === selectedClient.id));
+      
+      // 如果正在編輯這筆紀錄，刪除後自動關閉表單
+      if (editingVisitId === visitId) {
+        setIsAddingVisit(false);
+        setEditingVisitId(null);
+        setNewVisit({ date: getTodayString(), services: [], size: '', amount: '', payments: [{ method: '現金', amount: '', accountLast5: '', customName: '' }], deductPackageId: '', notes: '', photoUrl: '', designerId: activeDesignerId || '' });
+      }
+      showToast("已成功刪除消費紀錄，相關餘額已退還！");
+    }
+  };
+
   const handleServiceToggle = (serviceName) => {
     setNewVisit(prev => ({
       ...prev,
@@ -669,7 +727,7 @@ export default function App() {
           const base64Data = compressedBase64.split(',')[1];
           const cleanUrl = gdriveApiUrl.trim();
           
-          // 使用最單純的 POST + text/plain 繞過 OPTIONS 預檢
+          // ✅ 終極安全解法：移除所有自訂 header 與 credentials，讓瀏覽器視為最單純的請求，不觸發 CORS
           const response = await fetch(cleanUrl, {
             method: 'POST',
             body: JSON.stringify({ 
@@ -1502,7 +1560,7 @@ export default function App() {
 
           {/* 編輯時段 Modal */}
           {editingSlot && (
-            <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+            <div className="fixed inset0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
               <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative animate-in zoom-in duration-200">
                 <button onClick={() => setEditingSlot(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><X size={20}/></button>
                 <h3 className="text-lg font-bold mb-4 border-b pb-2">
@@ -1881,7 +1939,12 @@ export default function App() {
                              </div>
                            </div>
                            
-                           <div className="flex justify-end pt-2">
+                           <div className="flex justify-between items-center pt-2">
+                             {editingVisitId ? (
+                               <button onClick={() => setConfirmModal({ title: '刪除紀錄', message: '確定要刪除這筆消費紀錄嗎？相關的儲值金與包堂扣除將會自動退還。', onConfirm: () => handleDeleteVisit(editingVisitId) })} className="text-red-500 hover:text-red-600 text-sm font-bold flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-red-50 transition">
+                                 <Trash2 size={16}/> 刪除此紀錄
+                               </button>
+                             ) : <div></div>}
                              <button onClick={handleAddVisit} disabled={isUploadingImage} className="bg-[#A87B7B] text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-sm hover:bg-[#8f6666] disabled:bg-gray-400 disabled:cursor-not-allowed transition flex items-center gap-2">
                                <Save size={16}/> {editingVisitId ? '確認更新' : '確認儲存'}
                              </button>
@@ -1917,11 +1980,29 @@ export default function App() {
                                 >
                                   <Edit size={16}/>
                                 </button>
-                                <span className="block text-lg font-bold text-gray-800">${(Number(visit.amount)||0).toLocaleString()}</span>
+                                <button 
+                                  onClick={() => setConfirmModal({ title: '刪除紀錄', message: '確定要刪除這筆消費紀錄嗎？相關的儲值金與包堂扣除將會自動退還。', onConfirm: () => handleDeleteVisit(visit.id) })}
+                                  className="text-gray-300 hover:text-red-500 p-1 transition-colors" 
+                                  title="刪除紀錄"
+                                >
+                                  <Trash2 size={16}/>
+                                </button>
+                                <span className="block text-lg font-bold text-gray-800 ml-1">${(Number(visit.amount)||0).toLocaleString()}</span>
                               </div>
-                              <span className={`text-xs px-2 py-0.5 rounded-full inline-block ${visit.paymentMethod === '儲值金扣款' || visit.paymentMethod === '扣除包堂' ? 'bg-[#FDFBF7] text-[#A87B7B] border border-[#F0E6D8]' : 'bg-gray-100 text-gray-500'}`}>
-                                {visit.paymentMethod} {visit.accountLast5 ? `(${visit.accountLast5})` : ''}
-                              </span>
+                              {/* 顯示多種付款方式與金額 */}
+                              <div className="flex flex-wrap justify-end gap-1 mt-1">
+                                {visit.payments && visit.payments.length > 0 ? (
+                                  visit.payments.map((p, idx) => (
+                                    <span key={idx} className={`text-[11px] px-2 py-0.5 rounded-md border ${p.method === '儲值金扣款' || p.method === '扣除包堂' ? 'bg-[#FDFBF7] text-[#A87B7B] border-[#F0E6D8]' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>
+                                       {p.method} ${p.amount} {p.accountLast5 ? `(${p.accountLast5})` : ''}
+                                    </span>
+                                  ))
+                                ) : (
+                                  <span className={`text-[11px] px-2 py-0.5 rounded-md border ${visit.paymentMethod === '儲值金扣款' || visit.paymentMethod === '扣除包堂' ? 'bg-[#FDFBF7] text-[#A87B7B] border-[#F0E6D8]' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>
+                                    {visit.paymentMethod} {visit.accountLast5 ? `(${visit.accountLast5})` : ''}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
                           {visit.notes && <p className="text-sm text-gray-600 mt-2 bg-gray-50 p-3 rounded-lg border border-gray-100">{visit.notes}</p>}
