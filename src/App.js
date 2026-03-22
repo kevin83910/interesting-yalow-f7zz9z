@@ -1560,7 +1560,7 @@ export default function App() {
 
           {/* 編輯時段 Modal */}
           {editingSlot && (
-            <div className="fixed inset0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+            <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
               <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative animate-in zoom-in duration-200">
                 <button onClick={() => setEditingSlot(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><X size={20}/></button>
                 <h3 className="text-lg font-bold mb-4 border-b pb-2">
