@@ -226,6 +226,8 @@ const initialSavedProducts = [
   { name: "睫毛雨衣", price: 500 }, { name: "睫毛SPA洗卸慕斯", price: 450 }, { name: "睫毛生長液", price: 1280 }
 ];
 
+const DEFAULT_GDRIVE_URL = "https://script.google.com/macros/s/AKfycbzdTKA9zHoxxG_sTkC7XzlKCtWdppyndSuQvopjHtzS-3CYq2NvSVccBBNimlvUPbL_KA/exec";
+
 // ==========================================
 // 主程式 App
 // ==========================================
@@ -249,7 +251,7 @@ export default function App() {
   const [lineOfficialId, setLineOfficialId] = useState("");
   const [lineNotifyUrl, setLineNotifyUrl] = useState(""); // LINE Messaging API 推播網址
   const [lineUserIds, setLineUserIds] = useState(""); // 支援多個 User ID
-  const [gdriveApiUrl, setGdriveApiUrl] = useState(""); // Google Drive 圖床 Webhook 網址
+  const [gdriveApiUrl, setGdriveApiUrl] = useState(DEFAULT_GDRIVE_URL); // Google Drive 圖床 Webhook 網址
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [showForgotPrompt, setShowForgotPrompt] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
@@ -388,7 +390,7 @@ export default function App() {
           if (data.lineOfficialId !== undefined) setLineOfficialId(data.lineOfficialId);
           if (data.lineNotifyUrl !== undefined) setLineNotifyUrl(data.lineNotifyUrl);
           if (data.lineUserIds !== undefined) setLineUserIds(data.lineUserIds);
-          if (data.gdriveApiUrl !== undefined) setGdriveApiUrl(data.gdriveApiUrl);
+          if (data.gdriveApiUrl !== undefined) setGdriveApiUrl(data.gdriveApiUrl || DEFAULT_GDRIVE_URL);
           if (data.clients) setClients(data.clients);
           if (data.inventory) setInventory(data.inventory);
           if (data.paymentMethods) setPaymentMethods(data.paymentMethods);
@@ -406,7 +408,7 @@ export default function App() {
              lineOfficialId: "", 
              lineNotifyUrl: "",
              lineUserIds: "",
-             gdriveApiUrl: "",
+             gdriveApiUrl: DEFAULT_GDRIVE_URL,
              clients: initialClients, 
              inventory: initialInventory, 
              paymentMethods: ['現金', '轉帳', '信用卡', 'Line Pay', '儲值金扣款', '扣除包堂'],
