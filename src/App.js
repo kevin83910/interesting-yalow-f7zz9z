@@ -18,7 +18,7 @@ import { getFirestore, doc, setDoc, onSnapshot } from "firebase/firestore";
 let app, auth, db;
 
 // 🔽 1. 這裡改成您專屬的房號名稱 (不要跟別人重複即可，例如加上您的名字)
-const appId = "mandy-lash-beauty-2026"; 
+const appId = typeof __app_id !== 'undefined' ? __app_id : "lash-beauty-booking-official";
 
 try {
   // 🔽 2. 把您剛剛截圖裡複製的那一整塊貼到這裡，覆蓋掉舊的！
