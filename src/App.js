@@ -1,34 +1,30 @@
 import React, { useState, useEffect, useRef } from "react";
-
-// ==========================================
-// 雲端資料庫模組 (Firebase) 導入
-// ==========================================
 import { initializeApp } from "firebase/app";
-import {
-  getAuth,
-  signInAnonymously,
-  signInWithCustomToken,
-  onAuthStateChanged,
-} from "firebase/auth";
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, doc, setDoc, onSnapshot } from "firebase/firestore";
 
 // ==========================================
-// 全域雲端環境初始化 (已退回舊版測試庫設定)
+// 全域雲端環境初始化
 // ==========================================
 let app, auth, db;
 
-// 🌟 恢復為讀取平台預設的房號與鑰匙
-const appId = typeof __app_id !== 'undefined' ? __app_id : "lash-beauty-booking-official";
+// 🌟 正式鎖定為您的專屬私人房號
+const appId = "lash-beauty-booking-official";
 
 try {
-  // 🌟 恢復為讀取平台預設的隱藏金庫 (讓您找回舊資料)
-  const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+  // 🌟 這是您的專屬私人金庫鑰匙！(資料永遠不會再被清空)
+  const firebaseConfig = {
+    apiKey: "AIzaSyAMu5uINf-wS9FSuIgZHXA7fgnChmGqAus",
+    authDomain: "lash-beauty-booking.firebaseapp.com",
+    projectId: "lash-beauty-booking",
+    storageBucket: "lash-beauty-booking.firebasestorage.app",
+    messagingSenderId: "684286248425",
+    appId: "1:684286248425:web:b62b0f6ee2ccb514797778"
+  };
   
-  if (firebaseConfig) {
-    app = initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = getFirestore(app);
-  }
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getFirestore(app);
 } catch (e) {
   console.error("雲端資料庫初始化失敗，將切換為單機模式", e);
 }
@@ -70,13 +66,17 @@ const Icons = {
   Wand2: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>),
   CheckCircle: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>),
   Filter: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>),
-  Bell: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>)
+  Bell: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>),
+  Download: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>),
+  Upload: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>),
+  Database: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>),
+  FileText: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>)
 };
 
 const {
   MapPin, AlertCircle, CalendarCheck, ChevronRight, Settings, Save, Plus, Trash2, Eye, Lock, X, Key, Clock, MessageCircle, Cloud, Search, HelpCircle,
   Users, Receipt, Package, CalendarDays, MenuIcon, ChevronLeft, CreditCard, ShoppingBag, BookmarkPlus, CircleDollarSign, Edit,
-  ChevronLeftCircle, ChevronRightCircle, Wand2, CheckCircle, Filter, Bell
+  ChevronLeftCircle, ChevronRightCircle, Wand2, CheckCircle, Filter, Bell, Download, Upload, Database, FileText
 } = Icons;
 
 // --- 表單常數設定 ---
@@ -279,6 +279,7 @@ export default function App() {
   const [showDeleteClientModal, setShowDeleteClientModal] = useState(false);
   const [newClientData, setNewClientData] = useState({ name: '', phone: '', birthday: '', tags: '', lashPreference: '' });
   const [editingClientId, setEditingClientId] = useState(null); 
+  const [showDataModal, setShowDataModal] = useState(false); // 新增：資料匯出匯入彈窗
   
   const [newVisit, setNewVisit] = useState({ 
     date: getTodayString(), 
@@ -348,7 +349,14 @@ export default function App() {
     if (!auth) { setIsCloudLoaded(true); return; }
     const initAuth = async () => {
       try {
-        if (typeof __initial_auth_token !== "undefined" && __initial_auth_token) { await signInWithCustomToken(auth, __initial_auth_token); } 
+        if (typeof __initial_auth_token !== "undefined" && __initial_auth_token) { 
+          try {
+            await signInWithCustomToken(auth, __initial_auth_token); 
+          } catch (err) {
+            console.warn("自訂 Token 登入失敗 (可能是專案不符)，自動切換為匿名登入", err);
+            await signInAnonymously(auth);
+          }
+        } 
         else { await signInAnonymously(auth); }
       } catch (e) { console.error("雲端登入失敗:", e); setIsCloudLoaded(true); }
     };
@@ -583,6 +591,145 @@ export default function App() {
     setEditingClientId(null);
     setNewClientData({ name: '', phone: '', birthday: '', tags: '', lashPreference: '' });
   };
+
+  // === 新增：備份與匯入功能 ===
+  const handleExportCSV = () => {
+    const headers = ["姓名", "電話", "生日", "標籤", "睫毛密碼", "儲值餘額"];
+    const rows = clients.map(c => [
+      c.name, c.phone, c.birthday || '', (c.tags||[]).join(';'), c.lashPreference || '', c.balance || 0
+    ]);
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `LashBeauty_客戶名單_${getTodayString()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleDownloadTemplate = () => {
+    const headers = ["姓名", "電話", "生日", "標籤", "睫毛密碼", "儲值餘額"];
+    const example = ["林語晴", "0912345678", "1995-08-15", "VIP;喜歡自然款", "C翹度 / 粗度0.10", "1000"];
+    const csvContent = "\uFEFF" + headers.join(",") + "\n" + example.join(",");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `LashBeauty_匯入範本.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleImportCSV = async (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const text = event.target.result;
+      const rows = text.split('\n').map(row => row.split(','));
+      const headers = rows[0].map(h => h.trim().replace(/\uFEFF/g, '').replace(/"/g, ''));
+      const nameIdx = headers.indexOf("姓名");
+      const phoneIdx = headers.indexOf("電話");
+      if(nameIdx === -1 || phoneIdx === -1) {
+         e.target.value = null; 
+         return showToast("匯入失敗：CSV 必須包含「姓名」與「電話」欄位");
+      }
+
+      const newClients = [];
+      for(let i=1; i<rows.length; i++) {
+         const cols = rows[i];
+         if(cols.length < 2 || !cols[nameIdx] || !cols[phoneIdx]) continue;
+         const name = cols[nameIdx].trim().replace(/"/g, '');
+         const phone = cols[phoneIdx].trim().replace(/"/g, '');
+         if(!name || !phone) continue;
+         
+         if(clients.some(c => c.phone === phone) || newClients.some(c => c.phone === phone)) continue; // 跳過重複電話
+
+         const bdayIdx = headers.indexOf("生日");
+         const tagsIdx = headers.indexOf("標籤");
+         const lashIdx = headers.indexOf("睫毛密碼");
+         const balIdx = headers.indexOf("儲值餘額");
+
+         newClients.push({
+           id: Date.now() + i,
+           name,
+           phone,
+           birthday: bdayIdx > -1 && cols[bdayIdx] ? cols[bdayIdx].trim().replace(/"/g, '') : '-',
+           joinDate: getTodayString(),
+           tags: tagsIdx > -1 && cols[tagsIdx] ? cols[tagsIdx].replace(/"/g, '').split(';').map(t=>t.trim()).filter(t=>t) : ["匯入新客"],
+           lashPreference: lashIdx > -1 && cols[lashIdx] ? cols[lashIdx].trim().replace(/"/g, '') : "尚未建立紀錄",
+           balance: balIdx > -1 && cols[balIdx] ? Number(cols[balIdx].replace(/"/g, '').trim()) || 0 : 0,
+           packages: [],
+           visits: []
+         });
+      }
+
+      e.target.value = null; 
+      if(newClients.length === 0) return showToast("沒有找到可匯入的新客戶 (可能都是重複的電話或格式錯誤)");
+
+      const updatedClients = [...newClients, ...clients];
+      showToast(`正在匯入 ${newClients.length} 筆資料...`);
+      const success = await syncToCloud({ clients: updatedClients });
+      if(success) {
+         setClients(updatedClients);
+         showToast(`成功匯入 ${newClients.length} 位新客戶！`);
+         setShowDataModal(false);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleExportJSON = () => {
+    const dataToExport = { clients, designers, inventory, savedServices, savedProducts, paymentMethods };
+    const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `LashBeauty_完整系統備份_${getTodayString()}.json`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleImportJSON = async (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const data = JSON.parse(event.target.result);
+        if(!data.clients) throw new Error("無效的備份檔");
+        
+        showToast("正在還原系統資料...");
+        const success = await syncToCloud({
+          clients: data.clients,
+          designers: data.designers || designers,
+          inventory: data.inventory || inventory,
+          savedServices: data.savedServices || savedServices,
+          savedProducts: data.savedProducts || savedProducts,
+          paymentMethods: data.paymentMethods || paymentMethods
+        });
+        if(success) {
+          setClients(data.clients);
+          if(data.designers) setDesigners(data.designers);
+          if(data.inventory) setInventory(data.inventory);
+          if(data.savedServices) setSavedServices(data.savedServices);
+          if(data.savedProducts) setSavedProducts(data.savedProducts);
+          if(data.paymentMethods) setPaymentMethods(data.paymentMethods);
+          showToast("系統資料已成功還原！");
+          setShowDataModal(false);
+        }
+      } catch(err) {
+        showToast("備份檔解析失敗，請確認是否為正確的 JSON 備份檔！");
+      }
+      e.target.value = null; 
+    };
+    reader.readAsText(file);
+  };
+  // ===================================
 
   const handleEditClientClick = () => {
     setNewClientData({
@@ -1658,7 +1805,10 @@ export default function App() {
             <div className="p-6 max-w-6xl mx-auto">
               <div className="flex justify-between items-center mb-6">
                 <div><h1 className="text-2xl font-bold text-gray-800">客戶管理</h1><p className="text-sm text-gray-500">Customer CRM</p></div>
-                <button onClick={() => { setEditingClientId(null); setNewClientData({ name: '', phone: '', birthday: '', tags: '', lashPreference: '' }); setShowAddClientModal(true); }} className="bg-[#A87B7B] hover:bg-[#8f6666] text-white px-4 py-2 rounded-lg flex items-center gap-1.5 text-sm font-bold"><Plus size={16} />新增客戶</button>
+                <div className="flex gap-2">
+                  <button onClick={() => setShowDataModal(true)} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg flex items-center gap-1.5 text-sm font-bold border border-gray-200 transition shadow-sm"><Database size={16} />資料匯出 / 匯入</button>
+                  <button onClick={() => { setEditingClientId(null); setNewClientData({ name: '', phone: '', birthday: '', tags: '', lashPreference: '' }); setShowAddClientModal(true); }} className="bg-[#A87B7B] hover:bg-[#8f6666] text-white px-4 py-2 rounded-lg flex items-center gap-1.5 text-sm font-bold shadow-sm transition"><Plus size={16} />新增客戶</button>
+                </div>
               </div>
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
                 <div className="relative mb-4 max-w-md">
@@ -2020,6 +2170,51 @@ export default function App() {
                   <button onClick={handleSaveClient} className="w-full bg-[#A87B7B] text-white py-2.5 rounded-lg text-sm font-bold mt-4 shadow-sm hover:bg-[#8f6666] transition">
                     {editingClientId ? '更新儲存' : '建立'}
                   </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 新增：資料匯出匯入 Modal */}
+          {showDataModal && (
+            <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+              <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-2xl relative animate-in zoom-in duration-200">
+                <button onClick={() => setShowDataModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><X size={20}/></button>
+                <h2 className="text-2xl font-bold text-gray-800 mb-5 flex items-center gap-2"><Database size={24} className="text-[#C59A5C]" /> 資料備份與匯入管理</h2>
+                
+                <div className="space-y-6">
+                  {/* Excel (CSV) 區塊 */}
+                  <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
+                    <h3 className="font-bold text-gray-800 flex items-center gap-2 mb-3"><FileText size={18} className="text-[#A87B7B]" /> Excel (CSV) 客戶名單處理</h3>
+                    <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+                      適合用來大量建檔新客，或是在電腦上用 Excel 檢視客戶列表。<br/>
+                      <span className="text-[#A87B7B] font-bold">※ 匯入時若「電話」已存在，將自動略過以避免重複建檔。</span>
+                    </p>
+                    <div className="flex flex-wrap gap-3">
+                      <button onClick={handleExportCSV} className="flex-1 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-100 transition flex items-center justify-center gap-2 shadow-sm"><Download size={16}/> 下載客戶名單</button>
+                      <button onClick={handleDownloadTemplate} className="flex-1 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-100 transition flex items-center justify-center gap-2 shadow-sm"><Download size={16}/> 下載匯入範本</button>
+                      <div className="flex-1 relative">
+                         <input type="file" accept=".csv" onChange={handleImportCSV} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                         <button className="w-full py-2 bg-[#A87B7B] text-white rounded-lg text-sm font-bold hover:bg-[#8f6666] transition flex items-center justify-center gap-2 shadow-sm pointer-events-none"><Upload size={16}/> 上傳名單匯入</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* JSON 完整系統備份區塊 */}
+                  <div className="bg-[#FDFBF7] rounded-xl p-5 border border-[#F0E6D8]">
+                    <h3 className="font-bold text-gray-800 flex items-center gap-2 mb-3"><Database size={18} className="text-[#C59A5C]" /> 完整系統還原備份 (JSON)</h3>
+                    <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+                      包含所有客戶消費紀錄、照片網址、設計師排班與系統設定。<br/>
+                      <span className="text-red-500 font-bold">⚠️ 警告：上傳還原檔將會【完全覆蓋】目前的系統資料！請務必定期下載備份。</span>
+                    </p>
+                    <div className="flex flex-wrap gap-3">
+                      <button onClick={handleExportJSON} className="flex-1 py-2.5 bg-gray-800 text-white rounded-lg text-sm font-bold hover:bg-black transition flex items-center justify-center gap-2 shadow-sm"><Download size={16}/> 下載完整系統備份</button>
+                      <div className="flex-1 relative">
+                         <input type="file" accept=".json" onChange={handleImportJSON} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                         <button className="w-full py-2.5 bg-red-500 text-white rounded-lg text-sm font-bold hover:bg-red-600 transition flex items-center justify-center gap-2 shadow-sm pointer-events-none"><Upload size={16}/> 上傳備份還原系統</button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
