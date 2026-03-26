@@ -39,7 +39,6 @@ try {
   console.error("雲端資料庫初始化失敗，將切換為單機模式", e);
 }
 
-
 // ==========================================
 // 內建圖示庫
 // ==========================================
@@ -187,7 +186,7 @@ const getClientY = (e) => {
   return e.clientY;
 };
 
-// ✅ 將 Google Drive 原始網址轉換為可顯示的高畫質縮圖網址，徹底解決破圖問題！
+// ✅ 將 Google Drive 原始網址轉換為可顯示的高畫質縮圖網址
 const getDisplayImageUrl = (url) => {
   if (!url) return '';
   if (url.includes('drive.google.com')) {
@@ -295,13 +294,12 @@ export default function App() {
   const [newClientData, setNewClientData] = useState({ name: '', phone: '', birthday: '', tags: '', lashPreference: '' });
   const [editingClientId, setEditingClientId] = useState(null); 
   
-  // ✅ 全新升級：支援多重付款方式模組 (payments array)
   const [newVisit, setNewVisit] = useState({ 
     date: getTodayString(), 
     services: [], 
     size: '',
     amount: '', 
-    payments: [{ method: '現金', amount: '', accountLast5: '', customName: '' }], // 動態付款陣列
+    payments: [{ method: '現金', amount: '', accountLast5: '', customName: '' }], 
     deductPackageId: '', 
     notes: '', 
     photoUrl: '',
@@ -627,7 +625,6 @@ export default function App() {
     }
   };
 
-  // ✅ 新增：刪除單筆消費紀錄與智慧退款機制
   const handleDeleteVisit = async (visitId) => {
     const visitToDelete = selectedClient.visits.find(v => v.id === visitId);
     if (!visitToDelete) return;
@@ -648,7 +645,6 @@ export default function App() {
         }
       });
     } else {
-      // 舊版單一付款方式相容
       if (visitToDelete.paymentMethod === '儲值金扣款') {
         updatedBalance += (Number(visitToDelete.amount) || 0);
       }
@@ -675,7 +671,6 @@ export default function App() {
       setClients(updatedClients);
       setSelectedClient(updatedClients.find(c => c.id === selectedClient.id));
       
-      // 如果正在編輯這筆紀錄，刪除後自動關閉表單
       if (editingVisitId === visitId) {
         setIsAddingVisit(false);
         setEditingVisitId(null);
@@ -694,7 +689,6 @@ export default function App() {
     }));
   };
 
-  // --- 全新升級：純 Google Drive 隱私圖床引擎 ---
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -711,7 +705,6 @@ export default function App() {
       img.onload = async () => {
         const canvas = document.createElement('canvas');
         
-        // 恢復高解析度：寬高最大 1600px，保留睫毛所有細節
         const MAX_WIDTH = 1600;
         const MAX_HEIGHT = 1600;
         let width = img.width;
@@ -727,14 +720,12 @@ export default function App() {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
         
-        // 提升 JPEG 品質至 0.85 (85%)
         const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
 
         try {
           const base64Data = compressedBase64.split(',')[1];
           const cleanUrl = gdriveApiUrl.trim();
           
-          // ✅ 終極安全解法：移除所有自訂 header 與 credentials，讓瀏覽器視為最單純的請求，不觸發 CORS
           const response = await fetch(cleanUrl, {
             method: 'POST',
             body: JSON.stringify({ 
@@ -776,7 +767,6 @@ export default function App() {
     setIsAddingVisit(true);
     setEditingVisitId(visit.id);
     
-    // 將舊版單筆 paymentMethod 轉換相容至新的 payments 陣列
     let paymentsToSet = visit.payments && visit.payments.length > 0 
       ? visit.payments.map(p => ({
           method: paymentMethods.includes(p.method) ? p.method : '自訂',
@@ -805,21 +795,18 @@ export default function App() {
   };
 
   const handleAddVisit = async () => {
-    // 💡 終極救援：尺寸 (size) 改為非必填，避免客人忘了填而儲存失敗
     if (!newVisit.date || newVisit.services.length === 0 || !newVisit.amount || !newVisit.designerId) {
       return showToast("請完整填寫日期、設計師、項目與總金額！");
     }
     
     const serviceAmt = Number(newVisit.amount) || 0;
     
-    // 驗證：付款分配總額必須等於總金額
     const totalPaymentsAmt = newVisit.payments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
     if (totalPaymentsAmt !== serviceAmt) {
         return showToast(`付款分配總額 ($${totalPaymentsAmt}) 必須等於您設定的總金額 ($${serviceAmt})！`);
     }
 
     let tempBalance = selectedClient.balance;
-    // 如果是編輯模式，先把舊紀錄扣掉的儲值金加回來
     if (editingVisitId) {
        const oldVisit = selectedClient.visits.find(v => v.id === editingVisitId);
        if (oldVisit) {
@@ -848,7 +835,6 @@ export default function App() {
     const serviceStr = newVisit.services.join(', ');
     const selectedDesignerName = designers.find(d => d.id === newVisit.designerId)?.name || '';
     
-    // 為了舊版相容性，將多種付款方式組合為字串
     const finalPaymentMethodString = finalPayments.map(p => p.method).join(' + ');
 
     const visitData = { 
@@ -859,7 +845,7 @@ export default function App() {
       service: serviceStr, 
       size: newVisit.size || '', 
       amount: serviceAmt, 
-      payments: finalPayments, // ✅ 儲存詳細分配金額陣列
+      payments: finalPayments, 
       paymentMethod: finalPaymentMethodString, 
       accountLast5: finalPayments.find(p => p.method === '轉帳')?.accountLast5 || '', 
       deductPackageId: newVisit.deductPackageId,
@@ -914,13 +900,11 @@ export default function App() {
       setPaymentMethods(updatedPaymentMethods);
       setIsAddingVisit(false);
       setEditingVisitId(null);
-      // 清空表單並重置 payments 陣列
       setNewVisit({ date: getTodayString(), services: [], size: '', amount: '', payments: [{ method: '現金', amount: '', accountLast5: '', customName: '' }], deductPackageId: '', notes: '', photoUrl: '', designerId: activeDesignerId || '' });
       showToast(editingVisitId ? "消費紀錄已成功更新並儲存！" : "消費紀錄已成功儲存！");
     }
   };
 
-  // --- 排班管理 (批次自動開班) ---
   const handleApplyAutoSchedule = async () => {
     if (!activeDesigner || !generateMonth) return showToast("請先選擇月份！");
     const [yearStr, monthStr] = generateMonth.split("-"); 
@@ -1022,13 +1006,12 @@ export default function App() {
     });
   };
 
-  // --- 改版：純點擊輸入排班 ---
   const handleCellClick = (dateStr, timeStr) => {
     setEditingSlot({
       isNew: true,
       date: dateStr,
       startTime: timeStr,
-      endTime: getNextTime(timeStr), // 預設 30 分鐘
+      endTime: getNextTime(timeStr), 
       isFull: false,
       clientName: '',
       clientPhone: '',
@@ -1064,7 +1047,6 @@ export default function App() {
       return showToast("結束時間必須大於起始時間！");
     }
 
-    // --- 自動建檔邏輯 ---
     let finalClients = clients;
     let isNewClientCreated = false;
     if (isFull && clientName && clientPhone) {
@@ -1183,7 +1165,6 @@ export default function App() {
     }
   };
 
-  // --- 系統設定 (新增/編輯設計師與項目) ---
   const handleAddNewDesigner = async () => {
     const newId = "d" + Date.now();
     const newDesigners = [...designers, { id: newId, name: "新設計師", location: "北車店", schedules: [] }];
@@ -1279,7 +1260,6 @@ export default function App() {
 
     allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
     
-    // ✅ 營業額精準計算：動態加總非儲值金扣款的 payments 陣列金額
     const totalRevenue = allTransactions.reduce((sum, t) => {
         let rev = 0;
         if (t.payments && t.payments.length > 0) {
@@ -1289,7 +1269,6 @@ export default function App() {
                 }
             });
         } else {
-            // 相容舊版資料
             if (t.paymentMethod !== '儲值金扣款' && t.paymentMethod !== '扣除包堂') {
                 rev += t.totalAmount;
             }
@@ -1304,7 +1283,6 @@ export default function App() {
       <div className="h-screen bg-[#F8F9FA] flex flex-col md:flex-row font-sans overflow-hidden w-full">
         {renderToast()}
         
-        {/* 手機版頂部 */}
         <div className="md:hidden flex justify-between items-center p-4 bg-white border-b border-gray-200 z-20 shadow-sm">
           <h2 className="text-xl font-beauty font-black text-[#C59A5C] tracking-widest">L<span className="text-[#A87B7B]">&</span>B</h2>
           <div className="flex items-center gap-3">
@@ -1317,7 +1295,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* 側邊欄 */}
         <div className={`${isMobileMenuOpen ? 'flex' : 'hidden'} md:flex w-full md:w-64 bg-white border-r border-gray-200 flex-col absolute md:relative z-40 h-[calc(100vh-68px)] md:h-screen top-[68px] md:top-0 shadow-2xl md:shadow-none`}>
           <div className="hidden md:block p-6 border-b border-gray-100">
             <h2 className="text-2xl font-beauty font-black text-[#C59A5C] text-center tracking-widest">Lash <span className="text-[#A87B7B]">&</span> Beauty</h2>
@@ -1792,7 +1769,6 @@ export default function App() {
                           setIsAddingVisit(false);
                           setEditingVisitId(null);
                           setNewVisit({ date: getTodayString(), services: [], size: '', amount: '', payments: [{ method: '現金', amount: '', accountLast5: '', customName: '' }], deductPackageId: '', notes: '', photoUrl: '', designerId: activeDesignerId || '' });
-                          setCustomPayment('');
                         } else {
                           setIsAddingVisit(true);
                         }
@@ -1800,7 +1776,6 @@ export default function App() {
                         {isAddingVisit ? '取消編輯/新增' : '+ 新增紀錄'}
                       </button>
                     </div>
-                    {/* --- 全新升級：新增/編輯紀錄表單 --- */}
                     {isAddingVisit && (
                       <div className="mb-8 p-5 bg-[#FDFBF7] border border-[#F0E6D8] rounded-xl shadow-inner">
                         <h4 className="font-bold text-[#A87B7B] mb-4 flex items-center gap-2 border-b border-[#F0E6D8] pb-2">
@@ -1824,7 +1799,7 @@ export default function App() {
                              </div>
                            </div>
 
-                           {/* 消費項目 (動態讀取系統設定) */}
+                           {/* 消費項目 */}
                            <div>
                              <label className="text-xs font-bold text-gray-500 block mb-2">消費項目 (可複選) *</label>
                              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 bg-white p-3 rounded-lg border border-gray-200 max-h-[250px] overflow-y-auto">
@@ -1849,7 +1824,7 @@ export default function App() {
                              </div>
                            </div>
 
-                           {/* ✅ 升級：純數字鍵盤與連動金額輸入 */}
+                           {/* 金額與混合支付方式 */}
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-white p-4 rounded-lg border border-gray-100">
                              <div>
                                <label className="text-xs font-bold text-gray-500 block mb-1">本次服務總金額 *</label>
@@ -1996,7 +1971,6 @@ export default function App() {
                                 </button>
                                 <span className="block text-lg font-bold text-gray-800 ml-1">${(Number(visit.amount)||0).toLocaleString()}</span>
                               </div>
-                              {/* 顯示多種付款方式與金額 */}
                               <div className="flex flex-wrap justify-end gap-1 mt-1">
                                 {visit.payments && visit.payments.length > 0 ? (
                                   visit.payments.map((p, idx) => (
@@ -2534,7 +2508,6 @@ export default function App() {
             return displaySchedules.map((schedule) => {
               const isWeekend = schedule.day === "六" || schedule.day === "日"; const isToday = schedule.fullDate === getTodayString(); const times = schedule.times || [];
               
-              // 幫前台也群組化，讓連續時段變成一塊！
               const groups = groupSlots(times);
 
               return (
