@@ -592,8 +592,10 @@ export default function App() {
     setNewClientData({ name: '', phone: '', birthday: '', tags: '', lashPreference: '' });
   };
 
-  // === 新增：備份與匯入功能 ===
-  const handleExportCSV = () => {
+  // === 新增：全方位備份與匯入功能 ===
+  
+  // 匯出 1. 客戶名單 (Excel/CSV)
+  const handleExportClientsCSV = () => {
     const headers = ["姓名", "電話", "生日", "標籤", "睫毛密碼", "儲值餘額"];
     const rows = clients.map(c => [
       c.name, c.phone, c.birthday || '', (c.tags||[]).join(';'), c.lashPreference || '', c.balance || 0
@@ -604,6 +606,76 @@ export default function App() {
     const link = document.createElement("a");
     link.setAttribute("href", url);
     link.setAttribute("download", `LashBeauty_客戶名單_${getTodayString()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // 匯出 2. 預約排班表 (Excel/CSV)
+  const handleExportSchedulesCSV = () => {
+    const headers = ["日期", "星期", "時間", "設計師", "客戶姓名", "客戶電話", "預約項目"];
+    const rows = [];
+    designers.forEach(d => {
+      (d.schedules || []).forEach(s => {
+        const groups = groupSlots(s.times || []);
+        groups.forEach(g => {
+          if(g.isFull) {
+            rows.push([
+              s.fullDate,
+              s.day,
+              `${g.startTime}-${g.endTime}`,
+              d.name,
+              g.clientName || '',
+              g.clientPhone || '',
+              g.service || ''
+            ]);
+          }
+        });
+      });
+    });
+    // 依日期排序
+    rows.sort((a, b) => a[0].localeCompare(b[0]) || a[2].localeCompare(b[2]));
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(r => r.map(item => `"${item}"`).join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `LashBeauty_預約排班表_${getTodayString()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // 匯出 3. 交易紀錄 (Excel/CSV)
+  const handleExportTransactionsCSV = () => {
+    const headers = ["日期", "客戶姓名", "設計師", "消費項目", "規格", "總金額", "付款方式", "備註"];
+    const rows = [];
+    clients.forEach(c => {
+      (c.visits || []).forEach(v => {
+        let paymentMethodStr = v.paymentMethod || '';
+        if (v.payments && v.payments.length > 0) {
+          paymentMethodStr = v.payments.map(p => `${p.method}($${p.amount})`).join(' + ');
+        }
+        rows.push([
+          v.date,
+          c.name,
+          v.designerName || '',
+          v.service || '',
+          v.size || '',
+          v.amount || 0,
+          paymentMethodStr,
+          (v.notes || '').replace(/\n/g, ' ') // 避免換行破壞 CSV 格式
+        ]);
+      });
+    });
+    // 依日期排序 (新到舊)
+    rows.sort((a, b) => b[0].localeCompare(a[0]));
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(r => r.map(item => `"${item}"`).join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `LashBeauty_交易紀錄_${getTodayString()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -2183,15 +2255,26 @@ export default function App() {
                 <h2 className="text-2xl font-bold text-gray-800 mb-5 flex items-center gap-2"><Database size={24} className="text-[#C59A5C]" /> 資料備份與匯入管理</h2>
                 
                 <div className="space-y-6">
-                  {/* Excel (CSV) 區塊 */}
+                  {/* Excel (CSV) 匯出區塊 */}
                   <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
-                    <h3 className="font-bold text-gray-800 flex items-center gap-2 mb-3"><FileText size={18} className="text-[#A87B7B]" /> Excel (CSV) 客戶名單處理</h3>
+                    <h3 className="font-bold text-gray-800 flex items-center gap-2 mb-3"><FileText size={18} className="text-[#A87B7B]" /> 📊 匯出 Excel 報表 (閱讀/對帳用)</h3>
                     <p className="text-xs text-gray-500 mb-4 leading-relaxed">
-                      適合用來大量建檔新客，或是在電腦上用 Excel 檢視客戶列表。<br/>
-                      <span className="text-[#A87B7B] font-bold">※ 匯入時若「電話」已存在，將自動略過以避免重複建檔。</span>
+                      可將後台資料匯出成人類可讀的 Excel (CSV) 報表，方便您在電腦上檢視與整理帳務。
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <button onClick={handleExportClientsCSV} className="py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-100 transition flex items-center justify-center gap-2 shadow-sm"><Download size={16}/> 客戶名單</button>
+                      <button onClick={handleExportSchedulesCSV} className="py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-100 transition flex items-center justify-center gap-2 shadow-sm"><Download size={16}/> 預約排班表</button>
+                      <button onClick={handleExportTransactionsCSV} className="py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-100 transition flex items-center justify-center gap-2 shadow-sm"><Download size={16}/> 交易紀錄</button>
+                    </div>
+                  </div>
+
+                  {/* Excel 匯入區塊 */}
+                  <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
+                    <h3 className="font-bold text-gray-800 flex items-center gap-2 mb-3"><Upload size={18} className="text-[#A87B7B]" /> 📥 匯入新客戶名單 (CSV)</h3>
+                    <p className="text-[11px] text-gray-500 mb-4 leading-tight">
+                      適合用來大量建檔新客。<span className="text-[#A87B7B] font-bold">※ 若「電話」已存在，將自動略過以避免重複建檔。</span>
                     </p>
                     <div className="flex flex-wrap gap-3">
-                      <button onClick={handleExportCSV} className="flex-1 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-100 transition flex items-center justify-center gap-2 shadow-sm"><Download size={16}/> 下載客戶名單</button>
                       <button onClick={handleDownloadTemplate} className="flex-1 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-100 transition flex items-center justify-center gap-2 shadow-sm"><Download size={16}/> 下載匯入範本</button>
                       <div className="flex-1 relative">
                          <input type="file" accept=".csv" onChange={handleImportCSV} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
@@ -2202,13 +2285,13 @@ export default function App() {
 
                   {/* JSON 完整系統備份區塊 */}
                   <div className="bg-[#FDFBF7] rounded-xl p-5 border border-[#F0E6D8]">
-                    <h3 className="font-bold text-gray-800 flex items-center gap-2 mb-3"><Database size={18} className="text-[#C59A5C]" /> 完整系統還原備份 (JSON)</h3>
+                    <h3 className="font-bold text-gray-800 flex items-center gap-2 mb-3"><Database size={18} className="text-[#C59A5C]" /> 🛡️ 系統時光機還原備份 (JSON)</h3>
                     <p className="text-xs text-gray-500 mb-4 leading-relaxed">
-                      包含所有客戶消費紀錄、照片網址、設計師排班與系統設定。<br/>
-                      <span className="text-red-500 font-bold">⚠️ 警告：上傳還原檔將會【完全覆蓋】目前的系統資料！請務必定期下載備份。</span>
+                      會將【系統設定、預約表、客戶、交易】完整打包備份。<br/>
+                      <span className="text-red-500 font-bold">⚠️ 警告：上傳此還原檔將會【完全覆蓋】目前的系統資料！請務必定期下載備份。</span>
                     </p>
                     <div className="flex flex-wrap gap-3">
-                      <button onClick={handleExportJSON} className="flex-1 py-2.5 bg-gray-800 text-white rounded-lg text-sm font-bold hover:bg-black transition flex items-center justify-center gap-2 shadow-sm"><Download size={16}/> 下載完整系統備份</button>
+                      <button onClick={handleExportJSON} className="flex-1 py-2.5 bg-gray-800 text-white rounded-lg text-sm font-bold hover:bg-black transition flex items-center justify-center gap-2 shadow-sm"><Download size={16}/> 下載完整系統快照</button>
                       <div className="flex-1 relative">
                          <input type="file" accept=".json" onChange={handleImportJSON} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                          <button className="w-full py-2.5 bg-red-500 text-white rounded-lg text-sm font-bold hover:bg-red-600 transition flex items-center justify-center gap-2 shadow-sm pointer-events-none"><Upload size={16}/> 上傳備份還原系統</button>
