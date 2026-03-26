@@ -17,11 +17,12 @@ import { getFirestore, doc, setDoc, onSnapshot } from "firebase/firestore";
 // ==========================================
 let app, auth, db;
 
-// 🔽 1. 這裡改成您專屬的房號名稱 (不要跟別人重複即可，例如加上您的名字)
+// 🌟 關鍵修改 1：強制鎖定房號！
+// 這邊直接寫死房號，讓您在右側預覽區與正式 Vercel 網址，永遠讀取同一個資料庫，不再互相打架。
 const appId = "lash-beauty-booking-official";
 
 try {
-  // 🔽 2. 把您剛剛截圖裡複製的那一整塊貼到這裡，覆蓋掉舊的！
+  // 🌟 關鍵修改 2：寫入您專屬的 Firebase 鑰匙
   const firebaseConfig = {
     apiKey: "AIzaSyAMu5uINf-wS9FSuIgZHXA7fgnChmGqAus",
     authDomain: "lash-beauty-booking.firebaseapp.com",
@@ -37,6 +38,7 @@ try {
 } catch (e) {
   console.error("雲端資料庫初始化失敗，將切換為單機模式", e);
 }
+
 
 // ==========================================
 // 內建圖示庫
