@@ -13,28 +13,22 @@ import {
 import { getFirestore, doc, setDoc, onSnapshot } from "firebase/firestore";
 
 // ==========================================
-// 全域雲端環境初始化
+// 全域雲端環境初始化 (已退回舊版測試庫設定)
 // ==========================================
 let app, auth, db;
 
-// 🌟 關鍵修改 1：強制鎖定房號！
-// 這邊直接寫死房號，讓您在右側預覽區與正式 Vercel 網址，永遠讀取同一個資料庫，不再互相打架。
-const appId = "lash-beauty-booking-official";
+// 🌟 恢復為讀取平台預設的房號與鑰匙
+const appId = typeof __app_id !== 'undefined' ? __app_id : "lash-beauty-booking-official";
 
 try {
-  // 🌟 關鍵修改 2：寫入您專屬的 Firebase 鑰匙
-  const firebaseConfig = {
-    apiKey: "AIzaSyAMu5uINf-wS9FSuIgZHXA7fgnChmGqAus",
-    authDomain: "lash-beauty-booking.firebaseapp.com",
-    projectId: "lash-beauty-booking",
-    storageBucket: "lash-beauty-booking.firebasestorage.app",
-    messagingSenderId: "684286248425",
-    appId: "1:684286248425:web:b62b0f6ee2ccb514797778"
-  };
+  // 🌟 恢復為讀取平台預設的隱藏金庫 (讓您找回舊資料)
+  const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
   
-  app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  db = getFirestore(app);
+  if (firebaseConfig) {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+  }
 } catch (e) {
   console.error("雲端資料庫初始化失敗，將切換為單機模式", e);
 }
@@ -178,15 +172,7 @@ const groupSlots = (times) => {
   return groups;
 };
 
-// 取得觸控或滑鼠的 Y 座標
-const getClientY = (e) => {
-  if (e.touches && e.touches.length > 0) {
-    return e.touches[0].clientY;
-  }
-  return e.clientY;
-};
-
-// ✅ 將 Google Drive 原始網址轉換為可顯示的高畫質縮圖網址
+// 將 Google Drive 原始網址轉換為可顯示的高畫質縮圖網址
 const getDisplayImageUrl = (url) => {
   if (!url) return '';
   if (url.includes('drive.google.com')) {
@@ -1324,10 +1310,7 @@ export default function App() {
         </div>
         {isMobileMenuOpen && <div className="md:hidden fixed inset-0 bg-black/20 z-30 top-[68px]" onClick={() => setIsMobileMenuOpen(false)}></div>}
 
-        {/* 主要內容區 */}
         <div className="flex-1 h-full overflow-y-auto relative z-10 w-full bg-gray-50/50">
-          
-          {/* Tab 1: 行事曆 */}
           {activeTab === 'calendar' && (
             <div className="p-4 md:p-6 mx-auto h-full flex flex-col min-w-0">
               <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
@@ -1352,9 +1335,7 @@ export default function App() {
                 </div>
               </div>
 
-              {/* 日曆主體 */}
               <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col overflow-hidden relative">
-                {/* 頂部日期切換 */}
                 <div className="flex items-center justify-between p-3 border-b border-gray-100 bg-gray-50 z-10 relative">
                   <div className="flex gap-1">
                     <button onClick={() => { const d = new Date(currentWeekStart); d.setDate(d.getDate() - 7); setCurrentWeekStart(d); }} className="p-1.5 text-gray-500 hover:bg-gray-200 rounded-md transition"><ChevronLeftCircle size={20}/></button>
@@ -1364,16 +1345,12 @@ export default function App() {
                   <h2 className="text-lg font-bold text-gray-800">
                     {currentWeekStart.getFullYear()} 年 {currentWeekStart.getMonth() + 1} 月
                   </h2>
-                  <div className="w-20"></div> {/* 佔位平衡 */}
+                  <div className="w-20"></div>
                 </div>
 
-                {/* --- 統一 X/Y 滾動區塊 --- */}
                 <div className="flex-1 overflow-auto bg-gray-50/20 relative">
                   <div className="flex flex-col min-w-[800px]">
-                    
-                    {/* 星期標頭 (跟著 X 軸滾動，Y 軸固定) */}
                     <div className="flex border-b border-gray-200 bg-gray-50 sticky top-0 z-40 shadow-sm">
-                      {/* 左上角空白處也要固定 X 軸，確保不會被後面的時間軸蓋住 */}
                       <div className="w-14 border-r border-gray-200 flex-shrink-0 bg-gray-50 sticky left-0 z-50"></div>
                       <div className="flex flex-1">
                         {weekDates.map(day => (
@@ -1385,9 +1362,7 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* 時間格線 (純點擊區) */}
                     <div className="flex flex-1">
-                      {/* 左側時間軸 */}
                       <div className="w-14 flex-shrink-0 border-r border-gray-200 bg-white sticky left-0 z-30">
                         {Array.from({length: 13}).map((_, i) => (
                           <div key={i} className="h-[90px] border-b border-gray-100 text-right pr-2 pt-1 text-xs text-gray-400 font-medium">
@@ -1396,7 +1371,6 @@ export default function App() {
                         ))}
                       </div>
 
-                      {/* 右側天數行 */}
                       <div className="flex flex-1 relative">
                         {weekDates.map((day) => {
                           const schedule = activeDesigner?.schedules.find(s => s.fullDate === day.fullDate);
@@ -1408,7 +1382,6 @@ export default function App() {
                               key={day.fullDate} 
                               className={`flex-1 border-r border-gray-100 relative min-w-[100px] ${day.isToday ? 'bg-[#FDFBF7]/40' : ''}`}
                             >
-                              {/* 背景網格點擊事件 */}
                               <div className="absolute inset-0 flex flex-col z-0">
                                 {TIME_BLOCKS.map(time => (
                                   <div key={time}
@@ -1418,7 +1391,6 @@ export default function App() {
                                 ))}
                               </div>
 
-                              {/* 已建立的區塊層 */}
                               <div className={`absolute inset-0 z-10 pointer-events-none`}>
                                 {groups.map((group, i) => {
                                   const colorObj = EVENT_COLORS.find(c => c.id === group.color) || EVENT_COLORS[0];
@@ -1462,7 +1434,6 @@ export default function App() {
             </div>
           )}
 
-          {/* 批次自動開班 Modal */}
           {showAutoScheduleModal && (
             <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
               <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative animate-in zoom-in duration-200">
@@ -1542,7 +1513,6 @@ export default function App() {
             </div>
           )}
 
-          {/* 編輯時段 Modal */}
           {editingSlot && (
             <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
               <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative animate-in zoom-in duration-200">
@@ -1552,7 +1522,6 @@ export default function App() {
                 </h3>
                 
                 <div className="space-y-4 mt-4">
-                  {/* 時間區間選擇 */}
                   <div className="grid grid-cols-2 gap-3 mb-4 bg-gray-50 p-3 rounded-xl border border-gray-100">
                      <div>
                        <label className="block text-xs font-bold text-gray-600 mb-1">起始時間</label>
@@ -1685,7 +1654,6 @@ export default function App() {
             </div>
           )}
 
-          {/* Tab 2: 客戶管理 */}
           {activeTab === 'clients' && !selectedClient && (
             <div className="p-6 max-w-6xl mx-auto">
               <div className="flex justify-between items-center mb-6">
@@ -1784,7 +1752,6 @@ export default function App() {
                         </h4>
                         <div className="space-y-5">
                            
-                           {/* 日期與基礎資訊 */}
                            <div className="grid grid-cols-2 gap-4">
                              <div>
                                <label className="text-xs font-bold text-gray-500 block mb-1">日期 *</label>
@@ -1799,7 +1766,6 @@ export default function App() {
                              </div>
                            </div>
 
-                           {/* 消費項目 */}
                            <div>
                              <label className="text-xs font-bold text-gray-500 block mb-2">消費項目 (可複選) *</label>
                              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 bg-white p-3 rounded-lg border border-gray-200 max-h-[250px] overflow-y-auto">
@@ -1824,7 +1790,6 @@ export default function App() {
                              </div>
                            </div>
 
-                           {/* 金額與混合支付方式 */}
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-white p-4 rounded-lg border border-gray-100">
                              <div>
                                <label className="text-xs font-bold text-gray-500 block mb-1">本次服務總金額 *</label>
@@ -1898,7 +1863,6 @@ export default function App() {
                              </div>
                            </div>
 
-                           {/* 客片完成照 & 備註 */}
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                              <div>
                                 <label className="text-xs font-bold text-gray-500 block mb-1">客片完成照 (已啟用安全隱私保護)</label>
@@ -1935,7 +1899,6 @@ export default function App() {
                       </div>
                     )}
                     
-                    {/* 歷史紀錄時間軸 */}
                     <div className="space-y-5">
                       {selectedClient.visits.map((visit) => (
                         <div key={visit.id} className="relative pl-6 border-l-2 border-gray-100 pb-2 group">
@@ -1988,7 +1951,6 @@ export default function App() {
                           </div>
                           {visit.notes && <p className="text-sm text-gray-600 mt-2 bg-gray-50 p-3 rounded-lg border border-gray-100">{visit.notes}</p>}
                           
-                          {/* 點擊放大圖片區域 */}
                           {visit.photos && visit.photos.length > 0 && (
                             <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
                               {visit.photos.map((photo, i) => (
@@ -2010,7 +1972,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* 刪除客戶確認 Modal */}
               {showDeleteClientModal && (
                 <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
                   <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative animate-in zoom-in duration-200">
@@ -2028,7 +1989,6 @@ export default function App() {
             </div>
           )}
 
-          {/* 新增客戶 / 編輯客戶 Modal */}
           {showAddClientModal && (
             <div className="fixed inset-0 bg-black/40 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
               <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative">
@@ -2065,12 +2025,10 @@ export default function App() {
             </div>
           )}
 
-          {/* Tab 3: 交易紀錄 (包含進階篩選) */}
           {activeTab === 'transactions' && (
             <div className="p-6 max-w-5xl mx-auto">
                <div className="mb-6"><h1 className="text-2xl font-bold text-gray-800">交易紀錄與業績統計</h1></div>
                
-               {/* --- 進階篩選區塊 --- */}
                <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 mb-6 flex flex-col md:flex-row gap-4 md:items-end">
                  <div className="flex items-center gap-2 mb-1 md:hidden">
                     <Filter size={16} className="text-[#A87B7B]"/> 
@@ -2170,7 +2128,6 @@ export default function App() {
             </div>
           )}
 
-          {/* Tab 4: 庫存 */}
           {activeTab === 'inventory' && (
             <div className="p-6 max-w-4xl mx-auto">
               <div className="mb-6"><h1 className="text-2xl font-bold text-gray-800">耗材與庫存</h1></div>
@@ -2187,7 +2144,6 @@ export default function App() {
             </div>
           )}
 
-          {/* Tab 5: 全新系統設定 */}
           {activeTab === 'settings' && (
             <div className="p-6 max-w-5xl mx-auto space-y-6">
               <div className="mb-6">
@@ -2196,7 +2152,6 @@ export default function App() {
               </div>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* 左欄：設計師管理 */}
                 <div className="space-y-6">
                   <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                     <div className="flex justify-between items-center mb-5 border-b border-gray-100 pb-3">
@@ -2218,7 +2173,6 @@ export default function App() {
                     </div>
                   </div>
                   
-                  {/* 付款方式管理 */}
                   <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                     <h2 className="font-bold text-gray-800 mb-5 border-b border-gray-100 pb-3 flex items-center gap-2"><CreditCard size={18} className="text-[#A87B7B]"/> 付款方式管理</h2>
                     <div className="flex flex-wrap gap-2 mb-4">
@@ -2238,7 +2192,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* 右欄：服務項目與全域 */}
                 <div className="space-y-6">
                   <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                     <div className="flex justify-between items-center mb-5 border-b border-gray-100 pb-3">
@@ -2297,7 +2250,6 @@ export default function App() {
 
         </div>
         
-        {/* 全域放大圖片 Modal */}
         {enlargedImage && (
           <div className="fixed inset-0 bg-black/90 z-[300] flex items-center justify-center p-4 backdrop-blur-sm cursor-zoom-out" onClick={() => setEnlargedImage(null)}>
             <button className="absolute top-5 right-5 text-white/70 hover:text-white transition p-2"><X size={32}/></button>
@@ -2305,7 +2257,6 @@ export default function App() {
           </div>
         )}
 
-        {/* 全域確認操作 Modal (防呆) */}
         {confirmModal && (
           <div className="fixed inset-0 bg-black/50 z-[400] flex items-center justify-center p-4 backdrop-blur-sm">
             <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative animate-in zoom-in duration-200">
@@ -2319,7 +2270,6 @@ export default function App() {
           </div>
         )}
 
-        {/* 新增：今日行程自動提醒 Modal */}
         {showTodayNotice && (
           <div className="fixed inset-0 bg-black/60 z-[500] flex items-center justify-center p-4 backdrop-blur-sm">
             <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative animate-in zoom-in duration-300">
@@ -2338,7 +2288,6 @@ export default function App() {
                   const todayAppointments = todaySchedule ? todaySchedule.times.filter(t => t.isFull) : [];
                   if (todayAppointments.length === 0) return null;
                   
-                  // 將連續的時段群組化，讓畫面更簡潔
                   const groups = groupSlots(todayAppointments);
 
                   return (
@@ -2373,9 +2322,6 @@ export default function App() {
     );
   };
 
-  // ==========================================
-  // 客戶前台 Render (手機預約畫面)
-  // ==========================================
   const renderCustomerView = () => (
     <div className="w-full max-w-md bg-white min-h-screen shadow-2xl relative pb-28 mx-auto border-x border-gray-200">
       {renderToast()}
@@ -2541,7 +2487,6 @@ export default function App() {
     </div>
   );
 
-  // --- 載入狀態防護 ---
   if (!isStyleLoaded || !isCloudLoaded) {
     return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "100vh", backgroundColor: "#f9fafb", fontFamily: "sans-serif" }}>
