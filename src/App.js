@@ -16,10 +16,13 @@ import { getFirestore, doc, setDoc, onSnapshot } from "firebase/firestore";
 // 全域雲端環境初始化
 // ==========================================
 let app, auth, db;
-const appId = typeof __app_id !== 'undefined' ? __app_id : "lash-beauty-booking-official";
+
+// 🔽 1. 這裡改成您專屬的房號名稱 (不要跟別人重複即可，例如加上您的名字)
+const appId = "mandy-lash-beauty-2026"; 
 
 try {
-  const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+  // 🔽 2. 把您剛剛截圖裡複製的那一整塊貼到這裡，覆蓋掉舊的！
+  const firebaseConfig = {
     apiKey: "AIzaSyAMu5uINf-wS9FSuIgZHXA7fgnChmGqAus",
     authDomain: "lash-beauty-booking.firebaseapp.com",
     projectId: "lash-beauty-booking",
