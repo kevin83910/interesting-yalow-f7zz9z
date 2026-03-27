@@ -1274,6 +1274,366 @@ export default function App() {
             </div>
           )}
 
+          {/* === 客戶管理 Tab (客戶列表) === */}
+          {activeTab === 'clients' && !selectedClient && (
+            <div className="p-6 max-w-6xl mx-auto">
+              <div className="flex justify-between items-center mb-6">
+                <div><h1 className="text-2xl font-bold text-gray-800">客戶管理</h1><p className="text-sm text-gray-500">Customer CRM</p></div>
+                <div className="flex gap-2">
+                  <button onClick={() => setShowDataModal(true)} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg flex items-center gap-1.5 text-sm font-bold border border-gray-200 transition shadow-sm"><Database size={16} />資料匯出 / 匯入</button>
+                  <button onClick={() => { setEditingClientId(null); setNewClientData({ name: '', phone: '', birthday: '', tags: '', lashPreference: '' }); setShowAddClientModal(true); }} className="bg-[#A87B7B] hover:bg-[#8f6666] text-white px-4 py-2 rounded-lg flex items-center gap-1.5 text-sm font-bold shadow-sm transition"><Plus size={16} />新增客戶</button>
+                </div>
+              </div>
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+                <div className="relative mb-4 max-w-md">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                  <input type="text" placeholder="搜尋姓名或手機號碼..." className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}/>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse whitespace-nowrap">
+                    <thead>
+                      <tr className="border-b border-gray-100 text-gray-500 text-sm"><th className="pb-3 px-4 font-medium">客戶姓名</th><th className="pb-3 px-4 font-medium">聯絡電話</th><th className="pb-3 px-4 font-medium">標籤</th><th className="pb-3 px-4 font-medium">最近消費</th><th className="pb-3 px-4 text-right"></th></tr>
+                    </thead>
+                    <tbody>
+                      {filteredClients.map(c => (
+                        <tr key={c.id} className="border-b border-gray-50 hover:bg-[#FDFBF7] transition cursor-pointer" onClick={() => setSelectedClient(c)}>
+                          <td className="py-3 px-4 font-bold text-gray-800">{c.name}</td><td className="py-3 px-4 text-sm text-gray-600">{c.phone}</td>
+                          <td className="py-3 px-4 flex gap-1">{c.tags.map(t => <span key={t} className="bg-[#F5E3E3] text-[#A87B7B] text-[10px] px-2 py-0.5 rounded-full font-bold">{t}</span>)}</td>
+                          <td className="py-3 px-4 text-sm text-gray-500">{c.visits.length > 0 ? c.visits[0].date : '無紀錄'}</td>
+                          <td className="py-3 px-4 text-right text-sm font-bold text-[#A87B7B]">查看</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* === 客戶管理 Tab (客戶詳細資料) === */}
+          {activeTab === 'clients' && selectedClient && (
+            <div className="p-6 max-w-6xl mx-auto">
+              <button onClick={() => setSelectedClient(null)} className="flex items-center gap-1 text-gray-500 hover:text-gray-800 mb-4 text-sm font-bold"><ChevronLeft size={16} /> 返回列表</button>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-1">
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#E8D3C8] to-[#D4B8A8]"></div>
+                    <div className="flex justify-between items-start mt-2">
+                      <div>
+                        <h2 className="text-2xl font-bold text-gray-800">{selectedClient.name}</h2>
+                        <p className="text-gray-500 text-sm mt-1">{selectedClient.phone}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={handleEditClientClick}
+                          className="text-gray-400 hover:text-[#A87B7B] transition p-2 bg-gray-50 hover:bg-[#FDFBF7] rounded-full"
+                          title="編輯此客戶"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button 
+                          onClick={() => setConfirmModal({ title: '刪除客戶', message: `刪除「${selectedClient.name}」後將無法復原，包含所有消費紀錄都會被移除。確定刪除嗎？`, onConfirm: handleDeleteClient })}
+                          className="text-gray-400 hover:text-red-500 transition p-2 bg-gray-50 hover:bg-red-50 rounded-full"
+                          title="刪除此客戶"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-1.5">{selectedClient.tags.map(t => <span key={t} className="bg-[#F5E3E3] text-[#A87B7B] text-[10px] px-2 py-0.5 rounded-full font-bold">{t}</span>)}</div>
+                    <div className="mt-5 space-y-3">
+                      <div className="p-3 bg-[#FDFBF7] rounded-xl border border-[#F0E6D8]">
+                        <p className="text-xs text-[#A87B7B] font-bold mb-1 flex items-center gap-1"><Clock size={12} /> 專屬睫毛密碼</p>
+                        <p className="text-sm text-gray-700">{selectedClient.lashPreference}</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="p-3 bg-gray-50 border border-gray-100 rounded-xl relative">
+                          <p className="text-[10px] text-gray-500 font-bold">儲值餘額</p>
+                          <p className="text-lg font-bold text-gray-800">${selectedClient.balance}</p>
+                          <button onClick={() => setShowTopUpModal(true)} className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#C59A5C] text-white text-[11px] px-2.5 py-1 rounded shadow-sm hover:bg-[#b08850] flex items-center gap-0.5">
+                            <Wallet size={12}/> 儲值
+                          </button>
+                        </div>
+                        <div className="p-3 bg-gray-50 border border-gray-100 rounded-xl"><p className="text-[10px] text-gray-500 font-bold">剩餘包堂</p>{selectedClient.packages.length>0 ? selectedClient.packages.map(p=><p key={p.id} className="text-sm font-bold text-[#A87B7B]">{p.name}:{p.remaining}</p>) : <p className="text-sm font-bold text-gray-400">無</p>}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="lg:col-span-2">
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                    <div className="flex justify-between items-center mb-6">
+                      <h3 className="font-bold text-gray-800 flex items-center gap-2"><CalendarCheck size={18} className="text-[#A87B7B]" /> 歷史紀錄</h3>
+                      <button onClick={() => {
+                        if (isAddingVisit) {
+                          setIsAddingVisit(false);
+                          setEditingVisitId(null);
+                          setNewVisit({ date: getTodayString(), services: [], size: '', originalAmount: '', discountType: 'none', discountValue: '', discountNote: '', payments: [{ method: '現金', amount: '', accountLast5: '', customName: '' }], deductPackageId: '', notes: '', photoUrl: '', designerId: activeDesignerId || '' });
+                        } else {
+                          setIsAddingVisit(true);
+                        }
+                      }} className="text-sm bg-gray-900 hover:bg-black text-white px-4 py-2 rounded-lg font-bold transition flex items-center gap-1.5">
+                        {isAddingVisit ? '取消' : <><Plus size={16}/>新增消費紀錄</>}
+                      </button>
+                    </div>
+                    {isAddingVisit && (
+                      <div className="mb-8 p-5 bg-[#FDFBF7] border border-[#F0E6D8] rounded-xl shadow-inner">
+                        <h4 className="font-bold text-[#A87B7B] mb-4 flex items-center gap-2 border-b border-[#F0E6D8] pb-2">
+                           {editingVisitId ? <Edit size={18} /> : <Plus size={18} />} 
+                           {editingVisitId ? '編輯消費紀錄' : '新增消費紀錄 (做睫毛/買商品)'}
+                        </h4>
+                        <div className="space-y-5">
+                           
+                           <div className="grid grid-cols-2 gap-4">
+                             <div>
+                               <label className="text-xs font-bold text-gray-500 block mb-1">日期 *</label>
+                               <input type="date" value={newVisit.date} onChange={e=>setNewVisit({...newVisit,date:e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                             </div>
+                             <div>
+                               <label className="text-xs font-bold text-gray-500 block mb-1">操作設計師 *</label>
+                               <select value={newVisit.designerId} onChange={e=>setNewVisit({...newVisit, designerId: e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B] bg-white">
+                                 <option value="">請選擇</option>
+                                 {designers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                               </select>
+                             </div>
+                           </div>
+
+                           <div>
+                             <label className="text-xs font-bold text-gray-500 block mb-2">消費項目 (可複選) *</label>
+                             <div className="grid grid-cols-2 md:grid-cols-3 gap-2 bg-white p-3 rounded-lg border border-gray-200 max-h-[250px] overflow-y-auto">
+                                {savedServices.map(svc => (
+                                  <label key={svc} className="flex items-start gap-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-50 p-1 rounded transition">
+                                    <input 
+                                      type="checkbox" 
+                                      className="mt-0.5 w-4 h-4 accent-[#A87B7B] flex-shrink-0"
+                                      checked={newVisit.services.includes(svc)}
+                                      onChange={() => handleServiceToggle(svc)}
+                                    />
+                                    <span className="leading-snug">{svc}</span>
+                                  </label>
+                                ))}
+                             </div>
+                           </div>
+
+                           <div className="grid grid-cols-1 gap-4">
+                             <div>
+                               <label className="text-xs font-bold text-gray-500 block mb-1">尺寸 / 根數 / 規格</label>
+                               <input type="text" placeholder="例：C翹度 0.15 10-11-12" value={newVisit.size} onChange={e=>setNewVisit({...newVisit,size:e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                             </div>
+                           </div>
+
+                           {/* === 進階折扣設定區 === */}
+                           <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm space-y-4 relative overflow-hidden">
+                             <div className="absolute top-0 left-0 w-1 h-full bg-[#A87B7B]"></div>
+                             <h5 className="font-bold text-gray-700 text-sm flex items-center gap-1.5"><Tag size={16} className="text-[#A87B7B]"/> 金額與折扣設定</h5>
+                             <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                   <label className="text-xs font-bold text-gray-500 block mb-1">原價總額 *</label>
+                                   <div className="relative">
+                                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">$</span>
+                                      <input type="text" inputMode="numeric" value={newVisit.originalAmount} onChange={e=>setNewVisit({...newVisit, originalAmount: e.target.value.replace(/\D/g, '')})} placeholder="0" className="w-full pl-7 p-2.5 border border-gray-200 rounded-lg text-base font-bold text-gray-800 outline-none focus:border-[#A87B7B]" />
+                                   </div>
+                                </div>
+                                <div>
+                                   <label className="text-xs font-bold text-gray-500 block mb-1">給予折扣 / 優惠</label>
+                                   <select value={newVisit.discountType} onChange={e=>setNewVisit({...newVisit, discountType: e.target.value, discountValue: '', discountNote: ''})} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B] bg-gray-50">
+                                      <option value="none">無折扣</option>
+                                      <option value="amount">折抵現金 (扣金額)</option>
+                                      <option value="percent">打折優惠 (如 85 折)</option>
+                                   </select>
+                                </div>
+                             </div>
+
+                             {newVisit.discountType !== 'none' && (
+                                <div className="grid grid-cols-2 gap-4 bg-rose-50 p-3 rounded-lg border border-rose-100 animate-in fade-in zoom-in duration-200">
+                                   <div>
+                                      <label className="text-xs font-bold text-rose-600 block mb-1">
+                                         {newVisit.discountType === 'percent' ? '折扣折數 (如: 85 = 85折)' : '折抵金額'} *
+                                      </label>
+                                      <input type="text" inputMode="numeric" value={newVisit.discountValue} onChange={e=>setNewVisit({...newVisit, discountValue: e.target.value.replace(/\D/g, '')})} placeholder={newVisit.discountType === 'percent' ? '85' : '100'} className="w-full p-2 border border-rose-200 rounded text-sm outline-none focus:border-rose-400" />
+                                   </div>
+                                   <div>
+                                      <label className="text-xs font-bold text-rose-600 block mb-1">折扣原因 *</label>
+                                      <input type="text" value={newVisit.discountNote} onChange={e=>setNewVisit({...newVisit, discountNote: e.target.value})} placeholder="如: 壽星優惠、朋友同行" className="w-full p-2 border border-rose-200 rounded text-sm outline-none focus:border-rose-400" />
+                                   </div>
+                                   <div className="col-span-2 text-right text-xs font-bold text-rose-500">
+                                      ✨ 系統將自動折抵: ${getCalculatedVisitAmount().discountAmt}
+                                   </div>
+                                </div>
+                             )}
+
+                             <div className="bg-[#FDFBF7] p-3 rounded-lg border border-[#E8D3C8] flex justify-between items-center mt-2">
+                                <span className="font-bold text-[#A87B7B]">客人實際需付結帳總額：</span>
+                                <span className="text-2xl font-black text-[#A87B7B]">${getCalculatedVisitAmount().finalAmt}</span>
+                             </div>
+                           </div>
+
+                           {/* 付款方式分配 */}
+                           <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                                <div className="flex justify-between items-end mb-3">
+                                    <label className="text-sm font-bold text-gray-700 block">請輸入客人的付款方式 *</label>
+                                    <button onClick={() => setNewVisit({...newVisit, payments: [...(newVisit.payments || []), { method: '現金', amount: '', accountLast5: '', customName: '' }]})} className="text-[11px] text-[#A87B7B] font-bold hover:bg-[#FDFBF7] px-2 py-1 rounded border border-[#A87B7B]/30 hover:border-[#A87B7B] transition bg-white">+ 拆分付款</button>
+                                </div>
+                                <p className="text-[10px] text-gray-500 mb-3 leading-tight">為防呆確保帳務正確，下方分配的金額總和，必須剛好等於上面的【結帳總額】喔！</p>
+                                <div className="space-y-2">
+                                   {(newVisit.payments || []).map((payment, idx) => (
+                                       <div key={idx} className="flex flex-wrap gap-2 p-2.5 bg-white rounded-lg border border-gray-200 relative group">
+                                           {newVisit.payments.length > 1 && (
+                                               <button onClick={() => {
+                                                   const newP = [...newVisit.payments];
+                                                   newP.splice(idx, 1);
+                                                   setNewVisit({...newVisit, payments: newP});
+                                               }} className="absolute -top-1.5 -right-1.5 bg-white text-gray-400 hover:text-red-500 rounded-full shadow-sm border border-gray-200 w-5 h-5 flex items-center justify-center"><X size={12}/></button>
+                                           )}
+                                           <div className="flex w-full gap-2">
+                                             <select value={payment.method} onChange={e => {
+                                                 const newP = [...newVisit.payments];
+                                                 newP[idx].method = e.target.value;
+                                                 setNewVisit({...newVisit, payments: newP});
+                                             }} className="flex-[3] p-2 border border-gray-200 rounded-md text-xs outline-none focus:border-[#A87B7B] bg-gray-50">
+                                                 {paymentMethods.map(m=><option key={m} value={m}>{m}</option>)}
+                                                 <option value="自訂">+ 新增自訂...</option>
+                                             </select>
+                                             <div className="relative flex-[2]">
+                                                 <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
+                                                 <input type="text" inputMode="numeric" pattern="[0-9]*" placeholder="金額" value={payment.amount} onChange={e => {
+                                                     const val = e.target.value.replace(/\D/g, '');
+                                                     const newP = [...newVisit.payments];
+                                                     newP[idx].amount = val;
+                                                     setNewVisit({...newVisit, payments: newP});
+                                                 }} className="w-full pl-5 p-2 border border-gray-200 rounded-md text-xs font-bold outline-none focus:border-[#A87B7B]" />
+                                             </div>
+                                           </div>
+                                           
+                                           {payment.method === '轉帳' && (
+                                               <input type="text" inputMode="numeric" pattern="[0-9]*" maxLength="5" placeholder="帳號末五碼" value={payment.accountLast5} onChange={e => {
+                                                   const val = e.target.value.replace(/\D/g, '');
+                                                   const newP = [...newVisit.payments];
+                                                   newP[idx].accountLast5 = val;
+                                                   setNewVisit({...newVisit, payments: newP});
+                                               }} className="w-full p-2 border border-gray-200 rounded-md text-xs outline-none focus:border-[#A87B7B]" />
+                                           )}
+                                           {payment.method === '自訂' && (
+                                               <input type="text" placeholder="請輸入自訂方式名稱" value={payment.customName} onChange={e => {
+                                                   const newP = [...newVisit.payments];
+                                                   newP[idx].customName = e.target.value;
+                                                   setNewVisit({...newVisit, payments: newP});
+                                               }} className="w-full p-2 border border-gray-200 rounded-md text-xs outline-none focus:border-[#A87B7B] bg-yellow-50 focus:bg-white" />
+                                           )}
+                                       </div>
+                                   ))}
+                                </div>
+                           </div>
+
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div>
+                                <label className="text-xs font-bold text-gray-500 block mb-1">客片完成照 (已啟用安全隱私保護)</label>
+                                <input type="file" accept="image/*" onChange={handleImageUpload} disabled={isUploadingImage} className="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-[#F5E3E3] file:text-[#A87B7B] hover:file:bg-[#F0E6D8] cursor-pointer disabled:opacity-50" />
+                                {isUploadingImage && (
+                                  <div className="mt-2 text-xs text-[#A87B7B] font-bold animate-pulse flex items-center gap-1">
+                                    <Cloud size={14}/> 圖片處理上傳中，請稍候...
+                                  </div>
+                                )}
+                                {newVisit.photoUrl && !isUploadingImage && (
+                                  <div className="mt-2 relative inline-block">
+                                    <img src={getDisplayImageUrl(newVisit.photoUrl)} alt="預覽" className="h-16 w-16 object-cover rounded-lg border shadow-sm" />
+                                    <button onClick={() => setNewVisit({...newVisit, photoUrl: ''})} className="absolute -top-1.5 -right-1.5 bg-gray-800 text-white rounded-full p-0.5 hover:bg-red-500"><X size={12} /></button>
+                                  </div>
+                                )}
+                             </div>
+                             <div>
+                               <label className="text-xs font-bold text-gray-500 block mb-1">一般備註</label>
+                               <textarea value={newVisit.notes} onChange={e=>setNewVisit({...newVisit,notes:e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm h-16 outline-none focus:border-[#A87B7B]"></textarea>
+                             </div>
+                           </div>
+                           
+                           <div className="flex justify-between items-center pt-2">
+                             {editingVisitId ? (
+                               <button onClick={() => setConfirmModal({ title: '刪除紀錄', message: '確定要刪除這筆消費紀錄嗎？相關的儲值金與包堂扣除將會自動退還。', onConfirm: () => handleDeleteVisit(editingVisitId) })} className="text-red-500 hover:text-red-600 text-sm font-bold flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-red-50 transition">
+                                 <Trash2 size={16}/> 刪除此紀錄
+                               </button>
+                             ) : <div></div>}
+                             <button onClick={handleAddVisit} disabled={isUploadingImage} className="bg-[#A87B7B] text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-sm hover:bg-[#8f6666] disabled:bg-gray-400 disabled:cursor-not-allowed transition flex items-center gap-2">
+                               <Save size={16}/> {editingVisitId ? '確認更新' : '確認儲存'}
+                             </button>
+                           </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="space-y-5">
+                      {selectedClient.visits.map((visit) => (
+                        <div key={visit.id} className={`relative pl-6 border-l-2 ${visit.isTopUp ? 'border-[#C59A5C]' : 'border-gray-100'} pb-2 group`}>
+                          <div className={`absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-white border-4 ${visit.isTopUp ? 'border-[#C59A5C]' : 'border-[#E8D3C8]'}`}></div>
+                          <div className="flex flex-col sm:flex-row gap-4 justify-between items-start mb-2">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className={`text-[10px] font-bold ${visit.isTopUp ? 'text-[#C59A5C] bg-[#FDFBF7]' : 'text-[#A87B7B] bg-[#F5E3E3]'} px-2 py-0.5 rounded`}>{visit.date}</span>
+                                {visit.designerName && !visit.isTopUp && (
+                                  <span className="text-[10px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded border border-gray-200">由 {visit.designerName} 服務</span>
+                                )}
+                              </div>
+                              <h4 className={`font-bold mt-2 text-lg leading-tight ${visit.isTopUp ? 'text-[#C59A5C]' : 'text-gray-800'}`}>{visit.service}</h4>
+                              {visit.size && !visit.isTopUp && <p className="text-[11px] text-gray-500 mt-1 font-medium">尺寸規格：{visit.size}</p>}
+                              
+                              {/* 顯示一般消費折扣資訊 */}
+                              {visit.discount > 0 && !visit.isTopUp && (
+                                <p className="text-[11px] text-rose-500 mt-1 font-bold">
+                                  使用優惠：{visit.discountNote} (-${visit.discount})
+                                </p>
+                              )}
+                              {/* 顯示儲值加碼贈送資訊 */}
+                              {visit.isTopUp && (visit.bonus > 0 || visit.discount > 0) && (
+                                <p className="text-[11px] text-[#A87B7B] mt-1 font-bold">加碼贈送：${visit.bonus || visit.discount}</p>
+                              )}
+                            </div>
+                            <div className="flex flex-col items-end gap-1 w-full sm:w-auto">
+                              <div className="flex items-center gap-2">
+                                <button onClick={() => handleEditVisitClick(visit)} className="text-gray-300 hover:text-[#A87B7B] p-1 transition-colors" title="編輯紀錄"><Edit size={16}/></button>
+                                <button onClick={() => setConfirmModal({ title: '刪除紀錄', message: visit.isTopUp ? '確定要刪除這筆「儲值紀錄」嗎？客人的儲值餘額將會自動扣除該金額喔！' : '確定要刪除這筆消費紀錄嗎？相關的儲值金與包堂扣除將會自動退還。', onConfirm: () => handleDeleteVisit(visit.id) })} className="text-gray-300 hover:text-red-500 p-1 transition-colors" title="刪除紀錄"><Trash2 size={16}/></button>
+                                <span className={`block text-lg font-bold ml-1 ${visit.isTopUp ? 'text-[#C59A5C]' : 'text-gray-800'}`}>
+                                  {visit.isTopUp ? '+' : ''}{visit.isTopUp ? ((Number(visit.amount)||0) + (Number(visit.bonus)||Number(visit.discount)||0)).toLocaleString() : (Number(visit.amount)||0).toLocaleString()}
+                                </span>
+                              </div>
+                              <div className="flex flex-wrap justify-end gap-1 mt-1">
+                                {visit.payments && visit.payments.length > 0 ? (
+                                  visit.payments.map((p, idx) => (
+                                    <span key={idx} className={`text-[11px] px-2 py-0.5 rounded-md border ${p.method === '儲值金扣款' || p.method === '扣除包堂' ? 'bg-[#FDFBF7] text-[#A87B7B] border-[#F0E6D8]' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>
+                                       {p.method} ${p.amount} {p.accountLast5 ? `(${p.accountLast5})` : ''}
+                                    </span>
+                                  ))
+                                ) : (
+                                  <span className={`text-[11px] px-2 py-0.5 rounded-md border ${visit.paymentMethod === '儲值金扣款' || visit.paymentMethod === '扣除包堂' ? 'bg-[#FDFBF7] text-[#A87B7B] border-[#F0E6D8]' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>
+                                    {visit.paymentMethod} {visit.accountLast5 ? `(${visit.accountLast5})` : ''}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          {visit.notes && <p className="text-sm text-gray-600 mt-2 bg-gray-50 p-3 rounded-lg border border-gray-100">{visit.notes}</p>}
+                          
+                          {visit.photos && visit.photos.length > 0 && !visit.isTopUp && (
+                            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                              {visit.photos.map((photo, i) => (
+                                <img 
+                                  key={i} 
+                                  src={getDisplayImageUrl(photo)} 
+                                  alt="客片" 
+                                  onClick={() => setEnlargedImage(photo)}
+                                  className="w-20 h-20 object-cover rounded-lg border border-gray-200 shadow-sm cursor-pointer hover:opacity-80 transition" 
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      {selectedClient.visits.length===0 && <p className="text-sm text-gray-400 text-center py-4">無紀錄</p>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* === 交易紀錄 Tab === */}
           {activeTab === 'transactions' && (
             <div className="p-6 max-w-6xl mx-auto">
