@@ -135,7 +135,6 @@ const getTopPx = (timeStr) => {
   return ((h - 9) * 60 + m) * 1.5; 
 };
 
-// 獲取範圍內的時間陣列
 const getSlotsInRange = (start, end) => {
   let times = [];
   let curr = start;
@@ -146,7 +145,6 @@ const getSlotsInRange = (start, end) => {
   return times;
 };
 
-// 依照連續時間與 eventId 進行群組化
 const groupSlots = (times) => {
   if (!times || times.length === 0) return [];
   const sorted = [...times].sort((a,b) => a.val.localeCompare(b.val));
@@ -174,7 +172,6 @@ const groupSlots = (times) => {
   return groups;
 };
 
-// 將 Google Drive 原始網址轉換為可顯示的高畫質縮圖網址
 const getDisplayImageUrl = (url) => {
   if (!url) return '';
   if (url.includes('drive.google.com')) {
@@ -241,19 +238,16 @@ export default function App() {
   // --- 登入與設定 ---
   const [adminPassword, setAdminPassword] = useState("admin");
   const [lineOfficialId, setLineOfficialId] = useState("");
-  const [lineNotifyUrl, setLineNotifyUrl] = useState(""); // LINE Messaging API 推播網址
-  const [lineUserIds, setLineUserIds] = useState(""); // 支援多個 User ID
-  const [gdriveApiUrl, setGdriveApiUrl] = useState(DEFAULT_GDRIVE_URL); // Google Drive 圖床 Webhook 網址
+  const [lineNotifyUrl, setLineNotifyUrl] = useState("");
+  const [lineUserIds, setLineUserIds] = useState("");
+  const [gdriveApiUrl, setGdriveApiUrl] = useState(DEFAULT_GDRIVE_URL);
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [showForgotPrompt, setShowForgotPrompt] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [newPasswordInput, setNewPasswordInput] = useState("");
 
-  // --- 今日提醒彈窗狀態 ---
   const [showTodayNotice, setShowTodayNotice] = useState(false);
-
-  // --- 系統設定全域共用 Alert 視窗 ---
   const [confirmModal, setConfirmModal] = useState(null);
 
   // --- CRM / 後台狀態 ---
@@ -267,7 +261,6 @@ export default function App() {
   const [clients, setClients] = useState(initialClients);
   const [inventory, setInventory] = useState(initialInventory);
   
-  // --- 服務與付款動態清單 ---
   const [savedServices, setSavedServices] = useState(initialSavedServices);
   const [savedProducts, setSavedProducts] = useState(initialSavedProducts);
   const [paymentMethods, setPaymentMethods] = useState(['現金', '轉帳', '信用卡', 'Line Pay', '儲值金扣款', '扣除包堂']);
@@ -275,7 +268,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedClient, setSelectedClient] = useState(null);
   const [isAddingVisit, setIsAddingVisit] = useState(false);
-  const [isUploadingImage, setIsUploadingImage] = useState(false); // 圖片上傳中狀態
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [editingVisitId, setEditingVisitId] = useState(null); 
   const [showAddClientModal, setShowAddClientModal] = useState(false);
   const [showDeleteClientModal, setShowDeleteClientModal] = useState(false);
@@ -283,11 +276,12 @@ export default function App() {
   const [editingClientId, setEditingClientId] = useState(null); 
   const [showDataModal, setShowDataModal] = useState(false); 
   
-  // --- 儲值功能狀態 ---
+  // --- 儲值功能狀態 (加入編輯儲值ID與新版贈送邏輯) ---
   const [showTopUpModal, setShowTopUpModal] = useState(false);
-  const [topUpData, setTopUpData] = useState({ date: getTodayString(), targetAmount: '', discount: '', method: '現金', notes: '' });
+  const [editingTopUpId, setEditingTopUpId] = useState(null);
+  const [topUpData, setTopUpData] = useState({ date: getTodayString(), targetAmount: '', bonus: '', method: '現金', notes: '' });
 
-  // --- 消費紀錄狀態 (包含折扣欄位) ---
+  // --- 消費紀錄狀態 ---
   const [newVisit, setNewVisit] = useState({ 
     date: getTodayString(), 
     services: [], 
@@ -303,7 +297,6 @@ export default function App() {
     designerId: activeDesignerId || '' 
   });
 
-  // --- 交易紀錄篩選狀態 ---
   const [txFilterType, setTxFilterType] = useState('month');
   const [txFilterMonth, setTxFilterMonth] = useState(() => {
     const d = new Date();
@@ -319,13 +312,10 @@ export default function App() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   });
 
-  // --- 行事曆點擊編輯狀態 ---
   const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
-  // { isNew, date, startTime, endTime, isFull, clientName, clientPhone, service, color, eventId, originalSlots }
   const [editingSlot, setEditingSlot] = useState(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  // --- 批次自動開班設定狀態 ---
   const [showAutoScheduleModal, setShowAutoScheduleModal] = useState(false);
   const [autoScheduleConfig, setAutoScheduleConfig] = useState({
     workDays: [1, 2, 3, 4, 5, 6], 
@@ -336,7 +326,6 @@ export default function App() {
     breakEnd: "14:00"
   });
 
-  // --- 初始化與 Firebase ---
   useEffect(() => {
     if (typeof window !== "undefined") {
       const checkTailwind = setInterval(() => { if (window.tailwind) { setIsStyleLoaded(true); clearInterval(checkTailwind); } }, 50);
@@ -363,7 +352,6 @@ export default function App() {
           try {
             await signInWithCustomToken(auth, __initial_auth_token); 
           } catch (err) {
-            console.warn("自訂 Token 登入失敗 (可能是專案不符)，自動切換為匿名登入", err);
             await signInAnonymously(auth);
           }
         } 
@@ -427,9 +415,8 @@ export default function App() {
       setIsCloudLoaded(true);
     }, (err) => { console.error("雲端讀取失敗:", err); setIsCloudLoaded(true); });
     return () => unsubscribe();
-  }, [user, isAdminMode]);
+  }, [user, isAdminMode, activeDesignerId]);
 
-  // --- 自動儲存至雲端共用函數 ---
   const syncToCloud = async (updates = {}) => {
     if (!user || !db) return false;
     try {
@@ -489,7 +476,6 @@ export default function App() {
     );
   };
 
-  // --- 發送 LINE Messaging API 推播 ---
   const handleSendTodayScheduleToLine = async () => {
     if (!lineNotifyUrl) return showToast("請先至「系統設定」填寫 LINE 推播網址！");
     const idsArray = lineUserIds.split(',').map(id => id.trim()).filter(id => id);
@@ -532,7 +518,6 @@ export default function App() {
     }
   };
 
-  // --- 登入邏輯 ---
   const handleAdminLogin = () => {
     if (passwordInput === adminPassword) {
       setIsAdminMode(true); setShowPasswordPrompt(false); setPasswordInput(""); setPasswordError("");
@@ -547,13 +532,13 @@ export default function App() {
       }
     } else { setPasswordError("密碼錯誤，請重新輸入！"); setPasswordInput(""); }
   };
+  
   const handleResetPassword = () => {
     if (passwordInput === "8888") {
       setAdminPassword("admin"); setShowForgotPrompt(false); setShowPasswordPrompt(true); setPasswordInput(""); setPasswordError(""); showToast("密碼已重置為：admin");
     } else { setPasswordError("安全驗證碼錯誤！"); setPasswordInput(""); }
   };
 
-  // --- CRM 功能 ---
   const handleSaveClient = async () => {
     if(!newClientData.name) return showToast("姓名為必填！");
     const tagsArray = newClientData.tags ? newClientData.tags.split(',').map(t => t.trim()) : ["新客"];
@@ -562,22 +547,12 @@ export default function App() {
     if (editingClientId) {
       updatedClients = clients.map(c => {
         if (c.id === editingClientId) {
-          return {
-            ...c,
-            name: newClientData.name,
-            phone: newClientData.phone,
-            birthday: newClientData.birthday || '-',
-            tags: tagsArray,
-            lashPreference: newClientData.lashPreference || "尚未建立紀錄"
-          };
+          return { ...c, name: newClientData.name, phone: newClientData.phone, birthday: newClientData.birthday || '-', tags: tagsArray, lashPreference: newClientData.lashPreference || "尚未建立紀錄" };
         }
         return c;
       });
     } else {
-      const client = {
-        id: Date.now(), name: newClientData.name, phone: newClientData.phone, birthday: newClientData.birthday || '-', joinDate: getTodayString(),
-        tags: tagsArray, lashPreference: newClientData.lashPreference || "尚未建立紀錄", balance: 0, packages: [], visits: []
-      };
+      const client = { id: Date.now(), name: newClientData.name, phone: newClientData.phone, birthday: newClientData.birthday || '-', joinDate: getTodayString(), tags: tagsArray, lashPreference: newClientData.lashPreference || "尚未建立紀錄", balance: 0, packages: [], visits: [] };
       updatedClients = [client, ...clients];
     }
 
@@ -602,24 +577,27 @@ export default function App() {
     setNewClientData({ name: '', phone: '', birthday: '', tags: '', lashPreference: '' });
   };
 
-  // === 進階折扣與儲值功能 ===
-  
-  const handleSaveTopUp = async () => {
-    if (!topUpData.targetAmount) return showToast("請輸入預計存入的面額！");
-    
-    const target = Number(topUpData.targetAmount) || 0;
-    const discount = Number(topUpData.discount) || 0;
-    const actualPaid = target - discount;
+  // === 儲值功能 (支援修改與滿額加碼贈送) ===
+  const closeTopUpModal = () => {
+    setShowTopUpModal(false);
+    setEditingTopUpId(null);
+    setTopUpData({ date: getTodayString(), targetAmount: '', bonus: '', method: paymentMethods.includes('現金') ? '現金' : paymentMethods[0], notes: '' });
+  };
 
-    if (actualPaid < 0) return showToast("折扣贈送金額不可大於存入面額！");
+  const handleSaveTopUp = async () => {
+    const actualPaid = Number(topUpData.targetAmount) || 0;
+    const bonus = Number(topUpData.bonus) || 0;
+    const totalAdded = actualPaid + bonus;
+
+    if (actualPaid === 0 && bonus === 0) return showToast("請輸入實收金額或加碼贈送額度！");
 
     const visitData = {
-        id: Date.now(),
+        id: editingTopUpId || Date.now(),
         date: topUpData.date,
         isTopUp: true,
         service: '【客戶儲值金】',
         amount: actualPaid,  // 實收現金流
-        discount: discount, // 這個月讓利的折扣
+        bonus: bonus,        // 贈送額度
         payments: [{ method: topUpData.method, amount: actualPaid }],
         paymentMethod: topUpData.method,
         notes: topUpData.notes,
@@ -628,8 +606,26 @@ export default function App() {
 
     const updatedClients = clients.map(c => {
         if (c.id === selectedClient.id) {
-            const newVisits = [visitData, ...c.visits].sort((a,b) => new Date(b.date) - new Date(a.date));
-            return { ...c, balance: c.balance + target, visits: newVisits };
+            let newBalance = c.balance;
+            let newVisits = [...c.visits];
+
+            if (editingTopUpId) {
+                // 扣除原本舊的這筆儲值金增幅
+                const oldVisit = newVisits.find(v => v.id === editingTopUpId);
+                if (oldVisit) {
+                    const oldTotal = (Number(oldVisit.amount) || 0) + (Number(oldVisit.discount) || Number(oldVisit.bonus) || 0);
+                    newBalance -= oldTotal;
+                }
+                newVisits = newVisits.map(v => v.id === editingTopUpId ? visitData : v);
+            } else {
+                newVisits = [visitData, ...newVisits];
+            }
+
+            // 加上重新設定的新儲值金增幅
+            newBalance += totalAdded;
+            newVisits.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            return { ...c, balance: newBalance, visits: newVisits };
         }
         return c;
     });
@@ -639,13 +635,11 @@ export default function App() {
     if (success) {
         setClients(updatedClients);
         setSelectedClient(updatedClients.find(c => c.id === selectedClient.id));
-        setShowTopUpModal(false);
-        setTopUpData({ date: getTodayString(), targetAmount: '', discount: '', method: paymentMethods.includes('現金') ? '現金' : paymentMethods[0], notes: '' });
-        showToast(`儲值成功！已為 ${selectedClient.name} 存入 $${target} 餘額 (實收 $${actualPaid})。`);
+        closeTopUpModal();
+        showToast(editingTopUpId ? `儲值紀錄已成功更新！目前總餘額 $${updatedClients.find(c => c.id === selectedClient.id).balance}` : `儲值成功！已為 ${selectedClient.name} 存入 $${totalAdded} 餘額 (實收 $${actualPaid})。`);
     }
   };
 
-  // 計算即時的結帳總額 (用於畫面顯示與付款防呆)
   const getCalculatedVisitAmount = () => {
     let baseAmt = Number(newVisit.originalAmount) || 0;
     let discVal = 0;
@@ -653,34 +647,19 @@ export default function App() {
       discVal = Number(newVisit.discountValue) || 0;
     } else if (newVisit.discountType === 'percent') {
       let pct = Number(newVisit.discountValue) || 100;
-      if (pct >= 10 && pct <= 99) {
-        discVal = baseAmt - Math.round(baseAmt * (pct / 100));
-      } else if (pct > 0 && pct < 10) {
-        discVal = baseAmt - Math.round(baseAmt * (pct / 10));
-      }
+      if (pct >= 10 && pct <= 99) discVal = baseAmt - Math.round(baseAmt * (pct / 100));
+      else if (pct > 0 && pct < 10) discVal = baseAmt - Math.round(baseAmt * (pct / 10));
     }
-    return {
-      finalAmt: Math.max(0, baseAmt - discVal),
-      discountAmt: discVal
-    };
+    return { finalAmt: Math.max(0, baseAmt - discVal), discountAmt: discVal };
   };
 
-  // === 全方位備份與匯入功能 ===
-  
   const handleExportClientsCSV = () => {
     const headers = ["姓名", "電話", "生日", "標籤", "睫毛密碼", "儲值餘額"];
-    const rows = clients.map(c => [
-      c.name, c.phone, c.birthday || '', (c.tags||[]).join(';'), c.lashPreference || '', c.balance || 0
-    ]);
+    const rows = clients.map(c => [ c.name, c.phone, c.birthday || '', (c.tags||[]).join(';'), c.lashPreference || '', c.balance || 0 ]);
     const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `LashBeauty_客戶名單_${getTodayString()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const link = document.createElement("a"); link.setAttribute("href", url); link.setAttribute("download", `LashBeauty_客戶名單_${getTodayString()}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link);
   };
 
   const handleExportSchedulesCSV = () => {
@@ -690,17 +669,7 @@ export default function App() {
       (d.schedules || []).forEach(s => {
         const groups = groupSlots(s.times || []);
         groups.forEach(g => {
-          if(g.isFull) {
-            rows.push([
-              s.fullDate,
-              s.day,
-              `${g.startTime}-${g.endTime}`,
-              d.name,
-              g.clientName || '',
-              g.clientPhone || '',
-              g.service || ''
-            ]);
-          }
+          if(g.isFull) rows.push([ s.fullDate, s.day, `${g.startTime}-${g.endTime}`, d.name, g.clientName || '', g.clientPhone || '', g.service || '' ]);
         });
       });
     });
@@ -708,12 +677,7 @@ export default function App() {
     const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(r => r.map(item => `"${item}"`).join(","))].join("\n");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `LashBeauty_預約排班表_${getTodayString()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const link = document.createElement("a"); link.setAttribute("href", url); link.setAttribute("download", `LashBeauty_預約排班表_${getTodayString()}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link);
   };
 
   const handleExportTransactionsCSV = () => {
@@ -722,42 +686,23 @@ export default function App() {
     clients.forEach(c => {
       (c.visits || []).forEach(v => {
         let paymentMethodStr = v.paymentMethod || '';
-        if (v.payments && v.payments.length > 0) {
-          paymentMethodStr = v.payments.map(p => `${p.method}($${p.amount})`).join(' + ');
-        }
+        if (v.payments && v.payments.length > 0) paymentMethodStr = v.payments.map(p => `${p.method}($${p.amount})`).join(' + ');
         
         let original = v.originalAmount || v.amount || 0;
         let disc = v.discount || v.bonus || 0;
-        if (v.isTopUp) original = (Number(v.amount) || 0) + (Number(v.discount) || Number(v.bonus) || 0);
+        if (v.isTopUp) original = (Number(v.amount) || 0) + (Number(v.discount) || Number(v.bonus) || 0); // 存入的總面額
 
         let notesFull = v.notes || '';
         if (v.discountNote) notesFull += ` (折扣原因: ${v.discountNote})`;
 
-        rows.push([
-          v.date,
-          c.name,
-          v.isTopUp ? '【客戶儲值】' : '【美睫服務】',
-          v.isTopUp ? '--' : (v.designerName || ''),
-          v.service || '',
-          v.size || '',
-          original,
-          disc,
-          v.amount || 0, // 實收現金/結帳總額
-          paymentMethodStr,
-          notesFull.replace(/\n/g, ' ') 
-        ]);
+        rows.push([ v.date, c.name, v.isTopUp ? '【客戶儲值】' : '【美睫服務】', v.isTopUp ? '--' : (v.designerName || ''), v.service || '', v.size || '', original, disc, v.amount || 0, paymentMethodStr, notesFull.replace(/\n/g, ' ') ]);
       });
     });
     rows.sort((a, b) => b[0].localeCompare(a[0]));
     const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(r => r.map(item => `"${item}"`).join(","))].join("\n");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `LashBeauty_交易紀錄_${getTodayString()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const link = document.createElement("a"); link.setAttribute("href", url); link.setAttribute("download", `LashBeauty_交易紀錄_${getTodayString()}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link);
   };
 
   const handleDownloadTemplate = () => {
@@ -766,12 +711,7 @@ export default function App() {
     const csvContent = "\uFEFF" + headers.join(",") + "\n" + example.join(",");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `LashBeauty_匯入範本.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const link = document.createElement("a"); link.setAttribute("href", url); link.setAttribute("download", `LashBeauty_匯入範本.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link);
   };
 
   const handleImportCSV = async (e) => {
@@ -782,39 +722,26 @@ export default function App() {
       const text = event.target.result;
       const rows = text.split('\n').map(row => row.split(','));
       const headers = rows[0].map(h => h.trim().replace(/\uFEFF/g, '').replace(/"/g, ''));
-      const nameIdx = headers.indexOf("姓名");
-      const phoneIdx = headers.indexOf("電話");
-      if(nameIdx === -1) {
-         e.target.value = null; 
-         return showToast("匯入失敗：CSV 必須至少包含「姓名」欄位");
-      }
+      const nameIdx = headers.indexOf("姓名"); const phoneIdx = headers.indexOf("電話");
+      if(nameIdx === -1) { e.target.value = null; return showToast("匯入失敗：CSV 必須至少包含「姓名」欄位"); }
 
       const newClients = [];
       for(let i=1; i<rows.length; i++) {
-         const cols = rows[i];
-         if(cols.length < 1 || !cols[nameIdx]) continue;
+         const cols = rows[i]; if(cols.length < 1 || !cols[nameIdx]) continue;
          const name = cols[nameIdx].trim().replace(/"/g, '');
          const phone = phoneIdx > -1 && cols[phoneIdx] ? cols[phoneIdx].trim().replace(/"/g, '') : '';
          if(!name) continue;
-         
          if(phone && (clients.some(c => c.phone === phone) || newClients.some(c => c.phone === phone))) continue;
 
-         const bdayIdx = headers.indexOf("生日");
-         const tagsIdx = headers.indexOf("標籤");
-         const lashIdx = headers.indexOf("睫毛密碼");
-         const balIdx = headers.indexOf("儲值餘額");
+         const bdayIdx = headers.indexOf("生日"); const tagsIdx = headers.indexOf("標籤"); const lashIdx = headers.indexOf("睫毛密碼"); const balIdx = headers.indexOf("儲值餘額");
 
          newClients.push({
-           id: Date.now() + i,
-           name,
-           phone,
-           birthday: bdayIdx > -1 && cols[bdayIdx] ? cols[bdayIdx].trim().replace(/"/g, '') : '-',
-           joinDate: getTodayString(),
+           id: Date.now() + i, name, phone,
+           birthday: bdayIdx > -1 && cols[bdayIdx] ? cols[bdayIdx].trim().replace(/"/g, '') : '-', joinDate: getTodayString(),
            tags: tagsIdx > -1 && cols[tagsIdx] ? cols[tagsIdx].replace(/"/g, '').split(';').map(t=>t.trim()).filter(t=>t) : ["匯入新客"],
            lashPreference: lashIdx > -1 && cols[lashIdx] ? cols[lashIdx].trim().replace(/"/g, '') : "尚未建立紀錄",
            balance: balIdx > -1 && cols[balIdx] ? Number(cols[balIdx].replace(/"/g, '').trim()) || 0 : 0,
-           packages: [],
-           visits: []
+           packages: [], visits: []
          });
       }
 
@@ -824,11 +751,7 @@ export default function App() {
       const updatedClients = [...newClients, ...clients];
       showToast(`正在匯入 ${newClients.length} 筆資料...`);
       const success = await syncToCloud({ clients: updatedClients });
-      if(success) {
-         setClients(updatedClients);
-         showToast(`成功匯入 ${newClients.length} 位新客戶！`);
-         setShowDataModal(false);
-      }
+      if(success) { setClients(updatedClients); showToast(`成功匯入 ${newClients.length} 位新客戶！`); setShowDataModal(false); }
     };
     reader.readAsText(file);
   };
@@ -837,12 +760,7 @@ export default function App() {
     const dataToExport = { clients, designers, inventory, savedServices, savedProducts, paymentMethods };
     const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `LashBeauty_完整系統備份_${getTodayString()}.json`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const link = document.createElement("a"); link.setAttribute("href", url); link.setAttribute("download", `LashBeauty_完整系統備份_${getTodayString()}.json`); document.body.appendChild(link); link.click(); document.body.removeChild(link);
   };
 
   const handleImportJSON = async (e) => {
@@ -855,58 +773,27 @@ export default function App() {
         if(!data.clients) throw new Error("無效的備份檔");
         
         showToast("正在還原系統資料...");
-        const success = await syncToCloud({
-          clients: data.clients,
-          designers: data.designers || designers,
-          inventory: data.inventory || inventory,
-          savedServices: data.savedServices || savedServices,
-          savedProducts: data.savedProducts || savedProducts,
-          paymentMethods: data.paymentMethods || paymentMethods
-        });
+        const success = await syncToCloud({ clients: data.clients, designers: data.designers || designers, inventory: data.inventory || inventory, savedServices: data.savedServices || savedServices, savedProducts: data.savedProducts || savedProducts, paymentMethods: data.paymentMethods || paymentMethods });
         if(success) {
-          setClients(data.clients);
-          if(data.designers) setDesigners(data.designers);
-          if(data.inventory) setInventory(data.inventory);
-          if(data.savedServices) setSavedServices(data.savedServices);
-          if(data.savedProducts) setSavedProducts(data.savedProducts);
-          if(data.paymentMethods) setPaymentMethods(data.paymentMethods);
-          showToast("系統資料已成功還原！");
-          setShowDataModal(false);
+          setClients(data.clients); if(data.designers) setDesigners(data.designers); if(data.inventory) setInventory(data.inventory); if(data.savedServices) setSavedServices(data.savedServices); if(data.savedProducts) setSavedProducts(data.savedProducts); if(data.paymentMethods) setPaymentMethods(data.paymentMethods);
+          showToast("系統資料已成功還原！"); setShowDataModal(false);
         }
-      } catch(err) {
-        showToast("備份檔解析失敗，請確認是否為正確的 JSON 備份檔！");
-      }
+      } catch(err) { showToast("備份檔解析失敗，請確認是否為正確的 JSON 備份檔！"); }
       e.target.value = null; 
     };
     reader.readAsText(file);
   };
-  // ===================================
 
   const handleEditClientClick = () => {
-    setNewClientData({
-      name: selectedClient.name,
-      phone: selectedClient.phone,
-      birthday: selectedClient.birthday !== '-' ? selectedClient.birthday : '',
-      tags: selectedClient.tags.join(', '),
-      lashPreference: selectedClient.lashPreference === '尚未建立紀錄' ? '' : selectedClient.lashPreference
-    });
-    setEditingClientId(selectedClient.id);
-    setShowAddClientModal(true);
+    setNewClientData({ name: selectedClient.name, phone: selectedClient.phone, birthday: selectedClient.birthday !== '-' ? selectedClient.birthday : '', tags: selectedClient.tags.join(', '), lashPreference: selectedClient.lashPreference === '尚未建立紀錄' ? '' : selectedClient.lashPreference });
+    setEditingClientId(selectedClient.id); setShowAddClientModal(true);
   };
 
   const handleDeleteClient = async () => {
     if (!selectedClient) return;
     const updatedClients = clients.filter(c => c.id !== selectedClient.id);
-    
-    showToast("資料刪除中...");
-    const success = await syncToCloud({ clients: updatedClients });
-    
-    if (success) {
-      setClients(updatedClients);
-      setSelectedClient(null);
-      setShowDeleteClientModal(false);
-      showToast("已成功刪除該客戶所有資料！");
-    }
+    showToast("資料刪除中..."); const success = await syncToCloud({ clients: updatedClients });
+    if (success) { setClients(updatedClients); setSelectedClient(null); setShowDeleteClientModal(false); showToast("已成功刪除該客戶所有資料！"); }
   };
 
   const handleDeleteVisit = async (visitId) => {
@@ -917,136 +804,72 @@ export default function App() {
     let updatedPackages = [...selectedClient.packages];
 
     if (visitToDelete.isTopUp) {
-      // 刪除儲值紀錄，扣除當時增加的餘額
       const targetAdded = (Number(visitToDelete.amount) || 0) + (Number(visitToDelete.discount) || Number(visitToDelete.bonus) || 0);
       updatedBalance -= targetAdded;
     } else {
-      // 刪除消費，自動退還被扣除的儲值金或包堂
       if (visitToDelete.payments && visitToDelete.payments.length > 0) {
         visitToDelete.payments.forEach(p => {
-          if (p.method === '儲值金扣款') {
-            updatedBalance += (Number(p.amount) || 0);
-          }
+          if (p.method === '儲值金扣款') updatedBalance += (Number(p.amount) || 0);
           if (p.method === '扣除包堂' && visitToDelete.deductPackageId) {
-            updatedPackages = updatedPackages.map(pkg => 
-              pkg.id === visitToDelete.deductPackageId ? { ...pkg, remaining: pkg.remaining + 1 } : pkg
-            );
+            updatedPackages = updatedPackages.map(pkg => pkg.id === visitToDelete.deductPackageId ? { ...pkg, remaining: pkg.remaining + 1 } : pkg);
           }
         });
       } else {
-        if (visitToDelete.paymentMethod === '儲值金扣款') {
-          updatedBalance += (Number(visitToDelete.amount) || 0);
-        }
+        if (visitToDelete.paymentMethod === '儲值金扣款') updatedBalance += (Number(visitToDelete.amount) || 0);
         if (visitToDelete.paymentMethod === '扣除包堂' && visitToDelete.deductPackageId) {
-          updatedPackages = updatedPackages.map(pkg => 
-            pkg.id === visitToDelete.deductPackageId ? { ...pkg, remaining: pkg.remaining + 1 } : pkg
-          );
+          updatedPackages = updatedPackages.map(pkg => pkg.id === visitToDelete.deductPackageId ? { ...pkg, remaining: pkg.remaining + 1 } : pkg);
         }
       }
     }
 
     const updatedVisits = selectedClient.visits.filter(v => v.id !== visitId);
+    const updatedClients = clients.map(c => { if (c.id === selectedClient.id) return { ...c, balance: updatedBalance, packages: updatedPackages, visits: updatedVisits }; return c; });
 
-    const updatedClients = clients.map(c => {
-      if (c.id === selectedClient.id) {
-        return { ...c, balance: updatedBalance, packages: updatedPackages, visits: updatedVisits };
-      }
-      return c;
-    });
-
-    showToast("紀錄刪除中...");
-    const success = await syncToCloud({ clients: updatedClients });
+    showToast("紀錄刪除中..."); const success = await syncToCloud({ clients: updatedClients });
     
     if (success) {
-      setClients(updatedClients);
-      setSelectedClient(updatedClients.find(c => c.id === selectedClient.id));
-      
-      if (editingVisitId === visitId) {
-        setIsAddingVisit(false);
-        setEditingVisitId(null);
-        setNewVisit({ date: getTodayString(), services: [], size: '', originalAmount: '', discountType: 'none', discountValue: '', discountNote: '', payments: [{ method: '現金', amount: '', accountLast5: '', customName: '' }], deductPackageId: '', notes: '', photoUrl: '', designerId: activeDesignerId || '' });
-      }
+      setClients(updatedClients); setSelectedClient(updatedClients.find(c => c.id === selectedClient.id));
+      if (editingVisitId === visitId) { setIsAddingVisit(false); setEditingVisitId(null); setNewVisit({ date: getTodayString(), services: [], size: '', originalAmount: '', discountType: 'none', discountValue: '', discountNote: '', payments: [{ method: '現金', amount: '', accountLast5: '', customName: '' }], deductPackageId: '', notes: '', photoUrl: '', designerId: activeDesignerId || '' }); }
       showToast("已成功刪除紀錄！餘額已同步更新。");
     }
   };
 
   const handleServiceToggle = (serviceName) => {
-    setNewVisit(prev => ({
-      ...prev,
-      services: prev.services.includes(serviceName)
-        ? prev.services.filter(s => s !== serviceName)
-        : [...prev.services, serviceName]
-    }));
+    setNewVisit(prev => ({ ...prev, services: prev.services.includes(serviceName) ? prev.services.filter(s => s !== serviceName) : [...prev.services, serviceName] }));
   };
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    if (!gdriveApiUrl) {
-      return showToast("請先至「系統設定」填寫 Google 雲端硬碟圖床網址，才能上傳照片喔！");
-    }
+    if (!gdriveApiUrl) return showToast("請先至「系統設定」填寫 Google 雲端硬碟圖床網址，才能上傳照片喔！");
 
     setIsUploadingImage(true);
-
     const reader = new FileReader();
     reader.onloadend = () => {
       const img = new Image();
       img.onload = async () => {
         const canvas = document.createElement('canvas');
-        
-        const MAX_WIDTH = 1600;
-        const MAX_HEIGHT = 1600;
-        let width = img.width;
-        let height = img.height;
+        const MAX_WIDTH = 1600; const MAX_HEIGHT = 1600;
+        let width = img.width; let height = img.height;
 
-        if (width > height) {
-          if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-        } else {
-          if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-        }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
+        if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } 
+        else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
         
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
         const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
 
         try {
           const base64Data = compressedBase64.split(',')[1];
-          const cleanUrl = gdriveApiUrl.trim();
-          
-          const response = await fetch(cleanUrl, {
-            method: 'POST',
-            body: JSON.stringify({ 
-              image: base64Data,
-              name: `LashBeauty_${selectedClient?.name || 'Client'}_${Date.now()}.jpg`,
-              mimeType: 'image/jpeg'
-            })
-          });
-          
+          const response = await fetch(gdriveApiUrl.trim(), { method: 'POST', body: JSON.stringify({ image: base64Data, name: `LashBeauty_${selectedClient?.name || 'Client'}_${Date.now()}.jpg`, mimeType: 'image/jpeg' }) });
           const text = await response.text();
           let json;
-          try {
-            json = JSON.parse(text);
-          } catch(e) {
-            console.error("Google 原始回傳:", text);
-            showToast("❌ 雲端回傳格式異常，請檢查 GAS 程式碼是否為最新版。");
-            return setIsUploadingImage(false);
-          }
+          try { json = JSON.parse(text); } catch(e) { showToast("❌ 雲端回傳格式異常，請檢查 GAS 程式碼是否為最新版。"); return setIsUploadingImage(false); }
 
-          if (json.success) {
-            setNewVisit(prev => ({ ...prev, photoUrl: json.url }));
-            showToast("圖片上傳 Google 雲端成功！");
-          } else {
-            showToast("Google回傳錯誤：" + json.message);
-          }
-        } catch (error) {
-          console.error(error);
-          showToast("❌ 網路錯誤，請檢查您的 Google Apps Script 佈署設定。");
-        } finally {
-          setIsUploadingImage(false);
-        }
+          if (json.success) { setNewVisit(prev => ({ ...prev, photoUrl: json.url })); showToast("圖片上傳 Google 雲端成功！"); } 
+          else { showToast("Google回傳錯誤：" + json.message); }
+        } catch (error) { console.error(error); showToast("❌ 網路錯誤，請檢查您的 Google Apps Script 佈署設定。"); } 
+        finally { setIsUploadingImage(false); }
       };
       img.src = reader.result;
     };
@@ -1054,66 +877,44 @@ export default function App() {
   };
 
   const handleEditVisitClick = (visit) => {
-    setIsAddingVisit(true);
-    setEditingVisitId(visit.id);
-    
+    // 支援直接編輯「儲值紀錄」
+    if (visit.isTopUp) {
+      setEditingTopUpId(visit.id);
+      setTopUpData({
+        date: visit.date || getTodayString(),
+        targetAmount: (visit.amount || 0).toString(),
+        bonus: (visit.discount || visit.bonus || 0).toString(),
+        method: visit.paymentMethod || '現金',
+        notes: visit.notes || ''
+      });
+      setShowTopUpModal(true);
+      return;
+    }
+
+    setIsAddingVisit(true); setEditingVisitId(visit.id);
     let paymentsToSet = visit.payments && visit.payments.length > 0 
-      ? visit.payments.map(p => ({
-          method: paymentMethods.includes(p.method) ? p.method : '自訂',
-          amount: p.amount,
-          accountLast5: p.accountLast5 || '',
-          customName: paymentMethods.includes(p.method) ? '' : p.method
-        }))
-      : [{
-          method: paymentMethods.includes(visit.paymentMethod) ? visit.paymentMethod : '自訂',
-          amount: visit.amount || '',
-          accountLast5: visit.accountLast5 || '',
-          customName: paymentMethods.includes(visit.paymentMethod) ? '' : visit.paymentMethod
-        }];
+      ? visit.payments.map(p => ({ method: paymentMethods.includes(p.method) ? p.method : '自訂', amount: p.amount, accountLast5: p.accountLast5 || '', customName: paymentMethods.includes(p.method) ? '' : p.method }))
+      : [{ method: paymentMethods.includes(visit.paymentMethod) ? visit.paymentMethod : '自訂', amount: visit.amount || '', accountLast5: visit.accountLast5 || '', customName: paymentMethods.includes(visit.paymentMethod) ? '' : visit.paymentMethod }];
 
     setNewVisit({
-      date: visit.date || getTodayString(),
-      services: visit.service ? visit.service.split(', ') : [],
-      size: visit.size || '',
-      originalAmount: visit.originalAmount || visit.amount || '',
-      discountType: visit.discountType || 'none',
-      discountValue: visit.discountValue || '',
-      discountNote: visit.discountNote || '',
-      payments: paymentsToSet,
-      deductPackageId: visit.deductPackageId || '',
-      notes: visit.notes || '',
-      photoUrl: visit.photos && visit.photos.length > 0 ? visit.photos[0] : '',
-      designerId: visit.designerId || (designers.length > 0 ? designers[0].id : '')
+      date: visit.date || getTodayString(), services: visit.service ? visit.service.split(', ') : [], size: visit.size || '', originalAmount: visit.originalAmount || visit.amount || '', discountType: visit.discountType || 'none', discountValue: visit.discountValue || '', discountNote: visit.discountNote || '', payments: paymentsToSet, deductPackageId: visit.deductPackageId || '', notes: visit.notes || '', photoUrl: visit.photos && visit.photos.length > 0 ? visit.photos[0] : '', designerId: visit.designerId || (designers.length > 0 ? designers[0].id : '')
     });
   };
 
   const handleAddVisit = async () => {
     const { finalAmt, discountAmt } = getCalculatedVisitAmount();
-    
-    if (!newVisit.date || newVisit.services.length === 0 || !newVisit.designerId || !newVisit.originalAmount) {
-      return showToast("請完整填寫日期、設計師、項目與原價！");
-    }
-    
-    if (newVisit.discountType !== 'none' && !newVisit.discountNote) {
-      return showToast("使用折扣優惠時，請務必填寫「折扣原因」！");
-    }
+    if (!newVisit.date || newVisit.services.length === 0 || !newVisit.designerId || !newVisit.originalAmount) return showToast("請完整填寫日期、設計師、項目與原價！");
+    if (newVisit.discountType !== 'none' && !newVisit.discountNote) return showToast("使用折扣優惠時，請務必填寫「折扣原因」！");
 
     const totalPaymentsAmt = newVisit.payments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
-    if (totalPaymentsAmt !== finalAmt) {
-        return showToast(`付款分配總額 ($${totalPaymentsAmt}) 必須等於結帳總額 ($${finalAmt})！`);
-    }
+    if (totalPaymentsAmt !== finalAmt) return showToast(`付款分配總額 ($${totalPaymentsAmt}) 必須等於結帳總額 ($${finalAmt})！`);
 
     let tempBalance = selectedClient.balance;
     if (editingVisitId) {
        const oldVisit = selectedClient.visits.find(v => v.id === editingVisitId);
        if (oldVisit) {
-           if (oldVisit.payments) {
-               oldVisit.payments.forEach(p => {
-                   if (p.method === '儲值金扣款') tempBalance += (Number(p.amount) || 0);
-               });
-           } else if (oldVisit.paymentMethod === '儲值金扣款') {
-               tempBalance += (Number(oldVisit.amount) || 0);
-           }
+           if (oldVisit.payments) { oldVisit.payments.forEach(p => { if (p.method === '儲值金扣款') tempBalance += (Number(p.amount) || 0); }); } 
+           else if (oldVisit.paymentMethod === '儲值金扣款') { tempBalance += (Number(oldVisit.amount) || 0); }
        }
     }
 
@@ -1125,130 +926,68 @@ export default function App() {
         return { method, amount: amt, accountLast5: p.accountLast5 || '' };
     });
 
-    if (totalDeduct > tempBalance) {
-       return showToast(`儲值金餘額不足！目前可用餘額：$${tempBalance}`);
-    }
+    if (totalDeduct > tempBalance) return showToast(`儲值金餘額不足！目前可用餘額：$${tempBalance}`);
 
     const serviceStr = newVisit.services.join(', ');
     const selectedDesignerName = designers.find(d => d.id === newVisit.designerId)?.name || '';
     const finalPaymentMethodString = finalPayments.map(p => p.method).join(' + ');
 
     const visitData = { 
-      id: editingVisitId || Date.now(), 
-      date: newVisit.date, 
-      designerId: newVisit.designerId,
-      designerName: selectedDesignerName,
-      service: serviceStr, 
-      size: newVisit.size || '', 
-      originalAmount: Number(newVisit.originalAmount),
-      discountType: newVisit.discountType,
-      discountValue: newVisit.discountValue,
-      discountNote: newVisit.discountNote,
-      discount: discountAmt,
-      amount: finalAmt, // 最終結帳實收
-      payments: finalPayments, 
-      paymentMethod: finalPaymentMethodString, 
-      accountLast5: finalPayments.find(p => p.method === '轉帳')?.accountLast5 || '', 
-      deductPackageId: newVisit.deductPackageId,
-      notes: newVisit.notes, 
-      photos: newVisit.photoUrl ? [newVisit.photoUrl] : [] 
+      id: editingVisitId || Date.now(), date: newVisit.date, designerId: newVisit.designerId, designerName: selectedDesignerName, service: serviceStr, size: newVisit.size || '', originalAmount: Number(newVisit.originalAmount), discountType: newVisit.discountType, discountValue: newVisit.discountValue, discountNote: newVisit.discountNote, discount: discountAmt, amount: finalAmt, payments: finalPayments, paymentMethod: finalPaymentMethodString, accountLast5: finalPayments.find(p => p.method === '轉帳')?.accountLast5 || '', deductPackageId: newVisit.deductPackageId, notes: newVisit.notes, photos: newVisit.photoUrl ? [newVisit.photoUrl] : [] 
     };
 
     const updatedClients = clients.map(c => {
       if (c.id === selectedClient.id) {
         let newBalance = tempBalance - totalDeduct; 
-        let newPackages = [...c.packages];
-        let newVisits = [...c.visits];
+        let newPackages = [...c.packages]; let newVisits = [...c.visits];
 
         if (editingVisitId) {
           const oldVisit = newVisits.find(v => v.id === editingVisitId);
-          if (oldVisit && oldVisit.paymentMethod === '扣除包堂' && oldVisit.deductPackageId) {
-            newPackages = newPackages.map(pkg => pkg.id === oldVisit.deductPackageId ? { ...pkg, remaining: pkg.remaining + 1 } : pkg);
-          }
+          if (oldVisit && oldVisit.paymentMethod === '扣除包堂' && oldVisit.deductPackageId) { newPackages = newPackages.map(pkg => pkg.id === oldVisit.deductPackageId ? { ...pkg, remaining: pkg.remaining + 1 } : pkg); }
         }
 
         const hasPackageDeduct = finalPayments.some(p => p.method === '扣除包堂');
-        if (hasPackageDeduct && newVisit.deductPackageId) {
-          newPackages = newPackages.map(pkg => pkg.id === newVisit.deductPackageId ? { ...pkg, remaining: pkg.remaining - 1 } : pkg);
-        }
+        if (hasPackageDeduct && newVisit.deductPackageId) { newPackages = newPackages.map(pkg => pkg.id === newVisit.deductPackageId ? { ...pkg, remaining: pkg.remaining - 1 } : pkg); }
 
-        if (editingVisitId) {
-          newVisits = newVisits.map(v => v.id === editingVisitId ? visitData : v);
-        } else {
-          newVisits = [visitData, ...newVisits];
-        }
-        
+        if (editingVisitId) { newVisits = newVisits.map(v => v.id === editingVisitId ? visitData : v); } 
+        else { newVisits = [visitData, ...newVisits]; }
         newVisits.sort((a,b) => new Date(b.date) - new Date(a.date));
-
         return { ...c, balance: newBalance, packages: newPackages, visits: newVisits };
       }
       return c;
     });
 
     let updatedPaymentMethods = [...paymentMethods];
-    finalPayments.forEach(p => {
-       if (p.method && !updatedPaymentMethods.includes(p.method)) {
-           updatedPaymentMethods.push(p.method);
-       }
-    });
+    finalPayments.forEach(p => { if (p.method && !updatedPaymentMethods.includes(p.method)) { updatedPaymentMethods.push(p.method); } });
     
     showToast("資料儲存中，請稍候...");
     const success = await syncToCloud({ clients: updatedClients, paymentMethods: updatedPaymentMethods });
     
     if (success) {
-      setClients(updatedClients); 
-      setSelectedClient(updatedClients.find(c => c.id === selectedClient.id)); 
-      setPaymentMethods(updatedPaymentMethods);
-      setIsAddingVisit(false);
-      setEditingVisitId(null);
-      setNewVisit({ date: getTodayString(), services: [], size: '', originalAmount: '', discountType: 'none', discountValue: '', discountNote: '', payments: [{ method: '現金', amount: '', accountLast5: '', customName: '' }], deductPackageId: '', notes: '', photoUrl: '', designerId: activeDesignerId || '' });
+      setClients(updatedClients); setSelectedClient(updatedClients.find(c => c.id === selectedClient.id)); setPaymentMethods(updatedPaymentMethods); setIsAddingVisit(false); setEditingVisitId(null); setNewVisit({ date: getTodayString(), services: [], size: '', originalAmount: '', discountType: 'none', discountValue: '', discountNote: '', payments: [{ method: '現金', amount: '', accountLast5: '', customName: '' }], deductPackageId: '', notes: '', photoUrl: '', designerId: activeDesignerId || '' });
       showToast(editingVisitId ? "消費紀錄已成功更新並儲存！" : "消費紀錄已成功儲存！");
     }
   };
 
   const handleApplyAutoSchedule = async () => {
     if (!activeDesigner || !generateMonth) return showToast("請先選擇月份！");
-    const [yearStr, monthStr] = generateMonth.split("-"); 
-    const year = parseInt(yearStr, 10); 
-    const month = parseInt(monthStr, 10) - 1; 
-    const daysInMonth = new Date(year, month + 1, 0).getDate(); 
-    const todayStr = getTodayString();
-
-    let newSchedules = [...activeDesigner.schedules]; 
-    let maxId = newSchedules.length > 0 ? Math.max(...newSchedules.map((s) => s.id)) : 0; 
-    let addedCount = 0;
+    const [yearStr, monthStr] = generateMonth.split("-"); const year = parseInt(yearStr, 10); const month = parseInt(monthStr, 10) - 1; const daysInMonth = new Date(year, month + 1, 0).getDate(); const todayStr = getTodayString();
+    let newSchedules = [...activeDesigner.schedules]; let maxId = newSchedules.length > 0 ? Math.max(...newSchedules.map((s) => s.id)) : 0; 
     const daysMap = ["日", "一", "二", "三", "四", "五", "六"];
 
     const getGeneratedTimes = (datePrefix) => {
-      let times = [];
-      let curr = autoScheduleConfig.startTime;
-      const end = autoScheduleConfig.endTime;
-      const bStart = autoScheduleConfig.breakStart;
-      const bEnd = autoScheduleConfig.breakEnd;
-
-      let blockIndex = 0;
-      let slotsInCurrentBlock = 0;
-      let currentEventId = `auto_${datePrefix}_${blockIndex}`;
+      let times = []; let curr = autoScheduleConfig.startTime; const end = autoScheduleConfig.endTime; const bStart = autoScheduleConfig.breakStart; const bEnd = autoScheduleConfig.breakEnd;
+      let blockIndex = 0; let slotsInCurrentBlock = 0; let currentEventId = `auto_${datePrefix}_${blockIndex}`;
 
       while (curr < end && curr >= "00:00" && curr <= "23:59") {
         let skip = false;
         if (autoScheduleConfig.hasBreak && curr >= bStart && curr < bEnd) skip = true;
-        
         if (skip) {
-          if (slotsInCurrentBlock > 0) {
-            blockIndex++;
-            slotsInCurrentBlock = 0;
-            currentEventId = `auto_${datePrefix}_${blockIndex}`;
-          }
+          if (slotsInCurrentBlock > 0) { blockIndex++; slotsInCurrentBlock = 0; currentEventId = `auto_${datePrefix}_${blockIndex}`; }
         } else if (TIME_BLOCKS.includes(curr)) {
            times.push({ val: curr, isFull: false, eventId: currentEventId, color: 'default' });
            slotsInCurrentBlock++;
-           
-           if (slotsInCurrentBlock === 4) {
-             blockIndex++;
-             slotsInCurrentBlock = 0;
-             currentEventId = `auto_${datePrefix}_${blockIndex}`;
-           }
+           if (slotsInCurrentBlock === 4) { blockIndex++; slotsInCurrentBlock = 0; currentEventId = `auto_${datePrefix}_${blockIndex}`; }
         }
         curr = getNextTime(curr);
       }
@@ -1256,117 +995,41 @@ export default function App() {
     };
 
     for (let i = 1; i <= daysInMonth; i++) {
-      const d = new Date(year, month, i);
-      const fullDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(i).padStart(2, "0")}`;
-
+      const d = new Date(year, month, i); const fullDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(i).padStart(2, "0")}`;
       if (fullDate >= todayStr && autoScheduleConfig.workDays.includes(d.getDay())) {
-        addedCount++;
-        let existingScheduleIdx = newSchedules.findIndex(s => s.fullDate === fullDate);
-        const baseTimesToGenerate = getGeneratedTimes(fullDate);
-
+        let existingScheduleIdx = newSchedules.findIndex(s => s.fullDate === fullDate); const baseTimesToGenerate = getGeneratedTimes(fullDate);
         if (existingScheduleIdx === -1) {
-           maxId++;
-           newSchedules.push({
-              id: maxId,
-              fullDate: fullDate,
-              date: `${month + 1}/${i}`,
-              day: daysMap[d.getDay()],
-              times: [...baseTimesToGenerate]
-           });
+           maxId++; newSchedules.push({ id: maxId, fullDate: fullDate, date: `${month + 1}/${i}`, day: daysMap[d.getDay()], times: [...baseTimesToGenerate] });
         } else {
-           let existingSchedule = { ...newSchedules[existingScheduleIdx] };
-           let mergedTimes = [...existingSchedule.times];
-
-           baseTimesToGenerate.forEach(newTimeObj => {
-              if (!mergedTimes.some(t => t.val === newTimeObj.val)) {
-                 mergedTimes.push(newTimeObj);
-              } 
-           });
-           mergedTimes.sort((a,b) => a.val.localeCompare(b.val));
-           existingSchedule.times = mergedTimes;
-           newSchedules[existingScheduleIdx] = existingSchedule;
+           let existingSchedule = { ...newSchedules[existingScheduleIdx] }; let mergedTimes = [...existingSchedule.times];
+           baseTimesToGenerate.forEach(newTimeObj => { if (!mergedTimes.some(t => t.val === newTimeObj.val)) mergedTimes.push(newTimeObj); });
+           mergedTimes.sort((a,b) => a.val.localeCompare(b.val)); existingSchedule.times = mergedTimes; newSchedules[existingScheduleIdx] = existingSchedule;
         }
       }
     }
-
     newSchedules.sort((a, b) => new Date(a.fullDate) - new Date(b.fullDate));
     const newDesigners = designers.map(d => d.id === activeDesignerId ? { ...d, schedules: newSchedules } : d);
-    setDesigners(newDesigners);
-    setShowAutoScheduleModal(false);
-    
-    syncToCloud({ designers: newDesigners });
-    showToast(`批次開班成功！已自動儲存。`);
+    setDesigners(newDesigners); setShowAutoScheduleModal(false); syncToCloud({ designers: newDesigners }); showToast(`批次開班成功！已自動儲存。`);
   };
 
-  const toggleWorkDay = (dayIndex) => {
-    setAutoScheduleConfig(prev => {
-      const newDays = prev.workDays.includes(dayIndex)
-        ? prev.workDays.filter(d => d !== dayIndex)
-        : [...prev.workDays, dayIndex];
-      return { ...prev, workDays: newDays.sort() };
-    });
-  };
+  const toggleWorkDay = (dayIndex) => { setAutoScheduleConfig(prev => { const newDays = prev.workDays.includes(dayIndex) ? prev.workDays.filter(d => d !== dayIndex) : [...prev.workDays, dayIndex]; return { ...prev, workDays: newDays.sort() }; }); };
 
-  const handleCellClick = (dateStr, timeStr) => {
-    setEditingSlot({
-      isNew: true,
-      date: dateStr,
-      startTime: timeStr,
-      endTime: getNextTime(timeStr), 
-      isFull: false,
-      clientName: '',
-      clientPhone: '',
-      service: '',
-      color: 'default',
-      eventId: 'evt_' + Date.now().toString() + Math.random().toString(36).substr(2, 5),
-      originalSlots: []
-    });
-  };
+  const handleCellClick = (dateStr, timeStr) => { setEditingSlot({ isNew: true, date: dateStr, startTime: timeStr, endTime: getNextTime(timeStr), isFull: false, clientName: '', clientPhone: '', service: '', color: 'default', eventId: 'evt_' + Date.now().toString() + Math.random().toString(36).substr(2, 5), originalSlots: [] }); };
 
-  const handleGroupClick = (dateStr, group) => {
-    setEditingSlot({
-      isNew: false,
-      date: dateStr,
-      startTime: group.startTime,
-      endTime: group.endTime,
-      isFull: group.isFull,
-      clientName: group.clientName || '',
-      clientPhone: group.clientPhone || '',
-      service: group.service || '',
-      color: group.color || 'default',
-      eventId: group.eventId,
-      originalSlots: group.slots
-    });
-  };
+  const handleGroupClick = (dateStr, group) => { setEditingSlot({ isNew: false, date: dateStr, startTime: group.startTime, endTime: group.endTime, isFull: group.isFull, clientName: group.clientName || '', clientPhone: group.clientPhone || '', service: group.service || '', color: group.color || 'default', eventId: group.eventId, originalSlots: group.slots }); };
 
   const handleSaveSlotEdit = async () => {
     if (!editingSlot) return;
     const { isNew, date, startTime, endTime, isFull, clientName, clientPhone, service, color, eventId, originalSlots } = editingSlot;
-    
     const newSlots = getSlotsInRange(startTime, endTime);
-    if (newSlots.length === 0) {
-      return showToast("結束時間必須大於起始時間！");
-    }
+    if (newSlots.length === 0) return showToast("結束時間必須大於起始時間！");
 
-    let finalClients = clients;
-    let isNewClientCreated = false;
+    let finalClients = clients; let isNewClientCreated = false;
     if (isFull && clientName && clientPhone) {
       const exists = clients.find(c => c.phone === clientPhone);
       if (!exists) {
-        const newClient = {
-          id: Date.now(),
-          name: clientName,
-          phone: clientPhone,
-          birthday: '-',
-          joinDate: getTodayString(),
-          tags: ["新客"],
-          lashPreference: "尚未建立紀錄",
-          balance: 0,
-          packages: [],
-          visits: []
-        };
-        finalClients = [newClient, ...clients];
-        isNewClientCreated = true;
+        const newClient = { id: Date.now(), name: clientName, phone: clientPhone, birthday: '-', joinDate: getTodayString(), tags: ["新客"], lashPreference: "尚未建立紀錄", balance: 0, packages: [], visits: [] };
+        finalClients = [newClient, ...clients]; isNewClientCreated = true;
       }
     }
 
@@ -1374,85 +1037,35 @@ export default function App() {
     let scheduleIndex = updatedSchedules.findIndex(s => s.fullDate === date);
 
     if (scheduleIndex === -1) {
-      const d = new Date(date);
-      const daysMap = ["日", "一", "二", "三", "四", "五", "六"];
-      const newId = updatedSchedules.length > 0 ? Math.max(...updatedSchedules.map(s=>s.id)) + 1 : 1;
-      updatedSchedules.push({
-        id: newId,
-        fullDate: date,
-        date: `${d.getMonth() + 1}/${d.getDate()}`,
-        day: daysMap[d.getDay()],
-        times: newSlots.map(slotVal => ({
-            val: slotVal, isFull, clientName: clientName || '', clientPhone: clientPhone || '', service: service || '', color: color || 'default', eventId
-        }))
-      });
+      const d = new Date(date); const daysMap = ["日", "一", "二", "三", "四", "五", "六"]; const newId = updatedSchedules.length > 0 ? Math.max(...updatedSchedules.map(s=>s.id)) + 1 : 1;
+      updatedSchedules.push({ id: newId, fullDate: date, date: `${d.getMonth() + 1}/${d.getDate()}`, day: daysMap[d.getDay()], times: newSlots.map(slotVal => ({ val: slotVal, isFull, clientName: clientName || '', clientPhone: clientPhone || '', service: service || '', color: color || 'default', eventId })) });
       updatedSchedules.sort((a, b) => new Date(a.fullDate) - new Date(b.fullDate));
     } else {
-      let schedule = { ...updatedSchedules[scheduleIndex] };
-      let currentTimes = [...schedule.times];
-      
-      if (!isNew && originalSlots) {
-        currentTimes = currentTimes.filter(t => !originalSlots.includes(t.val));
-      }
+      let schedule = { ...updatedSchedules[scheduleIndex] }; let currentTimes = [...schedule.times];
+      if (!isNew && originalSlots) currentTimes = currentTimes.filter(t => !originalSlots.includes(t.val));
       currentTimes = currentTimes.filter(t => !newSlots.includes(t.val));
-
-      newSlots.forEach(slotVal => {
-        currentTimes.push({
-          val: slotVal, isFull, clientName: clientName || '', clientPhone: clientPhone || '', service: service || '', color: color || 'default', eventId
-        });
-      });
-
-      currentTimes.sort((a,b) => a.val.localeCompare(b.val));
-      schedule.times = currentTimes;
-      updatedSchedules[scheduleIndex] = schedule;
+      newSlots.forEach(slotVal => { currentTimes.push({ val: slotVal, isFull, clientName: clientName || '', clientPhone: clientPhone || '', service: service || '', color: color || 'default', eventId }); });
+      currentTimes.sort((a,b) => a.val.localeCompare(b.val)); schedule.times = currentTimes; updatedSchedules[scheduleIndex] = schedule;
     }
 
     const newDesigners = designers.map(d => d.id === activeDesignerId ? { ...d, schedules: updatedSchedules } : d);
+    showToast("排班資料儲存中..."); const success = await syncToCloud({ designers: newDesigners, clients: finalClients });
     
-    showToast("排班資料儲存中...");
-    const success = await syncToCloud({ designers: newDesigners, clients: finalClients });
-    
-    if (success) {
-      setDesigners(newDesigners);
-      setClients(finalClients);
-      setEditingSlot(null); 
-      if (isNewClientCreated) {
-        showToast("時段設定成功！已為新客人自動建立檔案。");
-      } else {
-        showToast("時段設定成功！已自動同步。");
-      }
-    }
+    if (success) { setDesigners(newDesigners); setClients(finalClients); setEditingSlot(null); showToast(isNewClientCreated ? "時段設定成功！已為新客人自動建立檔案。" : "時段設定成功！已自動同步。"); }
   };
 
   const handleRemoveSlot = async () => {
-    if (!editingSlot || editingSlot.isNew) {
-      setEditingSlot(null);
-      return;
-    }
+    if (!editingSlot || editingSlot.isNew) { setEditingSlot(null); return; }
     const { date, originalSlots } = editingSlot;
-    const updatedSchedules = activeDesigner.schedules.map(s => {
-      if (s.fullDate === date) {
-        return { ...s, times: s.times.filter(t => !originalSlots.includes(t.val)) };
-      }
-      return s;
-    });
-    
+    const updatedSchedules = activeDesigner.schedules.map(s => { if (s.fullDate === date) return { ...s, times: s.times.filter(t => !originalSlots.includes(t.val)) }; return s; });
     const newDesigners = designers.map(d => d.id === activeDesignerId ? { ...d, schedules: updatedSchedules } : d);
-    
-    showToast("空檔刪除中...");
-    const success = await syncToCloud({ designers: newDesigners });
-    
-    if (success) {
-      setDesigners(newDesigners);
-      setEditingSlot(null);
-      showToast("已刪除該空檔！已自動同步。");
-    }
+    showToast("空檔刪除中..."); const success = await syncToCloud({ designers: newDesigners });
+    if (success) { setDesigners(newDesigners); setEditingSlot(null); showToast("已刪除該空檔！已自動同步。"); }
   };
 
   const handleCopyBooking = () => {
-    if (!selectedTime) { showToast("請先點選您想要的時段喔！"); return; }
-    const textArea = document.createElement("textarea");
-    textArea.value = selectedTime; document.body.appendChild(textArea); textArea.select();
+    if (!selectedTime) return showToast("請先點選您想要的時段喔！");
+    const textArea = document.createElement("textarea"); textArea.value = selectedTime; document.body.appendChild(textArea); textArea.select();
     try { document.execCommand("copy"); setShowCopyModal(true); } catch (err) { console.error("複製失敗", err); showToast("複製失敗，請手動輸入"); }
     document.body.removeChild(textArea);
   };
@@ -1461,141 +1074,68 @@ export default function App() {
     setShowCopyModal(false);
     if (lineOfficialId) {
       const formattedLineId = lineOfficialId.startsWith("@") ? lineOfficialId : `@${lineOfficialId}`;
-      const lineUrl = `https://line.me/R/oaMessage/${formattedLineId}/?${encodeURIComponent(selectedTime)}`;
-      window.open(lineUrl, "_blank");
+      window.open(`https://line.me/R/oaMessage/${formattedLineId}/?${encodeURIComponent(selectedTime)}`, "_blank");
     }
   };
 
   const handleAddNewDesigner = async () => {
-    const newId = "d" + Date.now();
-    const newDesigners = [...designers, { id: newId, name: "新設計師", location: "北車店", schedules: [] }];
-    
-    showToast("新增中...");
-    const success = await syncToCloud({ designers: newDesigners });
-    
-    if (success) {
-      setDesigners(newDesigners);
-      showToast("已新增設計師欄位，請修改名稱");
-    }
+    const newId = "d" + Date.now(); const newDesigners = [...designers, { id: newId, name: "新設計師", location: "北車店", schedules: [] }];
+    showToast("新增中..."); const success = await syncToCloud({ designers: newDesigners });
+    if (success) { setDesigners(newDesigners); showToast("已新增設計師欄位，請修改名稱"); }
   };
 
-  const handleUpdateDesignerItem = (id, field, value) => {
-    const newDesigners = designers.map(d => d.id === id ? { ...d, [field]: value } : d);
-    setDesigners(newDesigners);
-    setHasUnsavedChanges(true);
-  };
+  const handleUpdateDesignerItem = (id, field, value) => { setDesigners(designers.map(d => d.id === id ? { ...d, [field]: value } : d)); setHasUnsavedChanges(true); };
 
   const handleDeleteDesigner = async (id) => {
     if (designers.length <= 1) return showToast("系統至少需保留一位設計師！");
     const newDesigners = designers.filter(d => d.id !== id);
-    
-    showToast("刪除中...");
-    const success = await syncToCloud({ designers: newDesigners });
-    
-    if (success) {
-      setDesigners(newDesigners);
-      if (activeDesignerId === id) setActiveDesignerId(newDesigners[0].id);
-      showToast("已刪除設計師！");
-    }
+    showToast("刪除中..."); const success = await syncToCloud({ designers: newDesigners });
+    if (success) { setDesigners(newDesigners); if (activeDesignerId === id) setActiveDesignerId(newDesigners[0].id); showToast("已刪除設計師！"); }
   };
 
-  const [newServiceInput, setNewServiceInput] = useState('');
   const handleAddServiceSetting = () => {
-     if(!newServiceInput.trim()) return showToast("請填寫項目名稱");
-     if(savedServices.includes(newServiceInput.trim())) return showToast("該項目已存在");
-     const newServices = [...savedServices, newServiceInput.trim()];
-     setSavedServices(newServices);
-     setNewServiceInput('');
-     setHasUnsavedChanges(true);
+     if(!newServiceInput.trim()) return showToast("請填寫項目名稱"); if(savedServices.includes(newServiceInput.trim())) return showToast("該項目已存在");
+     setSavedServices([...savedServices, newServiceInput.trim()]); setNewServiceInput(''); setHasUnsavedChanges(true);
   };
-  const handleDeleteServiceSetting = (name) => {
-     setSavedServices(savedServices.filter(s => s !== name));
-     setHasUnsavedChanges(true);
-  };
+  const handleDeleteServiceSetting = (name) => { setSavedServices(savedServices.filter(s => s !== name)); setHasUnsavedChanges(true); };
 
-  const [newPaymentInput, setNewPaymentInput] = useState('');
   const handleAddPaymentSetting = () => {
-     if(!newPaymentInput) return showToast("請填寫付款方式");
-     if(paymentMethods.includes(newPaymentInput)) return showToast("付款方式已存在");
-     const newMethods = [...paymentMethods, newPaymentInput];
-     setPaymentMethods(newMethods);
-     setNewPaymentInput('');
-     setHasUnsavedChanges(true);
+     if(!newPaymentInput) return showToast("請填寫付款方式"); if(paymentMethods.includes(newPaymentInput)) return showToast("付款方式已存在");
+     setPaymentMethods([...paymentMethods, newPaymentInput]); setNewPaymentInput(''); setHasUnsavedChanges(true);
   };
   const handleDeletePaymentSetting = (method) => {
      if(['現金', '轉帳', '信用卡', 'Line Pay', '儲值金扣款', '扣除包堂'].includes(method)) return showToast("系統預設付款方式無法刪除！");
-     setPaymentMethods(paymentMethods.filter(m => m !== method));
-     setHasUnsavedChanges(true);
+     setPaymentMethods(paymentMethods.filter(m => m !== method)); setHasUnsavedChanges(true);
   };
 
   const handleChangePassword = () => {
-    if (!newPasswordInput) return showToast("請輸入新密碼！");
-    if (newPasswordInput.length < 4) return showToast("密碼長度至少需 4 碼！");
-    setAdminPassword(newPasswordInput); setNewPasswordInput(""); 
-    syncToCloud({ adminPassword: newPasswordInput });
-    showToast("密碼修改成功！下次請使用新密碼登入。");
+    if (!newPasswordInput) return showToast("請輸入新密碼！"); if (newPasswordInput.length < 4) return showToast("密碼長度至少需 4 碼！");
+    setAdminPassword(newPasswordInput); setNewPasswordInput(""); syncToCloud({ adminPassword: newPasswordInput }); showToast("密碼修改成功！下次請使用新密碼登入。");
   };
 
   // ==========================================
   // 後台主畫面 Render
   // ==========================================
   const renderAdminView = () => {
-    
-    let allTransactions = clients.flatMap(client => client.visits.map(visit => ({ 
-      ...visit, 
-      clientId: client.id, 
-      clientName: client.name, 
-      totalAmount: (Number(visit.amount) || 0) + (Number(visit.productAmount) || 0) 
-    })));
-
-    if (txFilterDesignerId !== 'all') {
-      allTransactions = allTransactions.filter(tx => tx.designerId === txFilterDesignerId);
-    }
-    if (txFilterType === 'month') {
-      allTransactions = allTransactions.filter(tx => tx.date.startsWith(txFilterMonth));
-    } else if (txFilterType === 'day') {
-      allTransactions = allTransactions.filter(tx => tx.date === txFilterDate);
-    } else if (txFilterType === 'custom') {
-      allTransactions = allTransactions.filter(tx => tx.date >= txFilterStartDate && tx.date <= txFilterEndDate);
-    }
-
+    let allTransactions = clients.flatMap(client => client.visits.map(visit => ({ ...visit, clientId: client.id, clientName: client.name, totalAmount: (Number(visit.amount) || 0) + (Number(visit.productAmount) || 0) })));
+    if (txFilterDesignerId !== 'all') allTransactions = allTransactions.filter(tx => tx.designerId === txFilterDesignerId);
+    if (txFilterType === 'month') allTransactions = allTransactions.filter(tx => tx.date.startsWith(txFilterMonth));
+    else if (txFilterType === 'day') allTransactions = allTransactions.filter(tx => tx.date === txFilterDate);
+    else if (txFilterType === 'custom') allTransactions = allTransactions.filter(tx => tx.date >= txFilterStartDate && tx.date <= txFilterEndDate);
     allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
     
     // === 財務指標分流計算 ===
-    let actualRevenue = 0; // 實際總收入 (含儲值與做客人的現金流)
-    let topUpRevenue = 0;  // 客戶買儲值金的收入
-    let serviceRevenue = 0; // 純做客人的收入
-    let consumedValue = 0; // 消耗的儲值金 (帳面數字，無現金流)
-    let totalDiscountValue = 0; // 折扣與贈送總額
-
+    let actualRevenue = 0; let topUpRevenue = 0; let serviceRevenue = 0; let consumedValue = 0; let totalDiscountValue = 0; 
     allTransactions.forEach(t => {
-      // 累加折扣/贈送金額
       totalDiscountValue += (Number(t.discount) || Number(t.bonus) || 0);
-
       if (t.isTopUp) {
-        let t_rev = 0;
-        t.payments?.forEach(p => t_rev += (Number(p.amount) || 0));
-        topUpRevenue += t_rev;
-        actualRevenue += t_rev;
+        let t_rev = 0; t.payments?.forEach(p => t_rev += (Number(p.amount) || 0));
+        topUpRevenue += t_rev; actualRevenue += t_rev;
       } else {
         if (t.payments && t.payments.length > 0) {
-           t.payments.forEach(p => {
-             if (p.method === '儲值金扣款') {
-               consumedValue += (Number(p.amount) || 0);
-             } else if (p.method !== '扣除包堂') {
-               let amt = Number(p.amount) || 0;
-               serviceRevenue += amt;
-               actualRevenue += amt;
-             }
-           });
+           t.payments.forEach(p => { if (p.method === '儲值金扣款') consumedValue += (Number(p.amount) || 0); else if (p.method !== '扣除包堂') { let amt = Number(p.amount) || 0; serviceRevenue += amt; actualRevenue += amt; } });
         } else {
-           // 相容舊版資料
-           if (t.paymentMethod === '儲值金扣款') {
-              consumedValue += t.totalAmount;
-           } else if (t.paymentMethod !== '扣除包堂') {
-              serviceRevenue += t.totalAmount;
-              actualRevenue += t.totalAmount;
-           }
+           if (t.paymentMethod === '儲值金扣款') consumedValue += t.totalAmount; else if (t.paymentMethod !== '扣除包堂') { serviceRevenue += t.totalAmount; actualRevenue += t.totalAmount; }
         }
       }
     });
@@ -1606,15 +1146,10 @@ export default function App() {
     return (
       <div className="h-screen bg-[#F8F9FA] flex flex-col md:flex-row font-sans overflow-hidden w-full">
         {renderToast()}
-        
         <div className="md:hidden flex justify-between items-center p-4 bg-white border-b border-gray-200 z-20 shadow-sm">
           <h2 className="text-xl font-beauty font-black text-[#C59A5C] tracking-widest">L<span className="text-[#A87B7B]">&</span>B</h2>
           <div className="flex items-center gap-3">
-            {hasUnsavedChanges && (
-               <button onClick={handleExplicitSave} className="bg-[#A87B7B] text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-md animate-pulse flex items-center gap-1">
-                 <Save size={14} /> 儲存變更
-               </button>
-            )}
+            {hasUnsavedChanges && (<button onClick={handleExplicitSave} className="bg-[#A87B7B] text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-md animate-pulse flex items-center gap-1"><Save size={14} /> 儲存變更</button>)}
             <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-gray-600 p-1 hover:bg-gray-100 rounded-md"><MenuIcon size={26} /></button>
           </div>
         </div>
@@ -1635,12 +1170,7 @@ export default function App() {
             <button onClick={() => { setActiveTab('settings'); setSelectedClient(null); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium text-sm ${activeTab === 'settings' ? 'bg-[#FDFBF7] text-[#A87B7B]' : 'text-gray-600 hover:bg-gray-50'}`}><Settings size={18} /> 系統設定</button>
           </nav>
           <div className="p-4 border-t border-gray-100 space-y-3">
-            <button 
-               onClick={handleExplicitSave} 
-               className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition shadow-sm
-                  ${hasUnsavedChanges ? 'bg-[#A87B7B] text-white hover:bg-[#8f6666] animate-pulse shadow-md border-2 border-[#C59A5C]' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}
-               `}
-            >
+            <button onClick={handleExplicitSave} className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition shadow-sm ${hasUnsavedChanges ? 'bg-[#A87B7B] text-white hover:bg-[#8f6666] animate-pulse shadow-md border-2 border-[#C59A5C]' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
                {hasUnsavedChanges ? <Save size={16}/> : <CheckCircle size={16}/>} {hasUnsavedChanges ? '儲存變更至前台' : '資料已同步'}
             </button>
             <button onClick={handleExitAdmin} className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white py-3 rounded-xl text-sm font-bold hover:bg-black transition"><Eye size={16}/> 退出看前台</button>
@@ -1665,11 +1195,6 @@ export default function App() {
                   <button onClick={() => setShowAutoScheduleModal(true)} className="bg-white border border-gray-200 text-gray-700 text-sm font-bold px-3 py-1.5 rounded-lg hover:bg-gray-50 transition shadow-sm whitespace-nowrap flex items-center gap-1.5">
                     <Wand2 size={16} className="text-[#C59A5C]" /> 快速開班
                   </button>
-                  {hasUnsavedChanges && (
-                     <button onClick={handleExplicitSave} className="bg-[#A87B7B] text-white text-sm font-bold px-4 py-1.5 rounded-lg hover:bg-[#8f6666] transition shadow-md whitespace-nowrap flex items-center gap-1.5 animate-bounce ml-2">
-                       <Save size={16} /> 儲存發布
-                     </button>
-                  )}
                 </div>
               </div>
 
@@ -1680,9 +1205,7 @@ export default function App() {
                     <button onClick={() => setCurrentWeekStart(new Date())} className="px-3 py-1.5 text-sm font-bold text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-100 transition shadow-sm">本週</button>
                     <button onClick={() => { const d = new Date(currentWeekStart); d.setDate(d.getDate() + 7); setCurrentWeekStart(d); }} className="p-1.5 text-gray-500 hover:bg-gray-200 rounded-md transition"><ChevronRightCircle size={20}/></button>
                   </div>
-                  <h2 className="text-lg font-bold text-gray-800">
-                    {currentWeekStart.getFullYear()} 年 {currentWeekStart.getMonth() + 1} 月
-                  </h2>
+                  <h2 className="text-lg font-bold text-gray-800">{currentWeekStart.getFullYear()} 年 {currentWeekStart.getMonth() + 1} 月</h2>
                   <div className="w-20"></div>
                 </div>
 
@@ -1703,9 +1226,7 @@ export default function App() {
                     <div className="flex flex-1">
                       <div className="w-14 flex-shrink-0 border-r border-gray-200 bg-white sticky left-0 z-30">
                         {Array.from({length: 13}).map((_, i) => (
-                          <div key={i} className="h-[90px] border-b border-gray-100 text-right pr-2 pt-1 text-xs text-gray-400 font-medium">
-                            {String(i+9).padStart(2,'0')}:00
-                          </div>
+                          <div key={i} className="h-[90px] border-b border-gray-100 text-right pr-2 pt-1 text-xs text-gray-400 font-medium">{String(i+9).padStart(2,'0')}:00</div>
                         ))}
                       </div>
 
@@ -1716,47 +1237,27 @@ export default function App() {
                           const isPast = day.fullDate < getTodayString();
                           
                           return (
-                            <div 
-                              key={day.fullDate} 
-                              className={`flex-1 border-r border-gray-100 relative min-w-[100px] ${day.isToday ? 'bg-[#FDFBF7]/40' : ''}`}
-                            >
+                            <div key={day.fullDate} className={`flex-1 border-r border-gray-100 relative min-w-[100px] ${day.isToday ? 'bg-[#FDFBF7]/40' : ''}`}>
                               <div className="absolute inset-0 flex flex-col z-0">
                                 {TIME_BLOCKS.map(time => (
-                                  <div key={time}
-                                       className={`h-[45px] border-b border-dashed border-gray-100 transition-colors ${isPast ? 'bg-gray-100/50 cursor-not-allowed' : 'hover:bg-[#E8D3C8]/20 cursor-pointer'}`}
-                                       onClick={() => !isPast && handleCellClick(day.fullDate, time)}
-                                  />
+                                  <div key={time} className={`h-[45px] border-b border-dashed border-gray-100 transition-colors ${isPast ? 'bg-gray-100/50 cursor-not-allowed' : 'hover:bg-[#E8D3C8]/20 cursor-pointer'}`} onClick={() => !isPast && handleCellClick(day.fullDate, time)} />
                                 ))}
                               </div>
 
                               <div className={`absolute inset-0 z-10 pointer-events-none`}>
                                 {groups.map((group, i) => {
                                   const colorObj = EVENT_COLORS.find(c => c.id === group.color) || EVENT_COLORS[0];
-                                  const isFullClass = group.isFull
-                                    ? `${colorObj.colorClass} z-20 shadow-md`
-                                    : 'bg-[#FDFBF7] text-[#A87B7B] border-[#E8D3C8] z-10 hover:bg-[#F5E3E3]';
+                                  const isFullClass = group.isFull ? `${colorObj.colorClass} z-20 shadow-md` : 'bg-[#FDFBF7] text-[#A87B7B] border-[#E8D3C8] z-10 hover:bg-[#F5E3E3]';
 
                                   return (
                                     <div key={i}
                                         style={{ top: getTopPx(group.startTime), height: getTopPx(group.endTime) - getTopPx(group.startTime) }}
-                                        className={`absolute left-1 right-1 rounded-md border p-1.5 cursor-pointer overflow-hidden transition-all hover:z-30 hover:shadow-md pointer-events-auto hover:scale-[1.02]
-                                            ${isFullClass}
-                                        `}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          if (isPast) return;
-                                          handleGroupClick(day.fullDate, group);
-                                        }}
+                                        className={`absolute left-1 right-1 rounded-md border p-1.5 cursor-pointer overflow-hidden transition-all hover:z-30 hover:shadow-md pointer-events-auto hover:scale-[1.02] ${isFullClass}`}
+                                        onClick={(e) => { e.stopPropagation(); if (isPast) return; handleGroupClick(day.fullDate, group); }}
                                     >
-                                      <div className="text-[10px] font-bold leading-tight opacity-90 drop-shadow-sm pointer-events-none">
-                                        {group.startTime} - {group.endTime}
-                                      </div>
-                                      <div className="text-xs font-bold truncate mt-0.5 pointer-events-none">
-                                        {group.isFull ? (group.clientName || '已預約') : '開放預約'}
-                                      </div>
-                                      {group.isFull && group.service && (
-                                        <div className="text-[10px] opacity-90 truncate mt-0.5 pointer-events-none">{group.service}</div>
-                                      )}
+                                      <div className="text-[10px] font-bold leading-tight opacity-90 drop-shadow-sm pointer-events-none">{group.startTime} - {group.endTime}</div>
+                                      <div className="text-xs font-bold truncate mt-0.5 pointer-events-none">{group.isFull ? (group.clientName || '已預約') : '開放預約'}</div>
+                                      {group.isFull && group.service && (<div className="text-[10px] opacity-90 truncate mt-0.5 pointer-events-none">{group.service}</div>)}
                                     </div>
                                   );
                                 })}
@@ -1772,221 +1273,57 @@ export default function App() {
             </div>
           )}
 
-          {showAutoScheduleModal && (
-            <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-              <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative animate-in zoom-in duration-200">
-                <button onClick={() => setShowAutoScheduleModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><X size={20}/></button>
-                <div className="flex items-center gap-2 mb-6 border-b pb-3">
-                  <Wand2 size={24} className="text-[#C59A5C]" />
-                  <h3 className="text-xl font-bold text-gray-800">批次智慧排班設定</h3>
-                </div>
-
-                <div className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">1. 選擇要排班的月份</label>
-                    <input type="month" value={generateMonth} onChange={(e) => setGenerateMonth(e.target.value)} className="w-full p-3 rounded-xl border border-gray-200 text-base text-gray-700 bg-gray-50 focus:bg-white focus:border-[#A87B7B] outline-none transition cursor-pointer" />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">2. 選擇固定開放的星期</label>
-                    <div className="flex gap-2">
-                      {["日", "一", "二", "三", "四", "五", "六"].map((dStr, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => toggleWorkDay(idx)}
-                          className={`flex-1 py-2 rounded-lg text-sm font-bold transition-colors border ${
-                            autoScheduleConfig.workDays.includes(idx) 
-                              ? 'bg-[#A87B7B] text-white border-[#A87B7B] shadow-sm' 
-                              : 'bg-white text-gray-400 border-gray-200 hover:bg-gray-50'
-                          }`}
-                        >
-                          {dStr}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">3. 上班時間</label>
-                      <select value={autoScheduleConfig.startTime} onChange={e => setAutoScheduleConfig({...autoScheduleConfig, startTime: e.target.value})} className="w-full p-2.5 rounded-xl border border-gray-200 bg-gray-50 outline-none focus:border-[#A87B7B]">
-                        {TIME_BLOCKS.map(t => <option key={t} value={t}>{t}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">至 下班時間</label>
-                      <select value={autoScheduleConfig.endTime} onChange={e => setAutoScheduleConfig({...autoScheduleConfig, endTime: e.target.value})} className="w-full p-2.5 rounded-xl border border-gray-200 bg-gray-50 outline-none focus:border-[#A87B7B]">
-                        {TIME_BLOCKS.map(t => <option key={t} value={t}>{t}</option>)}
-                        <option value="21:00">21:00</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="bg-[#FDFBF7] p-4 rounded-xl border border-[#F0E6D8]">
-                    <label className="flex items-center gap-2 cursor-pointer mb-3">
-                      <input type="checkbox" checked={autoScheduleConfig.hasBreak} onChange={e => setAutoScheduleConfig({...autoScheduleConfig, hasBreak: e.target.checked})} className="w-4 h-4 accent-[#A87B7B]" />
-                      <span className="text-sm font-bold text-[#A87B7B]">設定固定午休/保留時間 (不開放預約)</span>
-                    </label>
-                    {autoScheduleConfig.hasBreak && (
-                      <div className="flex items-center gap-3">
-                        <select value={autoScheduleConfig.breakStart} onChange={e => setAutoScheduleConfig({...autoScheduleConfig, breakStart: e.target.value})} className="flex-1 p-2 rounded-lg border border-gray-200 bg-white text-sm outline-none focus:border-[#A87B7B]">
-                          {TIME_BLOCKS.map(t => <option key={t} value={t}>{t}</option>)}
-                        </select>
-                        <span className="text-gray-400">至</span>
-                        <select value={autoScheduleConfig.breakEnd} onChange={e => setAutoScheduleConfig({...autoScheduleConfig, breakEnd: e.target.value})} className="flex-1 p-2 rounded-lg border border-gray-200 bg-white text-sm outline-none focus:border-[#A87B7B]">
-                          {TIME_BLOCKS.map(t => <option key={t} value={t}>{t}</option>)}
-                        </select>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="mt-8">
-                  <button onClick={handleApplyAutoSchedule} className="w-full py-3.5 bg-[#A87B7B] text-white rounded-xl text-base font-bold hover:bg-[#8f6666] transition shadow-lg shadow-[#A87B7B]/30 flex items-center justify-center gap-2">
-                    一鍵產生 {generateMonth} 月排班
-                  </button>
-                  <p className="text-center text-[11px] text-gray-400 mt-3">※ 系統將自動把時段分割為【每 2 小時】一個區塊喔！</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {editingSlot && (
+          {/* 儲值 Modal (支援新增、編輯、客訴補償與追溯日期) */}
+          {showTopUpModal && (
             <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
               <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative animate-in zoom-in duration-200">
-                <button onClick={() => setEditingSlot(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><X size={20}/></button>
-                <h3 className="text-lg font-bold mb-4 border-b pb-2">
-                  {editingSlot.isNew ? '新增時段' : '管理時段'}：{editingSlot.date}
-                </h3>
+                <button onClick={closeTopUpModal} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><X size={20}/></button>
+                <h3 className="text-xl font-bold text-gray-800 mb-1 flex items-center gap-2"><Wallet size={24} className="text-[#C59A5C]" /> {editingTopUpId ? '編輯儲值紀錄' : '儲值金加值'}</h3>
+                <p className="text-xs text-gray-500 mb-5">為 {selectedClient.name} {editingTopUpId ? '修改儲值資訊與餘額' : '存入新的可用餘額'}</p>
                 
-                <div className="space-y-4 mt-4">
-                  <div className="grid grid-cols-2 gap-3 mb-4 bg-gray-50 p-3 rounded-xl border border-gray-100">
-                     <div>
-                       <label className="block text-xs font-bold text-gray-600 mb-1">起始時間</label>
-                       <select 
-                          value={editingSlot.startTime} 
-                          onChange={e => {
-                             const newStart = e.target.value;
-                             let newEnd = editingSlot.endTime;
-                             if (newStart >= newEnd) newEnd = getNextTime(newStart);
-                             setEditingSlot({...editingSlot, startTime: newStart, endTime: newEnd});
-                          }}
-                          className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B] bg-white"
-                       >
-                         {TIME_BLOCKS.map(t => <option key={t} value={t}>{t}</option>)}
-                       </select>
-                     </div>
-                     <div>
-                       <label className="block text-xs font-bold text-gray-600 mb-1">結束時間</label>
-                       <select 
-                          value={editingSlot.endTime} 
-                          onChange={e => setEditingSlot({...editingSlot, endTime: e.target.value})}
-                          className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B] bg-white"
-                       >
-                         {TIME_BLOCKS.map(t => {
-                           if (t <= editingSlot.startTime) return null;
-                           return <option key={t} value={t}>{t}</option>;
-                         })}
-                         <option value="21:00">21:00</option>
-                       </select>
-                     </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-1">儲值日期 *</label>
+                    <input type="date" value={topUpData.date} onChange={e=>setTopUpData({...topUpData, date: e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C59A5C] bg-white" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-1">實收儲值金額 (客人付的現金) *</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <input type="text" inputMode="numeric" value={topUpData.targetAmount} onChange={e=>setTopUpData({...topUpData, targetAmount: e.target.value.replace(/\D/g, '')})} placeholder="0" className="w-full pl-7 p-2.5 border border-gray-200 rounded-lg text-lg font-bold text-gray-800 outline-none focus:border-[#C59A5C]" />
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                       <button onClick={()=>setTopUpData({...topUpData, targetAmount: '5000', bonus: '500', notes: '滿5000送500'})} className="text-[11px] bg-[#FDFBF7] border border-[#D4B8A8] text-[#A87B7B] px-2 py-1 rounded hover:bg-[#F5E3E3] transition shadow-sm">滿5000送500</button>
+                       <button onClick={()=>setTopUpData({...topUpData, targetAmount: '10000', bonus: '1000', notes: '滿10000送1000'})} className="text-[11px] bg-[#FDFBF7] border border-[#D4B8A8] text-[#A87B7B] px-2 py-1 rounded hover:bg-[#F5E3E3] transition shadow-sm">滿10000送1000</button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-1">加碼贈送額度 (客訴補償可單填此欄)</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <input type="text" inputMode="numeric" value={topUpData.bonus} onChange={e=>setTopUpData({...topUpData, bonus: e.target.value.replace(/\D/g, '')})} placeholder="0" className="w-full pl-7 p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C59A5C]" />
+                    </div>
+                    <p className="text-[10px] text-gray-400 mt-1 leading-tight">例如：滿5000送500，上方填5000，此處填500。總共會存入5500額度。</p>
+                  </div>
+                  
+                  <div className="bg-[#FDFBF7] p-3 rounded-lg border border-[#E8D3C8] flex justify-between items-center">
+                      <span className="font-bold text-[#A87B7B]">將存入客戶餘額：</span>
+                      <span className="text-2xl font-black text-[#A87B7B]">${(Number(topUpData.targetAmount)||0) + (Number(topUpData.bonus)||0)}</span>
                   </div>
 
-                  <label className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer border transition-all ${editingSlot.isFull ? 'bg-[#FDFBF7] border-[#D4B8A8]' : 'bg-white border-gray-200 hover:bg-gray-50'}`}>
-                    <input type="checkbox" checked={editingSlot.isFull} onChange={e=>setEditingSlot({...editingSlot, isFull: e.target.checked})} className="w-5 h-5 accent-[#A87B7B]"/>
-                    <div>
-                      <span className="font-bold text-gray-800 block text-sm">標記為已預約 (滿檔)</span>
-                      <span className="text-xs text-gray-500">客人在前台將無法點選這段時間</span>
-                    </div>
-                  </label>
-
-                  {editingSlot.isFull && (
-                    <div className="space-y-4 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-xs font-bold text-gray-600 mb-1">客戶姓名 *</label>
-                          <input 
-                            type="text" 
-                            value={editingSlot.clientName || ''} 
-                            onChange={e => {
-                              const val = e.target.value;
-                              const matched = clients.find(c => c.name === val);
-                              setEditingSlot({
-                                ...editingSlot, 
-                                clientName: val,
-                                clientPhone: matched && (!editingSlot.clientPhone || editingSlot.clientPhone === '') ? matched.phone : editingSlot.clientPhone
-                              });
-                            }} 
-                            placeholder="例：林語晴" 
-                            list="calendar-client-names"
-                            className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B] bg-white"
-                          />
-                          <datalist id="calendar-client-names">
-                            {clients.map(c => <option key={c.id} value={c.name}>{c.phone}</option>)}
-                          </datalist>
-                        </div>
-                        <div>
-                          <label className="block text-xs font-bold text-gray-600 mb-1">聯絡電話 (自動建檔)</label>
-                          <input 
-                            type="tel" 
-                            value={editingSlot.clientPhone || ''} 
-                            onChange={e => {
-                              const val = e.target.value;
-                              const matched = clients.find(c => c.phone === val);
-                              setEditingSlot({
-                                ...editingSlot, 
-                                clientPhone: val,
-                                clientName: matched ? matched.name : editingSlot.clientName
-                              });
-                            }} 
-                            placeholder="例：0912345678" 
-                            list="calendar-client-phones"
-                            className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B] bg-white"
-                          />
-                          <datalist id="calendar-client-phones">
-                            {clients.map(c => <option key={c.id} value={c.phone}>{c.name}</option>)}
-                          </datalist>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-gray-600 mb-1">預約項目 / 備註</label>
-                        <input 
-                          type="text" 
-                          value={editingSlot.service || ''} 
-                          onChange={e=>setEditingSlot({...editingSlot, service: e.target.value})} 
-                          placeholder="例：日式單根(自然)" 
-                          list="calendar-services"
-                          className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B] bg-white"
-                        />
-                        <datalist id="calendar-services">
-                          {savedServices.map(s => <option key={s} value={s} />)}
-                        </datalist>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-gray-600 mb-2">自訂標記顏色</label>
-                        <div className="flex gap-2.5">
-                          {EVENT_COLORS.map(c => (
-                            <div 
-                              key={c.id} 
-                              onClick={() => setEditingSlot({...editingSlot, color: c.id})}
-                              className={`w-7 h-7 rounded-full cursor-pointer transition transform hover:scale-110 flex items-center justify-center
-                                ${editingSlot.color === c.id ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' : ''}`}
-                              style={{ backgroundColor: c.hex }}
-                              title={c.name}
-                            >
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="mt-8 flex gap-3">
-                  {!editingSlot.isNew && (
-                    <button onClick={handleRemoveSlot} className="px-4 py-2.5 bg-red-50 text-red-500 rounded-xl text-sm font-bold hover:bg-red-500 hover:text-white transition flex items-center gap-1"><Trash2 size={16}/> 刪除</button>
-                  )}
-                  <div className="flex-1"></div>
-                  <button onClick={handleSaveSlotEdit} className="px-8 py-2.5 bg-[#A87B7B] text-white rounded-xl text-sm font-bold hover:bg-[#8f6666] shadow-sm">套用時段</button>
+                  <div>
+                     <label className="block text-xs font-bold text-gray-500 mb-1">支付方式</label>
+                     <select value={topUpData.method} onChange={e=>setTopUpData({...topUpData, method: e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C59A5C] bg-white">
+                       {paymentMethods.filter(m => m !== '儲值金扣款' && m !== '扣除包堂').map(m=><option key={m} value={m}>{m}</option>)}
+                     </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-1">備註/活動原因</label>
+                    <input type="text" value={topUpData.notes} onChange={e=>setTopUpData({...topUpData, notes: e.target.value})} placeholder="例如：滿5000送500活動 / 客訴補償" className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C59A5C]" />
+                  </div>
+                  <button onClick={handleSaveTopUp} className="w-full bg-[#C59A5C] text-white py-3 rounded-xl text-sm font-bold shadow-sm hover:bg-[#b08850] transition mt-2">
+                    {editingTopUpId ? `確認更新存入 $${(Number(topUpData.targetAmount)||0) + (Number(topUpData.bonus)||0)}` : `確認加值存入 $${(Number(topUpData.targetAmount)||0) + (Number(topUpData.bonus)||0)}`}
+                  </button>
                 </div>
               </div>
             </div>
@@ -2291,21 +1628,24 @@ export default function App() {
                               <h4 className={`font-bold mt-2 text-lg leading-tight ${visit.isTopUp ? 'text-[#C59A5C]' : 'text-gray-800'}`}>{visit.service}</h4>
                               {visit.size && !visit.isTopUp && <p className="text-[11px] text-gray-500 mt-1 font-medium">尺寸規格：{visit.size}</p>}
                               
-                              {/* 顯示折扣資訊 */}
+                              {/* 顯示一般消費折扣資訊 */}
                               {visit.discount > 0 && !visit.isTopUp && (
                                 <p className="text-[11px] text-rose-500 mt-1 font-bold">
                                   使用優惠：{visit.discountNote} (-${visit.discount})
                                 </p>
                               )}
-                              {visit.isTopUp && visit.discount > 0 && (
-                                <p className="text-[11px] text-[#A87B7B] mt-1 font-bold">加碼折扣/贈送：${visit.discount}</p>
+                              {/* 顯示儲值加碼贈送資訊 */}
+                              {visit.isTopUp && (visit.bonus > 0 || visit.discount > 0) && (
+                                <p className="text-[11px] text-[#A87B7B] mt-1 font-bold">加碼贈送：${visit.bonus || visit.discount}</p>
                               )}
                             </div>
                             <div className="flex flex-col items-end gap-1 w-full sm:w-auto">
                               <div className="flex items-center gap-2">
                                 <button onClick={() => handleEditVisitClick(visit)} className="text-gray-300 hover:text-[#A87B7B] p-1 transition-colors" title="編輯紀錄"><Edit size={16}/></button>
                                 <button onClick={() => setConfirmModal({ title: '刪除紀錄', message: visit.isTopUp ? '確定要刪除這筆「儲值紀錄」嗎？客人的儲值餘額將會自動扣除該金額喔！' : '確定要刪除這筆消費紀錄嗎？相關的儲值金與包堂扣除將會自動退還。', onConfirm: () => handleDeleteVisit(visit.id) })} className="text-gray-300 hover:text-red-500 p-1 transition-colors" title="刪除紀錄"><Trash2 size={16}/></button>
-                                <span className={`block text-lg font-bold ml-1 ${visit.isTopUp ? 'text-[#C59A5C]' : 'text-gray-800'}`}>{visit.isTopUp ? '+' : ''}${(Number(visit.amount)||0).toLocaleString()}</span>
+                                <span className={`block text-lg font-bold ml-1 ${visit.isTopUp ? 'text-[#C59A5C]' : 'text-gray-800'}`}>
+                                  {visit.isTopUp ? '+' : ''}{visit.isTopUp ? ((Number(visit.amount)||0) + (Number(visit.bonus)||Number(visit.discount)||0)).toLocaleString() : (Number(visit.amount)||0).toLocaleString()}
+                                </span>
                               </div>
                               <div className="flex flex-wrap justify-end gap-1 mt-1">
                                 {visit.payments && visit.payments.length > 0 ? (
@@ -2344,73 +1684,226 @@ export default function App() {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
 
-              {/* 儲值 Modal */}
-              {showTopUpModal && (
-                <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-                  <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative animate-in zoom-in duration-200">
-                    <button onClick={() => setShowTopUpModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><X size={20}/></button>
-                    <h3 className="text-xl font-bold text-gray-800 mb-1 flex items-center gap-2"><Wallet size={24} className="text-[#C59A5C]" /> 儲值金加值</h3>
-                    <p className="text-xs text-gray-500 mb-5">為 {selectedClient.name} 存入新的可用餘額</p>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-xs font-bold text-gray-500 mb-1">預計存入的儲值金 (面額) *</label>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                          <input type="text" inputMode="numeric" value={topUpData.targetAmount} onChange={e=>setTopUpData({...topUpData, targetAmount: e.target.value.replace(/\D/g, '')})} placeholder="0" className="w-full pl-7 p-2.5 border border-gray-200 rounded-lg text-lg font-bold text-gray-800 outline-none focus:border-[#C59A5C]" />
-                        </div>
-                        <div className="flex gap-2 mt-2">
-                           <button onClick={()=>setTopUpData({...topUpData, targetAmount: '5000', discount: '500', notes: '滿5000折500'})} className="text-[11px] bg-[#FDFBF7] border border-[#D4B8A8] text-[#A87B7B] px-2 py-1 rounded hover:bg-[#F5E3E3] transition">滿5000折500</button>
-                           <button onClick={()=>setTopUpData({...topUpData, targetAmount: '10000', discount: '1000', notes: '滿10000折1000'})} className="text-[11px] bg-[#FDFBF7] border border-[#D4B8A8] text-[#A87B7B] px-2 py-1 rounded hover:bg-[#F5E3E3] transition">滿10000折1000</button>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-gray-500 mb-1">給予固定折扣 / 贈送額 (無則免填)</label>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                          <input type="text" inputMode="numeric" value={topUpData.discount} onChange={e=>setTopUpData({...topUpData, discount: e.target.value.replace(/\D/g, '')})} placeholder="0" className="w-full pl-7 p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C59A5C]" />
-                        </div>
-                        <p className="text-[10px] text-gray-400 mt-1">例如：買5000付4500，上面填5000，這裡填500。這500元將計入報表「總折扣」中。</p>
-                      </div>
-                      
-                      <div className="bg-[#FDFBF7] p-3 rounded-lg border border-[#E8D3C8] flex justify-between items-center">
-                          <span className="font-bold text-[#A87B7B]">客人實際需付現金：</span>
-                          <span className="text-2xl font-black text-[#A87B7B]">${Math.max(0, (Number(topUpData.targetAmount)||0) - (Number(topUpData.discount)||0))}</span>
-                      </div>
+          {showAutoScheduleModal && (
+            <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+              <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative animate-in zoom-in duration-200">
+                <button onClick={() => setShowAutoScheduleModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><X size={20}/></button>
+                <div className="flex items-center gap-2 mb-6 border-b pb-3">
+                  <Wand2 size={24} className="text-[#C59A5C]" />
+                  <h3 className="text-xl font-bold text-gray-800">批次智慧排班設定</h3>
+                </div>
 
-                      <div>
-                         <label className="block text-xs font-bold text-gray-500 mb-1">支付方式</label>
-                         <select value={topUpData.method} onChange={e=>setTopUpData({...topUpData, method: e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C59A5C] bg-white">
-                           {paymentMethods.filter(m => m !== '儲值金扣款' && m !== '扣除包堂').map(m=><option key={m} value={m}>{m}</option>)}
-                         </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-gray-500 mb-1">備註/折扣原因</label>
-                        <input type="text" value={topUpData.notes} onChange={e=>setTopUpData({...topUpData, notes: e.target.value})} placeholder="例如：滿5000折500優惠" className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C59A5C]" />
-                      </div>
-                      <button onClick={handleSaveTopUp} className="w-full bg-[#C59A5C] text-white py-3 rounded-xl text-sm font-bold shadow-sm hover:bg-[#b08850] transition mt-2">
-                        確認加值存入 ${Number(topUpData.targetAmount) || 0}
-                      </button>
+                <div className="space-y-5">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">1. 選擇要排班的月份</label>
+                    <input type="month" value={generateMonth} onChange={(e) => setGenerateMonth(e.target.value)} className="w-full p-3 rounded-xl border border-gray-200 text-base text-gray-700 bg-gray-50 focus:bg-white focus:border-[#A87B7B] outline-none transition cursor-pointer" />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">2. 選擇固定開放的星期</label>
+                    <div className="flex gap-2">
+                      {["日", "一", "二", "三", "四", "五", "六"].map((dStr, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => toggleWorkDay(idx)}
+                          className={`flex-1 py-2 rounded-lg text-sm font-bold transition-colors border ${
+                            autoScheduleConfig.workDays.includes(idx) 
+                              ? 'bg-[#A87B7B] text-white border-[#A87B7B] shadow-sm' 
+                              : 'bg-white text-gray-400 border-gray-200 hover:bg-gray-50'
+                          }`}
+                        >
+                          {dStr}
+                        </button>
+                      ))}
                     </div>
                   </div>
-                </div>
-              )}
 
-              {showDeleteClientModal && (
-                <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-                  <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative animate-in zoom-in duration-200">
-                    <h3 className="text-xl font-bold text-gray-800 mb-2">確定刪除此客戶？</h3>
-                    <p className="text-sm text-gray-600 mb-6 leading-relaxed">
-                      刪除「<span className="font-bold">{selectedClient.name}</span>」後將無法復原，包含其所有的消費紀錄與儲值資料都會被永久移除。
-                    </p>
-                    <div className="flex gap-3">
-                      <button onClick={() => setShowDeleteClientModal(false)} className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-200 transition">取消</button>
-                      <button onClick={handleDeleteClient} className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 transition shadow-sm shadow-red-200">確定刪除</button>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">3. 上班時間</label>
+                      <select value={autoScheduleConfig.startTime} onChange={e => setAutoScheduleConfig({...autoScheduleConfig, startTime: e.target.value})} className="w-full p-2.5 rounded-xl border border-gray-200 bg-gray-50 outline-none focus:border-[#A87B7B]">
+                        {TIME_BLOCKS.map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">至 下班時間</label>
+                      <select value={autoScheduleConfig.endTime} onChange={e => setAutoScheduleConfig({...autoScheduleConfig, endTime: e.target.value})} className="w-full p-2.5 rounded-xl border border-gray-200 bg-gray-50 outline-none focus:border-[#A87B7B]">
+                        {TIME_BLOCKS.map(t => <option key={t} value={t}>{t}</option>)}
+                        <option value="21:00">21:00</option>
+                      </select>
                     </div>
                   </div>
+
+                  <div className="bg-[#FDFBF7] p-4 rounded-xl border border-[#F0E6D8]">
+                    <label className="flex items-center gap-2 cursor-pointer mb-3">
+                      <input type="checkbox" checked={autoScheduleConfig.hasBreak} onChange={e => setAutoScheduleConfig({...autoScheduleConfig, hasBreak: e.target.checked})} className="w-4 h-4 accent-[#A87B7B]" />
+                      <span className="text-sm font-bold text-[#A87B7B]">設定固定午休/保留時間 (不開放預約)</span>
+                    </label>
+                    {autoScheduleConfig.hasBreak && (
+                      <div className="flex items-center gap-3">
+                        <select value={autoScheduleConfig.breakStart} onChange={e => setAutoScheduleConfig({...autoScheduleConfig, breakStart: e.target.value})} className="flex-1 p-2 rounded-lg border border-gray-200 bg-white text-sm outline-none focus:border-[#A87B7B]">
+                          {TIME_BLOCKS.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                        <span className="text-gray-400">至</span>
+                        <select value={autoScheduleConfig.breakEnd} onChange={e => setAutoScheduleConfig({...autoScheduleConfig, breakEnd: e.target.value})} className="flex-1 p-2 rounded-lg border border-gray-200 bg-white text-sm outline-none focus:border-[#A87B7B]">
+                          {TIME_BLOCKS.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
+
+                <div className="mt-8">
+                  <button onClick={handleApplyAutoSchedule} className="w-full py-3.5 bg-[#A87B7B] text-white rounded-xl text-base font-bold hover:bg-[#8f6666] transition shadow-lg shadow-[#A87B7B]/30 flex items-center justify-center gap-2">
+                    一鍵產生 {generateMonth} 月排班
+                  </button>
+                  <p className="text-center text-[11px] text-gray-400 mt-3">※ 系統將自動把時段分割為【每 2 小時】一個區塊喔！</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {editingSlot && (
+            <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+              <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative animate-in zoom-in duration-200">
+                <button onClick={() => setEditingSlot(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><X size={20}/></button>
+                <h3 className="text-lg font-bold mb-4 border-b pb-2">
+                  {editingSlot.isNew ? '新增時段' : '管理時段'}：{editingSlot.date}
+                </h3>
+                
+                <div className="space-y-4 mt-4">
+                  <div className="grid grid-cols-2 gap-3 mb-4 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                     <div>
+                       <label className="block text-xs font-bold text-gray-600 mb-1">起始時間</label>
+                       <select 
+                          value={editingSlot.startTime} 
+                          onChange={e => {
+                             const newStart = e.target.value;
+                             let newEnd = editingSlot.endTime;
+                             if (newStart >= newEnd) newEnd = getNextTime(newStart);
+                             setEditingSlot({...editingSlot, startTime: newStart, endTime: newEnd});
+                          }}
+                          className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B] bg-white"
+                       >
+                         {TIME_BLOCKS.map(t => <option key={t} value={t}>{t}</option>)}
+                       </select>
+                     </div>
+                     <div>
+                       <label className="block text-xs font-bold text-gray-600 mb-1">結束時間</label>
+                       <select 
+                          value={editingSlot.endTime} 
+                          onChange={e => setEditingSlot({...editingSlot, endTime: e.target.value})}
+                          className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B] bg-white"
+                       >
+                         {TIME_BLOCKS.map(t => {
+                           if (t <= editingSlot.startTime) return null;
+                           return <option key={t} value={t}>{t}</option>;
+                         })}
+                         <option value="21:00">21:00</option>
+                       </select>
+                     </div>
+                  </div>
+
+                  <label className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer border transition-all ${editingSlot.isFull ? 'bg-[#FDFBF7] border-[#D4B8A8]' : 'bg-white border-gray-200 hover:bg-gray-50'}`}>
+                    <input type="checkbox" checked={editingSlot.isFull} onChange={e=>setEditingSlot({...editingSlot, isFull: e.target.checked})} className="w-5 h-5 accent-[#A87B7B]"/>
+                    <div>
+                      <span className="font-bold text-gray-800 block text-sm">標記為已預約 (滿檔)</span>
+                      <span className="text-xs text-gray-500">客人在前台將無法點選這段時間</span>
+                    </div>
+                  </label>
+
+                  {editingSlot.isFull && (
+                    <div className="space-y-4 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-600 mb-1">客戶姓名 *</label>
+                          <input 
+                            type="text" 
+                            value={editingSlot.clientName || ''} 
+                            onChange={e => {
+                              const val = e.target.value;
+                              const matched = clients.find(c => c.name === val);
+                              setEditingSlot({
+                                ...editingSlot, 
+                                clientName: val,
+                                clientPhone: matched && (!editingSlot.clientPhone || editingSlot.clientPhone === '') ? matched.phone : editingSlot.clientPhone
+                              });
+                            }} 
+                            placeholder="例：林語晴" 
+                            list="calendar-client-names"
+                            className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B] bg-white"
+                          />
+                          <datalist id="calendar-client-names">
+                            {clients.map(c => <option key={c.id} value={c.name}>{c.phone}</option>)}
+                          </datalist>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-600 mb-1">聯絡電話 (自動建檔)</label>
+                          <input 
+                            type="tel" 
+                            value={editingSlot.clientPhone || ''} 
+                            onChange={e => {
+                              const val = e.target.value;
+                              const matched = clients.find(c => c.phone === val);
+                              setEditingSlot({
+                                ...editingSlot, 
+                                clientPhone: val,
+                                clientName: matched ? matched.name : editingSlot.clientName
+                              });
+                            }} 
+                            placeholder="例：0912345678" 
+                            list="calendar-client-phones"
+                            className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B] bg-white"
+                          />
+                          <datalist id="calendar-client-phones">
+                            {clients.map(c => <option key={c.id} value={c.phone}>{c.name}</option>)}
+                          </datalist>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 mb-1">預約項目 / 備註</label>
+                        <input 
+                          type="text" 
+                          value={editingSlot.service || ''} 
+                          onChange={e=>setEditingSlot({...editingSlot, service: e.target.value})} 
+                          placeholder="例：日式單根(自然)" 
+                          list="calendar-services"
+                          className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B] bg-white"
+                        />
+                        <datalist id="calendar-services">
+                          {savedServices.map(s => <option key={s} value={s} />)}
+                        </datalist>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 mb-2">自訂標記顏色</label>
+                        <div className="flex gap-2.5">
+                          {EVENT_COLORS.map(c => (
+                            <div 
+                              key={c.id} 
+                              onClick={() => setEditingSlot({...editingSlot, color: c.id})}
+                              className={`w-7 h-7 rounded-full cursor-pointer transition transform hover:scale-110 flex items-center justify-center
+                                ${editingSlot.color === c.id ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' : ''}`}
+                              style={{ backgroundColor: c.hex }}
+                              title={c.name}
+                            >
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="mt-8 flex gap-3">
+                  {!editingSlot.isNew && (
+                    <button onClick={handleRemoveSlot} className="px-4 py-2.5 bg-red-50 text-red-500 rounded-xl text-sm font-bold hover:bg-red-500 hover:text-white transition flex items-center gap-1"><Trash2 size={16}/> 刪除</button>
+                  )}
+                  <div className="flex-1"></div>
+                  <button onClick={handleSaveSlotEdit} className="px-8 py-2.5 bg-[#A87B7B] text-white rounded-xl text-sm font-bold hover:bg-[#8f6666] shadow-sm">套用時段</button>
+                </div>
+              </div>
             </div>
           )}
 
@@ -2457,7 +1950,6 @@ export default function App() {
                 <h2 className="text-2xl font-bold text-gray-800 mb-5 flex items-center gap-2"><Database size={24} className="text-[#C59A5C]" /> 資料備份與匯入管理</h2>
                 
                 <div className="space-y-6">
-                  {/* Excel (CSV) 匯出區塊 */}
                   <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
                     <h3 className="font-bold text-gray-800 flex items-center gap-2 mb-3"><FileText size={18} className="text-[#A87B7B]" /> 📊 匯出 Excel 報表 (閱讀/對帳用)</h3>
                     <p className="text-xs text-gray-500 mb-4 leading-relaxed">
@@ -2470,7 +1962,6 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Excel 匯入區塊 */}
                   <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
                     <h3 className="font-bold text-gray-800 flex items-center gap-2 mb-3"><Upload size={18} className="text-[#A87B7B]" /> 📥 匯入新客戶名單 (CSV)</h3>
                     <p className="text-[11px] text-gray-500 mb-4 leading-tight">
@@ -2485,7 +1976,6 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* JSON 完整系統備份區塊 */}
                   <div className="bg-[#FDFBF7] rounded-xl p-5 border border-[#F0E6D8]">
                     <h3 className="font-bold text-gray-800 flex items-center gap-2 mb-3"><Database size={18} className="text-[#C59A5C]" /> 🛡️ 系統時光機還原備份 (JSON)</h3>
                     <p className="text-xs text-gray-500 mb-4 leading-relaxed">
@@ -2497,286 +1987,6 @@ export default function App() {
                       <div className="flex-1 relative">
                          <input type="file" accept=".json" onChange={handleImportJSON} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                          <button className="w-full py-2.5 bg-red-500 text-white rounded-lg text-sm font-bold hover:bg-red-600 transition flex items-center justify-center gap-2 shadow-sm pointer-events-none"><Upload size={16}/> 上傳備份還原系統</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'transactions' && (
-            <div className="p-6 max-w-6xl mx-auto">
-               <div className="mb-6"><h1 className="text-2xl font-bold text-gray-800">交易紀錄與業績統計</h1></div>
-               
-               <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 mb-6 flex flex-col md:flex-row gap-4 md:items-end">
-                 <div className="flex items-center gap-2 mb-1 md:hidden">
-                    <Filter size={16} className="text-[#A87B7B]"/> 
-                    <span className="font-bold text-sm text-gray-700">篩選條件</span>
-                 </div>
-                 
-                 <div className="flex-1">
-                   <label className="block text-xs font-bold text-gray-500 mb-1">查詢區間</label>
-                   <select value={txFilterType} onChange={e => setTxFilterType(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]">
-                     <option value="month">單月查詢</option>
-                     <option value="day">單日查詢</option>
-                     <option value="custom">自訂區間</option>
-                     <option value="all">所有紀錄</option>
-                   </select>
-                 </div>
-                 
-                 {txFilterType === 'month' && (
-                   <div className="flex-1">
-                     <label className="block text-xs font-bold text-gray-500 mb-1">選擇月份</label>
-                     <input type="month" value={txFilterMonth} onChange={e=>setTxFilterMonth(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
-                   </div>
-                 )}
-                 {txFilterType === 'day' && (
-                   <div className="flex-1">
-                     <label className="block text-xs font-bold text-gray-500 mb-1">選擇日期</label>
-                     <input type="date" value={txFilterDate} onChange={e=>setTxFilterDate(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
-                   </div>
-                 )}
-                 {txFilterType === 'custom' && (
-                   <div className="flex-2 flex items-end gap-2">
-                     <div className="flex-1">
-                       <label className="block text-xs font-bold text-gray-500 mb-1">開始日期</label>
-                       <input type="date" value={txFilterStartDate} onChange={e=>setTxFilterStartDate(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
-                     </div>
-                     <span className="text-gray-400 mb-2">-</span>
-                     <div className="flex-1">
-                       <label className="block text-xs font-bold text-gray-500 mb-1">結束日期</label>
-                       <input type="date" value={txFilterEndDate} onChange={e=>setTxFilterEndDate(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
-                     </div>
-                   </div>
-                 )}
-
-                 <div className="flex-1">
-                   <label className="block text-xs font-bold text-gray-500 mb-1">指定設計師</label>
-                   <select value={txFilterDesignerId} onChange={e => setTxFilterDesignerId(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]">
-                     <option value="all">全部設計師 (總店)</option>
-                     {designers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                   </select>
-                 </div>
-               </div>
-
-               {/* 進階：帳務拆分五大指標 */}
-               <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
-                 <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-4 rounded-xl border shadow-lg relative overflow-hidden">
-                    <div className="absolute -right-3 -bottom-3 text-white opacity-10"><Wallet size={70}/></div>
-                    <p className="text-[11px] font-bold text-gray-400 mb-1">💰 實際總收入 (現金流)</p>
-                    <h2 className="text-2xl font-bold text-white">${actualRevenue.toLocaleString()}</h2>
-                    <p className="text-[10px] text-gray-400 mt-1">進收銀機的錢(含服務+儲值)</p>
-                 </div>
-                 <div className="bg-white p-4 rounded-xl border shadow-sm relative overflow-hidden">
-                    <p className="text-[11px] font-bold text-gray-500 mb-1">✂️ 其中：服務實收</p>
-                    <h2 className="text-2xl font-bold text-green-600">${serviceRevenue.toLocaleString()}</h2>
-                    <p className="text-[10px] text-gray-400 mt-1">不含用舊儲值金抵扣的款項</p>
-                 </div>
-                 <div className="bg-[#FDFBF7] border-[#F0E6D8] p-4 rounded-xl border shadow-sm relative overflow-hidden">
-                    <p className="text-[11px] font-bold text-[#A87B7B] mb-1">💎 其中：客戶買儲值</p>
-                    <h2 className="text-2xl font-bold text-[#C59A5C]">${topUpRevenue.toLocaleString()}</h2>
-                    <p className="text-[10px] text-gray-500 mt-1">客人買儲值金實際付的現金</p>
-                 </div>
-                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm relative overflow-hidden">
-                    <p className="text-[11px] font-bold text-gray-500 mb-1">📉 消耗舊儲值金</p>
-                    <h2 className="text-2xl font-bold text-orange-500">${consumedValue.toLocaleString()}</h2>
-                    <p className="text-[10px] text-gray-400 mt-1">帳面數字(無現金流)，完成負債</p>
-                 </div>
-                 <div className="bg-rose-50 p-4 rounded-xl border border-rose-100 shadow-sm relative overflow-hidden">
-                    <p className="text-[11px] font-bold text-rose-600 mb-1">🎁 總折扣與贈送額</p>
-                    <h2 className="text-2xl font-bold text-rose-500">${totalDiscountValue.toLocaleString()}</h2>
-                    <p className="text-[10px] text-rose-400 mt-1">包含服務打折與儲值贈送金</p>
-                 </div>
-               </div>
-
-               <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
-                 <table className="w-full text-left text-sm whitespace-nowrap">
-                   <thead className="bg-gray-50 text-gray-500 border-b border-gray-100">
-                     <tr>
-                       <th className="p-4">日期</th>
-                       <th className="p-4">設計師</th>
-                       <th className="p-4">客戶</th>
-                       <th className="p-4">項目</th>
-                       <th className="p-4">付款明細</th>
-                       <th className="p-4 text-right">入帳(現金流)</th>
-                     </tr>
-                   </thead>
-                   <tbody>
-                     {allTransactions.map((tx, index) => {
-                       // 計算這筆訂單的「實際現金流」
-                       let thisActualCash = 0;
-                       if (tx.isTopUp) {
-                         tx.payments?.forEach(p => thisActualCash += (Number(p.amount)||0));
-                       } else {
-                         if (tx.payments && tx.payments.length > 0) {
-                           tx.payments.forEach(p => {
-                             if (p.method !== '儲值金扣款' && p.method !== '扣除包堂') thisActualCash += (Number(p.amount)||0);
-                           });
-                         } else {
-                           if (tx.paymentMethod !== '儲值金扣款' && tx.paymentMethod !== '扣除包堂') thisActualCash = tx.totalAmount;
-                         }
-                       }
-
-                       return (
-                         <tr key={`${tx.id}-${index}`} className={`border-b hover:bg-gray-50 ${tx.isTopUp ? 'bg-[#FDFBF7]/40 border-[#F5E3BD]/30' : 'border-gray-50'}`}>
-                           <td className="p-4 text-gray-600">
-                             {tx.date}
-                             {tx.isTopUp && <span className="ml-2 bg-[#C59A5C] text-white text-[10px] px-1.5 py-0.5 rounded font-bold">儲值</span>}
-                           </td>
-                           <td className="p-4 text-gray-600">{tx.isTopUp ? '--' : (tx.designerName || '未指定')}</td>
-                           <td className="p-4 font-bold text-gray-800">{tx.clientName}</td>
-                           <td className="p-4">
-                             <div className={`max-w-[150px] md:max-w-[200px] truncate ${tx.isTopUp ? 'text-[#C59A5C] font-bold' : ''}`} title={tx.service}>{tx.service}</div>
-                             {tx.discount > 0 && (
-                                <div className="text-[11px] text-rose-500 font-bold mt-0.5">
-                                  {tx.discountNote ? `${tx.discountNote} (-$${tx.discount})` : `已折扣 -$${tx.discount}`}
-                                </div>
-                             )}
-                             {tx.bonus > 0 && (
-                                <div className="text-[11px] text-[#A87B7B] font-bold mt-0.5">加碼贈送 ${tx.bonus}</div>
-                             )}
-                           </td>
-                           <td className="p-4">
-                             {tx.payments && tx.payments.length > 0 ? (
-                               <div className="flex flex-col gap-1">
-                                 {tx.payments.map((p, i) => (
-                                   <span key={i} className={`px-2 py-0.5 rounded text-[11px] w-fit ${p.method === '儲值金扣款' || p.method === '扣除包堂' ? 'bg-[#FDFBF7] text-[#A87B7B] border border-[#F0E6D8]' : 'bg-gray-100 text-gray-500 border border-gray-200'}`}>
-                                     {p.method} ${p.amount}
-                                   </span>
-                                 ))}
-                               </div>
-                             ) : (
-                               <span className={`px-2 py-1 rounded text-[11px] border ${tx.paymentMethod === '儲值金扣款' || tx.paymentMethod === '扣除包堂' ? 'bg-[#FDFBF7] text-[#A87B7B] border-[#F0E6D8]' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>{tx.paymentMethod}</span>
-                             )}
-                           </td>
-                           <td className={`p-4 text-right font-bold ${thisActualCash > 0 ? 'text-green-600' : 'text-gray-400'}`}>
-                             {thisActualCash > 0 ? `+${thisActualCash.toLocaleString()}` : '0'}
-                           </td>
-                         </tr>
-                       );
-                     })}
-                     {allTransactions.length === 0 && (
-                       <tr><td colSpan="6" className="text-center py-10 text-gray-400">該條件下尚無交易紀錄</td></tr>
-                     )}
-                   </tbody>
-                 </table>
-               </div>
-            </div>
-          )}
-
-          {activeTab === 'inventory' && (
-            <div className="p-6 max-w-4xl mx-auto">
-              <div className="mb-6"><h1 className="text-2xl font-bold text-gray-800">耗材與庫存</h1></div>
-              <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
-                 <table className="w-full text-left text-sm whitespace-nowrap">
-                   <thead className="bg-gray-50 text-gray-500"><tr><th className="p-4">品項</th><th className="p-4">分類</th><th className="p-4 text-center">庫存</th><th className="p-4">狀態</th></tr></thead>
-                   <tbody>
-                     {inventory.map(item => (
-                       <tr key={item.id} className="border-b hover:bg-gray-50"><td className="p-4 font-bold text-gray-800">{item.name}</td><td className="p-4"><span className="bg-gray-100 px-2 py-1 rounded text-xs">{item.category}</span></td><td className="p-4 text-center font-bold">{item.stock}</td><td className="p-4">{item.status==='低庫存'?<span className="text-red-500 bg-red-50 px-2 py-1 rounded text-xs font-bold">過低</span>:<span className="text-green-500 bg-green-50 px-2 py-1 rounded text-xs font-bold">充足</span>}</td></tr>
-                     ))}
-                   </tbody>
-                 </table>
-               </div>
-            </div>
-          )}
-
-          {activeTab === 'settings' && (
-            <div className="p-6 max-w-5xl mx-auto space-y-6">
-              <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-800 mb-1">系統設定</h1>
-                <p className="text-sm text-gray-500">System Configuration & Management</p>
-              </div>
-              
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="space-y-6">
-                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                    <div className="flex justify-between items-center mb-5 border-b border-gray-100 pb-3">
-                      <h2 className="font-bold text-gray-800 flex items-center gap-2"><Users size={18} className="text-[#A87B7B]"/> 設計師團隊管理</h2>
-                      <button onClick={handleAddNewDesigner} className="text-[#A87B7B] hover:text-[#8f6666] text-sm font-bold flex items-center gap-1"><Plus size={16}/> 新增</button>
-                    </div>
-                    <div className="space-y-4">
-                      {designers.map(d => (
-                        <div key={d.id} className="flex gap-3 items-center bg-gray-50 p-3 rounded-xl border border-gray-100">
-                          <div className="flex-1 space-y-2">
-                            <div><label className="text-[10px] text-gray-500 font-bold block">姓名</label><input type="text" value={d.name} onChange={e=>handleUpdateDesignerItem(d.id, "name", e.target.value)} className="w-full bg-white border border-gray-200 rounded p-1.5 text-sm outline-none focus:border-[#A87B7B]" /></div>
-                            <div><label className="text-[10px] text-gray-500 font-bold block">地點/備註</label><input type="text" value={d.location} onChange={e=>handleUpdateDesignerItem(d.id, "location", e.target.value)} className="w-full bg-white border border-gray-200 rounded p-1.5 text-sm outline-none focus:border-[#A87B7B]" /></div>
-                          </div>
-                          <button onClick={() => setConfirmModal({ title: '刪除設計師', message: `確定要刪除「${d.name}」嗎？這將同時刪除該設計師的所有排班紀錄，且無法復原。`, onConfirm: () => handleDeleteDesigner(d.id) })} className="text-gray-400 hover:text-red-500 p-2 bg-white rounded-lg border border-gray-200 hover:border-red-200 transition">
-                            <Trash2 size={16}/>
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                    <h2 className="font-bold text-gray-800 mb-5 border-b border-gray-100 pb-3 flex items-center gap-2"><CreditCard size={18} className="text-[#A87B7B]"/> 付款方式管理</h2>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {paymentMethods.map(method => (
-                        <div key={method} className="flex items-center gap-1.5 bg-[#FDFBF7] border border-[#F0E6D8] text-gray-700 px-3 py-1.5 rounded-lg text-sm">
-                          <span>{method}</span>
-                          {!['現金', '轉帳', '信用卡', 'Line Pay', '儲值金扣款', '扣除包堂'].includes(method) && (
-                            <button onClick={() => setConfirmModal({ title: '刪除付款方式', message: `確定要刪除「${method}」嗎？`, onConfirm: () => handleDeletePaymentSetting(method) })} className="text-gray-400 hover:text-red-500 ml-1"><X size={14}/></button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex gap-2">
-                      <input type="text" placeholder="輸入新的付款方式" value={newPaymentInput} onChange={e=>setNewPaymentInput(e.target.value)} className="flex-1 p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
-                      <button onClick={handleAddPaymentSetting} className="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-black transition">新增</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                    <div className="flex justify-between items-center mb-5 border-b border-gray-100 pb-3">
-                      <h2 className="font-bold text-gray-800 flex items-center gap-2"><BookmarkPlus size={18} className="text-[#A87B7B]"/> 消費項目設定</h2>
-                    </div>
-                    <div className="max-h-60 overflow-y-auto pr-2 space-y-2 mb-4">
-                      {savedServices.map(svc => (
-                        <div key={svc} className="flex justify-between items-center bg-gray-50 border border-gray-100 p-2.5 rounded-lg">
-                          <span className="text-sm font-bold text-gray-700">{svc}</span>
-                          <button onClick={() => setConfirmModal({ title: '刪除服務項目', message: `確定要移除「${svc}」嗎？`, onConfirm: () => handleDeleteServiceSetting(svc) })} className="text-gray-400 hover:text-red-500"><X size={16}/></button>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
-                      <label className="block text-[10px] font-bold text-gray-500 mb-2">快速新增項目</label>
-                      <div className="flex gap-2">
-                        <input type="text" placeholder="輸入項目名稱" value={newServiceInput} onChange={e=>setNewServiceInput(e.target.value)} className="flex-[2] p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
-                        <button onClick={handleAddServiceSetting} className="bg-[#A87B7B] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#8f6666] transition shadow-sm">新增</button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                    <h2 className="font-bold text-gray-800 mb-5 border-b border-gray-100 pb-3 flex items-center gap-2"><Settings size={18} className="text-[#A87B7B]"/> 全域系統設定</h2>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-xs font-bold text-gray-500 mb-1">LINE 官方帳號 ID (前台跳轉用)</label>
-                        <input type="text" placeholder="@lashbeauty" value={lineOfficialId} onChange={e=>{setLineOfficialId(e.target.value); setHasUnsavedChanges(true);}} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 outline-none focus:bg-white focus:border-[#A87B7B]" />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-gray-500 mb-1">LINE 預約總表推播網址 (Google Apps Script)</label>
-                        <input type="text" placeholder="https://script.google.com/macros/s/..." value={lineNotifyUrl} onChange={e=>{setLineNotifyUrl(e.target.value); setHasUnsavedChanges(true);}} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 outline-none focus:bg-white focus:border-[#A87B7B]" />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-gray-500 mb-1">接收推播的 LINE User ID (多人請用半形逗號 , 分隔)</label>
-                        <input type="text" placeholder="例: U123..., U456..." value={lineUserIds} onChange={e=>{setLineUserIds(e.target.value); setHasUnsavedChanges(true);}} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 outline-none focus:bg-white focus:border-[#A87B7B]" />
-                      </div>
-                      <div className="p-3 bg-[#FDFBF7] border border-[#F0E6D8] rounded-xl">
-                        <label className="block text-xs font-bold text-[#A87B7B] mb-1">Google 雲端硬碟圖床網址 (Apps Script) ✨新功能</label>
-                        <input type="text" placeholder="https://script.google.com/macros/s/..." value={gdriveApiUrl} onChange={e=>{setGdriveApiUrl(e.target.value); setHasUnsavedChanges(true);}} className="w-full p-2.5 border border-[#E8D3C8] rounded-lg text-sm bg-white outline-none focus:border-[#A87B7B]" />
-                        <p className="text-[10px] text-gray-500 mt-1.5 leading-tight">填寫此欄位後，照片將優先上傳至您的 Google 雲端硬碟，保留最高畫質且不佔 Firebase 空間。</p>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-gray-500 mb-1">變更後台登入密碼</label>
-                        <div className="flex gap-2">
-                          <input type="password" placeholder="輸入新密碼" value={newPasswordInput} onChange={e=>setNewPasswordInput(e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 outline-none focus:bg-white focus:border-[#A87B7B]" />
-                          <button onClick={handleChangePassword} className="bg-gray-800 text-white px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-black transition">更新</button>
-                        </div>
                       </div>
                     </div>
                   </div>
