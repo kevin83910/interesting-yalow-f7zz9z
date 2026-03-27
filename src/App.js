@@ -70,13 +70,15 @@ const Icons = {
   Download: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>),
   Upload: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>),
   Database: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>),
-  FileText: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>)
+  FileText: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>),
+  Wallet: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>),
+  Tag: ({ size = 24, className = "" }) => (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42l-8.704-8.704z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg>)
 };
 
 const {
   MapPin, AlertCircle, CalendarCheck, ChevronRight, Settings, Save, Plus, Trash2, Eye, Lock, X, Key, Clock, MessageCircle, Cloud, Search, HelpCircle,
   Users, Receipt, Package, CalendarDays, MenuIcon, ChevronLeft, CreditCard, ShoppingBag, BookmarkPlus, CircleDollarSign, Edit,
-  ChevronLeftCircle, ChevronRightCircle, Wand2, CheckCircle, Filter, Bell, Download, Upload, Database, FileText
+  ChevronLeftCircle, ChevronRightCircle, Wand2, CheckCircle, Filter, Bell, Download, Upload, Database, FileText, Wallet, Tag
 } = Icons;
 
 // --- 表單常數設定 ---
@@ -279,13 +281,21 @@ export default function App() {
   const [showDeleteClientModal, setShowDeleteClientModal] = useState(false);
   const [newClientData, setNewClientData] = useState({ name: '', phone: '', birthday: '', tags: '', lashPreference: '' });
   const [editingClientId, setEditingClientId] = useState(null); 
-  const [showDataModal, setShowDataModal] = useState(false); // 新增：資料匯出匯入彈窗
+  const [showDataModal, setShowDataModal] = useState(false); 
   
+  // --- 儲值功能狀態 ---
+  const [showTopUpModal, setShowTopUpModal] = useState(false);
+  const [topUpData, setTopUpData] = useState({ date: getTodayString(), targetAmount: '', discount: '', method: '現金', notes: '' });
+
+  // --- 消費紀錄狀態 (包含折扣欄位) ---
   const [newVisit, setNewVisit] = useState({ 
     date: getTodayString(), 
     services: [], 
     size: '',
-    amount: '', 
+    originalAmount: '',
+    discountType: 'none',
+    discountValue: '',
+    discountNote: '',
     payments: [{ method: '現金', amount: '', accountLast5: '', customName: '' }], 
     deductPackageId: '', 
     notes: '', 
@@ -592,9 +602,71 @@ export default function App() {
     setNewClientData({ name: '', phone: '', birthday: '', tags: '', lashPreference: '' });
   };
 
-  // === 新增：全方位備份與匯入功能 ===
+  // === 進階折扣與儲值功能 ===
   
-  // 匯出 1. 客戶名單 (Excel/CSV)
+  const handleSaveTopUp = async () => {
+    if (!topUpData.targetAmount) return showToast("請輸入預計存入的面額！");
+    
+    const target = Number(topUpData.targetAmount) || 0;
+    const discount = Number(topUpData.discount) || 0;
+    const actualPaid = target - discount;
+
+    if (actualPaid < 0) return showToast("折扣贈送金額不可大於存入面額！");
+
+    const visitData = {
+        id: Date.now(),
+        date: topUpData.date,
+        isTopUp: true,
+        service: '【客戶儲值金】',
+        amount: actualPaid,  // 實收現金流
+        discount: discount, // 這個月讓利的折扣
+        payments: [{ method: topUpData.method, amount: actualPaid }],
+        paymentMethod: topUpData.method,
+        notes: topUpData.notes,
+        designerName: '系統/櫃台'
+    };
+
+    const updatedClients = clients.map(c => {
+        if (c.id === selectedClient.id) {
+            const newVisits = [visitData, ...c.visits].sort((a,b) => new Date(b.date) - new Date(a.date));
+            return { ...c, balance: c.balance + target, visits: newVisits };
+        }
+        return c;
+    });
+
+    showToast("儲值處理中...");
+    const success = await syncToCloud({ clients: updatedClients });
+    if (success) {
+        setClients(updatedClients);
+        setSelectedClient(updatedClients.find(c => c.id === selectedClient.id));
+        setShowTopUpModal(false);
+        setTopUpData({ date: getTodayString(), targetAmount: '', discount: '', method: paymentMethods.includes('現金') ? '現金' : paymentMethods[0], notes: '' });
+        showToast(`儲值成功！已為 ${selectedClient.name} 存入 $${target} 餘額 (實收 $${actualPaid})。`);
+    }
+  };
+
+  // 計算即時的結帳總額 (用於畫面顯示與付款防呆)
+  const getCalculatedVisitAmount = () => {
+    let baseAmt = Number(newVisit.originalAmount) || 0;
+    let discVal = 0;
+    if (newVisit.discountType === 'amount') {
+      discVal = Number(newVisit.discountValue) || 0;
+    } else if (newVisit.discountType === 'percent') {
+      let pct = Number(newVisit.discountValue) || 100;
+      if (pct >= 10 && pct <= 99) {
+        discVal = baseAmt - Math.round(baseAmt * (pct / 100));
+      } else if (pct > 0 && pct < 10) {
+        discVal = baseAmt - Math.round(baseAmt * (pct / 10));
+      }
+    }
+    return {
+      finalAmt: Math.max(0, baseAmt - discVal),
+      discountAmt: discVal
+    };
+  };
+
+  // === 全方位備份與匯入功能 ===
+  
   const handleExportClientsCSV = () => {
     const headers = ["姓名", "電話", "生日", "標籤", "睫毛密碼", "儲值餘額"];
     const rows = clients.map(c => [
@@ -611,7 +683,6 @@ export default function App() {
     document.body.removeChild(link);
   };
 
-  // 匯出 2. 預約排班表 (Excel/CSV)
   const handleExportSchedulesCSV = () => {
     const headers = ["日期", "星期", "時間", "設計師", "客戶姓名", "客戶電話", "預約項目"];
     const rows = [];
@@ -633,7 +704,6 @@ export default function App() {
         });
       });
     });
-    // 依日期排序
     rows.sort((a, b) => a[0].localeCompare(b[0]) || a[2].localeCompare(b[2]));
     const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(r => r.map(item => `"${item}"`).join(","))].join("\n");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -646,9 +716,8 @@ export default function App() {
     document.body.removeChild(link);
   };
 
-  // 匯出 3. 交易紀錄 (Excel/CSV)
   const handleExportTransactionsCSV = () => {
-    const headers = ["日期", "客戶姓名", "設計師", "消費項目", "規格", "總金額", "付款方式", "備註"];
+    const headers = ["日期", "客戶姓名", "紀錄類型", "設計師", "消費項目", "規格", "原價/面額", "折扣與贈送", "結帳/實收金額", "付款方式", "備註與折扣原因"];
     const rows = [];
     clients.forEach(c => {
       (c.visits || []).forEach(v => {
@@ -656,19 +725,29 @@ export default function App() {
         if (v.payments && v.payments.length > 0) {
           paymentMethodStr = v.payments.map(p => `${p.method}($${p.amount})`).join(' + ');
         }
+        
+        let original = v.originalAmount || v.amount || 0;
+        let disc = v.discount || v.bonus || 0;
+        if (v.isTopUp) original = (Number(v.amount) || 0) + (Number(v.discount) || Number(v.bonus) || 0);
+
+        let notesFull = v.notes || '';
+        if (v.discountNote) notesFull += ` (折扣原因: ${v.discountNote})`;
+
         rows.push([
           v.date,
           c.name,
-          v.designerName || '',
+          v.isTopUp ? '【客戶儲值】' : '【美睫服務】',
+          v.isTopUp ? '--' : (v.designerName || ''),
           v.service || '',
           v.size || '',
-          v.amount || 0,
+          original,
+          disc,
+          v.amount || 0, // 實收現金/結帳總額
           paymentMethodStr,
-          (v.notes || '').replace(/\n/g, ' ') // 避免換行破壞 CSV 格式
+          notesFull.replace(/\n/g, ' ') 
         ]);
       });
     });
-    // 依日期排序 (新到舊)
     rows.sort((a, b) => b[0].localeCompare(a[0]));
     const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(r => r.map(item => `"${item}"`).join(","))].join("\n");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -718,7 +797,7 @@ export default function App() {
          const phone = cols[phoneIdx].trim().replace(/"/g, '');
          if(!name || !phone) continue;
          
-         if(clients.some(c => c.phone === phone) || newClients.some(c => c.phone === phone)) continue; // 跳過重複電話
+         if(clients.some(c => c.phone === phone) || newClients.some(c => c.phone === phone)) continue;
 
          const bdayIdx = headers.indexOf("生日");
          const tagsIdx = headers.indexOf("標籤");
@@ -837,26 +916,32 @@ export default function App() {
     let updatedBalance = selectedClient.balance;
     let updatedPackages = [...selectedClient.packages];
 
-    // 自動退還被扣除的儲值金或包堂
-    if (visitToDelete.payments && visitToDelete.payments.length > 0) {
-      visitToDelete.payments.forEach(p => {
-        if (p.method === '儲值金扣款') {
-          updatedBalance += (Number(p.amount) || 0);
+    if (visitToDelete.isTopUp) {
+      // 刪除儲值紀錄，扣除當時增加的餘額
+      const targetAdded = (Number(visitToDelete.amount) || 0) + (Number(visitToDelete.discount) || Number(visitToDelete.bonus) || 0);
+      updatedBalance -= targetAdded;
+    } else {
+      // 刪除消費，自動退還被扣除的儲值金或包堂
+      if (visitToDelete.payments && visitToDelete.payments.length > 0) {
+        visitToDelete.payments.forEach(p => {
+          if (p.method === '儲值金扣款') {
+            updatedBalance += (Number(p.amount) || 0);
+          }
+          if (p.method === '扣除包堂' && visitToDelete.deductPackageId) {
+            updatedPackages = updatedPackages.map(pkg => 
+              pkg.id === visitToDelete.deductPackageId ? { ...pkg, remaining: pkg.remaining + 1 } : pkg
+            );
+          }
+        });
+      } else {
+        if (visitToDelete.paymentMethod === '儲值金扣款') {
+          updatedBalance += (Number(visitToDelete.amount) || 0);
         }
-        if (p.method === '扣除包堂' && visitToDelete.deductPackageId) {
+        if (visitToDelete.paymentMethod === '扣除包堂' && visitToDelete.deductPackageId) {
           updatedPackages = updatedPackages.map(pkg => 
             pkg.id === visitToDelete.deductPackageId ? { ...pkg, remaining: pkg.remaining + 1 } : pkg
           );
         }
-      });
-    } else {
-      if (visitToDelete.paymentMethod === '儲值金扣款') {
-        updatedBalance += (Number(visitToDelete.amount) || 0);
-      }
-      if (visitToDelete.paymentMethod === '扣除包堂' && visitToDelete.deductPackageId) {
-        updatedPackages = updatedPackages.map(pkg => 
-          pkg.id === visitToDelete.deductPackageId ? { ...pkg, remaining: pkg.remaining + 1 } : pkg
-        );
       }
     }
 
@@ -879,9 +964,9 @@ export default function App() {
       if (editingVisitId === visitId) {
         setIsAddingVisit(false);
         setEditingVisitId(null);
-        setNewVisit({ date: getTodayString(), services: [], size: '', amount: '', payments: [{ method: '現金', amount: '', accountLast5: '', customName: '' }], deductPackageId: '', notes: '', photoUrl: '', designerId: activeDesignerId || '' });
+        setNewVisit({ date: getTodayString(), services: [], size: '', originalAmount: '', discountType: 'none', discountValue: '', discountNote: '', payments: [{ method: '現金', amount: '', accountLast5: '', customName: '' }], deductPackageId: '', notes: '', photoUrl: '', designerId: activeDesignerId || '' });
       }
-      showToast("已成功刪除消費紀錄，相關餘額已退還！");
+      showToast("已成功刪除紀錄！餘額已同步更新。");
     }
   };
 
@@ -990,7 +1075,10 @@ export default function App() {
       date: visit.date || getTodayString(),
       services: visit.service ? visit.service.split(', ') : [],
       size: visit.size || '',
-      amount: visit.amount || '',
+      originalAmount: visit.originalAmount || visit.amount || '',
+      discountType: visit.discountType || 'none',
+      discountValue: visit.discountValue || '',
+      discountNote: visit.discountNote || '',
       payments: paymentsToSet,
       deductPackageId: visit.deductPackageId || '',
       notes: visit.notes || '',
@@ -1000,15 +1088,19 @@ export default function App() {
   };
 
   const handleAddVisit = async () => {
-    if (!newVisit.date || newVisit.services.length === 0 || !newVisit.amount || !newVisit.designerId) {
-      return showToast("請完整填寫日期、設計師、項目與總金額！");
+    const { finalAmt, discountAmt } = getCalculatedVisitAmount();
+    
+    if (!newVisit.date || newVisit.services.length === 0 || !newVisit.designerId || !newVisit.originalAmount) {
+      return showToast("請完整填寫日期、設計師、項目與原價！");
     }
     
-    const serviceAmt = Number(newVisit.amount) || 0;
-    
+    if (newVisit.discountType !== 'none' && !newVisit.discountNote) {
+      return showToast("使用折扣優惠時，請務必填寫「折扣原因」！");
+    }
+
     const totalPaymentsAmt = newVisit.payments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
-    if (totalPaymentsAmt !== serviceAmt) {
-        return showToast(`付款分配總額 ($${totalPaymentsAmt}) 必須等於您設定的總金額 ($${serviceAmt})！`);
+    if (totalPaymentsAmt !== finalAmt) {
+        return showToast(`付款分配總額 ($${totalPaymentsAmt}) 必須等於結帳總額 ($${finalAmt})！`);
     }
 
     let tempBalance = selectedClient.balance;
@@ -1039,7 +1131,6 @@ export default function App() {
 
     const serviceStr = newVisit.services.join(', ');
     const selectedDesignerName = designers.find(d => d.id === newVisit.designerId)?.name || '';
-    
     const finalPaymentMethodString = finalPayments.map(p => p.method).join(' + ');
 
     const visitData = { 
@@ -1049,7 +1140,12 @@ export default function App() {
       designerName: selectedDesignerName,
       service: serviceStr, 
       size: newVisit.size || '', 
-      amount: serviceAmt, 
+      originalAmount: Number(newVisit.originalAmount),
+      discountType: newVisit.discountType,
+      discountValue: newVisit.discountValue,
+      discountNote: newVisit.discountNote,
+      discount: discountAmt,
+      amount: finalAmt, // 最終結帳實收
       payments: finalPayments, 
       paymentMethod: finalPaymentMethodString, 
       accountLast5: finalPayments.find(p => p.method === '轉帳')?.accountLast5 || '', 
@@ -1105,7 +1201,7 @@ export default function App() {
       setPaymentMethods(updatedPaymentMethods);
       setIsAddingVisit(false);
       setEditingVisitId(null);
-      setNewVisit({ date: getTodayString(), services: [], size: '', amount: '', payments: [{ method: '現金', amount: '', accountLast5: '', customName: '' }], deductPackageId: '', notes: '', photoUrl: '', designerId: activeDesignerId || '' });
+      setNewVisit({ date: getTodayString(), services: [], size: '', originalAmount: '', discountType: 'none', discountValue: '', discountNote: '', payments: [{ method: '現金', amount: '', accountLast5: '', customName: '' }], deductPackageId: '', notes: '', photoUrl: '', designerId: activeDesignerId || '' });
       showToast(editingVisitId ? "消費紀錄已成功更新並儲存！" : "消費紀錄已成功儲存！");
     }
   };
@@ -1465,21 +1561,44 @@ export default function App() {
 
     allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
     
-    const totalRevenue = allTransactions.reduce((sum, t) => {
-        let rev = 0;
+    // === 財務指標分流計算 ===
+    let actualRevenue = 0; // 實際總收入 (含儲值與做客人的現金流)
+    let topUpRevenue = 0;  // 客戶買儲值金的收入
+    let serviceRevenue = 0; // 純做客人的收入
+    let consumedValue = 0; // 消耗的儲值金 (帳面數字，無現金流)
+    let totalDiscountValue = 0; // 折扣與贈送總額
+
+    allTransactions.forEach(t => {
+      // 累加折扣/贈送金額
+      totalDiscountValue += (Number(t.discount) || Number(t.bonus) || 0);
+
+      if (t.isTopUp) {
+        let t_rev = 0;
+        t.payments?.forEach(p => t_rev += (Number(p.amount) || 0));
+        topUpRevenue += t_rev;
+        actualRevenue += t_rev;
+      } else {
         if (t.payments && t.payments.length > 0) {
-            t.payments.forEach(p => {
-                if (p.method !== '儲值金扣款' && p.method !== '扣除包堂') {
-                    rev += (Number(p.amount) || 0);
-                }
-            });
+           t.payments.forEach(p => {
+             if (p.method === '儲值金扣款') {
+               consumedValue += (Number(p.amount) || 0);
+             } else if (p.method !== '扣除包堂') {
+               let amt = Number(p.amount) || 0;
+               serviceRevenue += amt;
+               actualRevenue += amt;
+             }
+           });
         } else {
-            if (t.paymentMethod !== '儲值金扣款' && t.paymentMethod !== '扣除包堂') {
-                rev += t.totalAmount;
-            }
+           // 相容舊版資料
+           if (t.paymentMethod === '儲值金扣款') {
+              consumedValue += t.totalAmount;
+           } else if (t.paymentMethod !== '扣除包堂') {
+              serviceRevenue += t.totalAmount;
+              actualRevenue += t.totalAmount;
+           }
         }
-        return sum + rev;
-    }, 0);
+      }
+    });
 
     const filteredClients = clients.filter(c => c.name.includes(searchQuery) || c.phone.includes(searchQuery));
     const weekDates = getWeekDates(currentWeekStart);
@@ -1944,7 +2063,13 @@ export default function App() {
                         <p className="text-sm text-gray-700">{selectedClient.lashPreference}</p>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
-                        <div className="p-3 bg-gray-50 border border-gray-100 rounded-xl"><p className="text-[10px] text-gray-500 font-bold">儲值餘額</p><p className="text-lg font-bold text-gray-800">${selectedClient.balance}</p></div>
+                        <div className="p-3 bg-gray-50 border border-gray-100 rounded-xl relative">
+                          <p className="text-[10px] text-gray-500 font-bold">儲值餘額</p>
+                          <p className="text-lg font-bold text-gray-800">${selectedClient.balance}</p>
+                          <button onClick={() => setShowTopUpModal(true)} className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#C59A5C] text-white text-[11px] px-2.5 py-1 rounded shadow-sm hover:bg-[#b08850] flex items-center gap-0.5">
+                            <Wallet size={12}/> 儲值
+                          </button>
+                        </div>
                         <div className="p-3 bg-gray-50 border border-gray-100 rounded-xl"><p className="text-[10px] text-gray-500 font-bold">剩餘包堂</p>{selectedClient.packages.length>0 ? selectedClient.packages.map(p=><p key={p.id} className="text-sm font-bold text-[#A87B7B]">{p.name}:{p.remaining}</p>) : <p className="text-sm font-bold text-gray-400">無</p>}</div>
                       </div>
                     </div>
@@ -1953,24 +2078,24 @@ export default function App() {
                 <div className="lg:col-span-2">
                   <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                     <div className="flex justify-between items-center mb-6">
-                      <h3 className="font-bold text-gray-800 flex items-center gap-2"><CalendarCheck size={18} className="text-[#A87B7B]" /> 服務紀錄</h3>
+                      <h3 className="font-bold text-gray-800 flex items-center gap-2"><CalendarCheck size={18} className="text-[#A87B7B]" /> 歷史紀錄</h3>
                       <button onClick={() => {
                         if (isAddingVisit) {
                           setIsAddingVisit(false);
                           setEditingVisitId(null);
-                          setNewVisit({ date: getTodayString(), services: [], size: '', amount: '', payments: [{ method: '現金', amount: '', accountLast5: '', customName: '' }], deductPackageId: '', notes: '', photoUrl: '', designerId: activeDesignerId || '' });
+                          setNewVisit({ date: getTodayString(), services: [], size: '', originalAmount: '', discountType: 'none', discountValue: '', discountNote: '', payments: [{ method: '現金', amount: '', accountLast5: '', customName: '' }], deductPackageId: '', notes: '', photoUrl: '', designerId: activeDesignerId || '' });
                         } else {
                           setIsAddingVisit(true);
                         }
-                      }} className="text-sm bg-gray-900 hover:bg-black text-white px-4 py-2 rounded-lg font-bold transition">
-                        {isAddingVisit ? '取消編輯/新增' : '+ 新增紀錄'}
+                      }} className="text-sm bg-gray-900 hover:bg-black text-white px-4 py-2 rounded-lg font-bold transition flex items-center gap-1.5">
+                        {isAddingVisit ? '取消' : <><Plus size={16}/>新增消費紀錄</>}
                       </button>
                     </div>
                     {isAddingVisit && (
                       <div className="mb-8 p-5 bg-[#FDFBF7] border border-[#F0E6D8] rounded-xl shadow-inner">
                         <h4 className="font-bold text-[#A87B7B] mb-4 flex items-center gap-2 border-b border-[#F0E6D8] pb-2">
                            {editingVisitId ? <Edit size={18} /> : <Plus size={18} />} 
-                           {editingVisitId ? '編輯消費紀錄' : '新增消費紀錄'}
+                           {editingVisitId ? '編輯消費紀錄' : '新增消費紀錄 (做睫毛/買商品)'}
                         </h4>
                         <div className="space-y-5">
                            
@@ -2012,31 +2137,62 @@ export default function App() {
                              </div>
                            </div>
 
-                           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-white p-4 rounded-lg border border-gray-100">
-                             <div>
-                               <label className="text-xs font-bold text-gray-500 block mb-1">本次服務總金額 *</label>
-                               <div className="relative">
-                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                                  <input type="text" inputMode="numeric" pattern="[0-9]*" placeholder="0" value={newVisit.amount} onChange={e => {
-                                      const val = e.target.value.replace(/\D/g, '');
-                                      const newPayments = [...newVisit.payments];
-                                      if (newPayments.length === 1) {
-                                          newPayments[0].amount = val;
-                                      }
-                                      setNewVisit({...newVisit, amount: val, payments: newPayments});
-                                  }} className="w-full pl-7 p-2.5 border border-gray-200 rounded-lg text-lg font-bold text-[#A87B7B] outline-none focus:border-[#A87B7B]" />
-                               </div>
-                               <p className="text-[10px] text-gray-400 mt-2">輸入總金額後，右側會自動帶入。若需拆分付款請再手動修改右側金額。</p>
-                             </div>
-                             
-                             <div>
-                                <div className="flex justify-between items-end mb-2">
-                                    <label className="text-xs font-bold text-gray-500 block">支付方式與分配金額 *</label>
-                                    <button onClick={() => setNewVisit({...newVisit, payments: [...(newVisit.payments || []), { method: '現金', amount: '', accountLast5: '', customName: '' }]})} className="text-[11px] text-[#A87B7B] font-bold hover:bg-[#FDFBF7] px-2 py-0.5 rounded border border-[#A87B7B]/30 hover:border-[#A87B7B] transition">+ 新增</button>
+                           {/* === 進階折扣設定區 === */}
+                           <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm space-y-4 relative overflow-hidden">
+                             <div className="absolute top-0 left-0 w-1 h-full bg-[#A87B7B]"></div>
+                             <h5 className="font-bold text-gray-700 text-sm flex items-center gap-1.5"><Tag size={16} className="text-[#A87B7B]"/> 金額與折扣設定</h5>
+                             <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                   <label className="text-xs font-bold text-gray-500 block mb-1">原價總額 *</label>
+                                   <div className="relative">
+                                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">$</span>
+                                      <input type="text" inputMode="numeric" value={newVisit.originalAmount} onChange={e=>setNewVisit({...newVisit, originalAmount: e.target.value.replace(/\D/g, '')})} placeholder="0" className="w-full pl-7 p-2.5 border border-gray-200 rounded-lg text-base font-bold text-gray-800 outline-none focus:border-[#A87B7B]" />
+                                   </div>
                                 </div>
+                                <div>
+                                   <label className="text-xs font-bold text-gray-500 block mb-1">給予折扣 / 優惠</label>
+                                   <select value={newVisit.discountType} onChange={e=>setNewVisit({...newVisit, discountType: e.target.value, discountValue: '', discountNote: ''})} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B] bg-gray-50">
+                                      <option value="none">無折扣</option>
+                                      <option value="amount">折抵現金 (扣金額)</option>
+                                      <option value="percent">打折優惠 (如 85 折)</option>
+                                   </select>
+                                </div>
+                             </div>
+
+                             {newVisit.discountType !== 'none' && (
+                                <div className="grid grid-cols-2 gap-4 bg-rose-50 p-3 rounded-lg border border-rose-100 animate-in fade-in zoom-in duration-200">
+                                   <div>
+                                      <label className="text-xs font-bold text-rose-600 block mb-1">
+                                         {newVisit.discountType === 'percent' ? '折扣折數 (如: 85 = 85折)' : '折抵金額'} *
+                                      </label>
+                                      <input type="text" inputMode="numeric" value={newVisit.discountValue} onChange={e=>setNewVisit({...newVisit, discountValue: e.target.value.replace(/\D/g, '')})} placeholder={newVisit.discountType === 'percent' ? '85' : '100'} className="w-full p-2 border border-rose-200 rounded text-sm outline-none focus:border-rose-400" />
+                                   </div>
+                                   <div>
+                                      <label className="text-xs font-bold text-rose-600 block mb-1">折扣原因 *</label>
+                                      <input type="text" value={newVisit.discountNote} onChange={e=>setNewVisit({...newVisit, discountNote: e.target.value})} placeholder="如: 壽星優惠、朋友同行" className="w-full p-2 border border-rose-200 rounded text-sm outline-none focus:border-rose-400" />
+                                   </div>
+                                   <div className="col-span-2 text-right text-xs font-bold text-rose-500">
+                                      ✨ 系統將自動折抵: ${getCalculatedVisitAmount().discountAmt}
+                                   </div>
+                                </div>
+                             )}
+
+                             <div className="bg-[#FDFBF7] p-3 rounded-lg border border-[#E8D3C8] flex justify-between items-center mt-2">
+                                <span className="font-bold text-[#A87B7B]">客人實際需付結帳總額：</span>
+                                <span className="text-2xl font-black text-[#A87B7B]">${getCalculatedVisitAmount().finalAmt}</span>
+                             </div>
+                           </div>
+
+                           {/* 付款方式分配 */}
+                           <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                                <div className="flex justify-between items-end mb-3">
+                                    <label className="text-sm font-bold text-gray-700 block">請輸入客人的付款方式 *</label>
+                                    <button onClick={() => setNewVisit({...newVisit, payments: [...(newVisit.payments || []), { method: '現金', amount: '', accountLast5: '', customName: '' }]})} className="text-[11px] text-[#A87B7B] font-bold hover:bg-[#FDFBF7] px-2 py-1 rounded border border-[#A87B7B]/30 hover:border-[#A87B7B] transition bg-white">+ 拆分付款</button>
+                                </div>
+                                <p className="text-[10px] text-gray-500 mb-3 leading-tight">為防呆確保帳務正確，下方分配的金額總和，必須剛好等於上面的【結帳總額】喔！</p>
                                 <div className="space-y-2">
                                    {(newVisit.payments || []).map((payment, idx) => (
-                                       <div key={idx} className="flex flex-wrap gap-2 p-2.5 bg-gray-50 rounded-lg border border-gray-100 relative group">
+                                       <div key={idx} className="flex flex-wrap gap-2 p-2.5 bg-white rounded-lg border border-gray-200 relative group">
                                            {newVisit.payments.length > 1 && (
                                                <button onClick={() => {
                                                    const newP = [...newVisit.payments];
@@ -2049,7 +2205,7 @@ export default function App() {
                                                  const newP = [...newVisit.payments];
                                                  newP[idx].method = e.target.value;
                                                  setNewVisit({...newVisit, payments: newP});
-                                             }} className="flex-[3] p-2 border border-gray-200 rounded-md text-xs outline-none focus:border-[#A87B7B] bg-white">
+                                             }} className="flex-[3] p-2 border border-gray-200 rounded-md text-xs outline-none focus:border-[#A87B7B] bg-gray-50">
                                                  {paymentMethods.map(m=><option key={m} value={m}>{m}</option>)}
                                                  <option value="自訂">+ 新增自訂...</option>
                                              </select>
@@ -2065,7 +2221,7 @@ export default function App() {
                                            </div>
                                            
                                            {payment.method === '轉帳' && (
-                                               <input type="text" inputMode="numeric" pattern="[0-9]*" maxLength="5" placeholder="輸入帳號後五碼" value={payment.accountLast5} onChange={e => {
+                                               <input type="text" inputMode="numeric" pattern="[0-9]*" maxLength="5" placeholder="帳號末五碼" value={payment.accountLast5} onChange={e => {
                                                    const val = e.target.value.replace(/\D/g, '');
                                                    const newP = [...newVisit.payments];
                                                    newP[idx].accountLast5 = val;
@@ -2082,7 +2238,6 @@ export default function App() {
                                        </div>
                                    ))}
                                 </div>
-                             </div>
                            </div>
 
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2102,7 +2257,7 @@ export default function App() {
                                 )}
                              </div>
                              <div>
-                               <label className="text-xs font-bold text-gray-500 block mb-1">備註</label>
+                               <label className="text-xs font-bold text-gray-500 block mb-1">一般備註</label>
                                <textarea value={newVisit.notes} onChange={e=>setNewVisit({...newVisit,notes:e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm h-16 outline-none focus:border-[#A87B7B]"></textarea>
                              </div>
                            </div>
@@ -2123,38 +2278,34 @@ export default function App() {
                     
                     <div className="space-y-5">
                       {selectedClient.visits.map((visit) => (
-                        <div key={visit.id} className="relative pl-6 border-l-2 border-gray-100 pb-2 group">
-                          <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-white border-4 border-[#E8D3C8]"></div>
+                        <div key={visit.id} className={`relative pl-6 border-l-2 ${visit.isTopUp ? 'border-[#C59A5C]' : 'border-gray-100'} pb-2 group`}>
+                          <div className={`absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-white border-4 ${visit.isTopUp ? 'border-[#C59A5C]' : 'border-[#E8D3C8]'}`}></div>
                           <div className="flex flex-col sm:flex-row gap-4 justify-between items-start mb-2">
                             <div>
                               <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-bold text-[#A87B7B] bg-[#FDFBF7] px-2 py-0.5 rounded">{visit.date}</span>
-                                {visit.designerName && (
-                                  <span className="text-[10px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded border border-gray-200">
-                                    由 {visit.designerName} 服務
-                                  </span>
+                                <span className={`text-[10px] font-bold ${visit.isTopUp ? 'text-[#C59A5C] bg-[#FDFBF7]' : 'text-[#A87B7B] bg-[#F5E3E3]'} px-2 py-0.5 rounded`}>{visit.date}</span>
+                                {visit.designerName && !visit.isTopUp && (
+                                  <span className="text-[10px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded border border-gray-200">由 {visit.designerName} 服務</span>
                                 )}
                               </div>
-                              <h4 className="font-bold text-gray-800 mt-2 text-lg leading-tight">{visit.service}</h4>
-                              {visit.size && <p className="text-[11px] text-gray-500 mt-1 font-medium">尺寸規格：{visit.size}</p>}
+                              <h4 className={`font-bold mt-2 text-lg leading-tight ${visit.isTopUp ? 'text-[#C59A5C]' : 'text-gray-800'}`}>{visit.service}</h4>
+                              {visit.size && !visit.isTopUp && <p className="text-[11px] text-gray-500 mt-1 font-medium">尺寸規格：{visit.size}</p>}
+                              
+                              {/* 顯示折扣資訊 */}
+                              {visit.discount > 0 && !visit.isTopUp && (
+                                <p className="text-[11px] text-rose-500 mt-1 font-bold">
+                                  使用優惠：{visit.discountNote} (-${visit.discount})
+                                </p>
+                              )}
+                              {visit.isTopUp && visit.discount > 0 && (
+                                <p className="text-[11px] text-[#A87B7B] mt-1 font-bold">加碼折扣/贈送：${visit.discount}</p>
+                              )}
                             </div>
                             <div className="flex flex-col items-end gap-1 w-full sm:w-auto">
                               <div className="flex items-center gap-2">
-                                <button 
-                                  onClick={() => handleEditVisitClick(visit)} 
-                                  className="text-gray-300 hover:text-[#A87B7B] p-1 transition-colors" 
-                                  title="編輯紀錄"
-                                >
-                                  <Edit size={16}/>
-                                </button>
-                                <button 
-                                  onClick={() => setConfirmModal({ title: '刪除紀錄', message: '確定要刪除這筆消費紀錄嗎？相關的儲值金與包堂扣除將會自動退還。', onConfirm: () => handleDeleteVisit(visit.id) })}
-                                  className="text-gray-300 hover:text-red-500 p-1 transition-colors" 
-                                  title="刪除紀錄"
-                                >
-                                  <Trash2 size={16}/>
-                                </button>
-                                <span className="block text-lg font-bold text-gray-800 ml-1">${(Number(visit.amount)||0).toLocaleString()}</span>
+                                <button onClick={() => handleEditVisitClick(visit)} className="text-gray-300 hover:text-[#A87B7B] p-1 transition-colors" title="編輯紀錄"><Edit size={16}/></button>
+                                <button onClick={() => setConfirmModal({ title: '刪除紀錄', message: visit.isTopUp ? '確定要刪除這筆「儲值紀錄」嗎？客人的儲值餘額將會自動扣除該金額喔！' : '確定要刪除這筆消費紀錄嗎？相關的儲值金與包堂扣除將會自動退還。', onConfirm: () => handleDeleteVisit(visit.id) })} className="text-gray-300 hover:text-red-500 p-1 transition-colors" title="刪除紀錄"><Trash2 size={16}/></button>
+                                <span className={`block text-lg font-bold ml-1 ${visit.isTopUp ? 'text-[#C59A5C]' : 'text-gray-800'}`}>{visit.isTopUp ? '+' : ''}${(Number(visit.amount)||0).toLocaleString()}</span>
                               </div>
                               <div className="flex flex-wrap justify-end gap-1 mt-1">
                                 {visit.payments && visit.payments.length > 0 ? (
@@ -2173,7 +2324,7 @@ export default function App() {
                           </div>
                           {visit.notes && <p className="text-sm text-gray-600 mt-2 bg-gray-50 p-3 rounded-lg border border-gray-100">{visit.notes}</p>}
                           
-                          {visit.photos && visit.photos.length > 0 && (
+                          {visit.photos && visit.photos.length > 0 && !visit.isTopUp && (
                             <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
                               {visit.photos.map((photo, i) => (
                                 <img 
@@ -2193,6 +2344,58 @@ export default function App() {
                   </div>
                 </div>
               </div>
+
+              {/* 儲值 Modal */}
+              {showTopUpModal && (
+                <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+                  <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative animate-in zoom-in duration-200">
+                    <button onClick={() => setShowTopUpModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><X size={20}/></button>
+                    <h3 className="text-xl font-bold text-gray-800 mb-1 flex items-center gap-2"><Wallet size={24} className="text-[#C59A5C]" /> 儲值金加值</h3>
+                    <p className="text-xs text-gray-500 mb-5">為 {selectedClient.name} 存入新的可用餘額</p>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-1">預計存入的儲值金 (面額) *</label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                          <input type="text" inputMode="numeric" value={topUpData.targetAmount} onChange={e=>setTopUpData({...topUpData, targetAmount: e.target.value.replace(/\D/g, '')})} placeholder="0" className="w-full pl-7 p-2.5 border border-gray-200 rounded-lg text-lg font-bold text-gray-800 outline-none focus:border-[#C59A5C]" />
+                        </div>
+                        <div className="flex gap-2 mt-2">
+                           <button onClick={()=>setTopUpData({...topUpData, targetAmount: '5000', discount: '500', notes: '滿5000折500'})} className="text-[11px] bg-[#FDFBF7] border border-[#D4B8A8] text-[#A87B7B] px-2 py-1 rounded hover:bg-[#F5E3E3] transition">滿5000折500</button>
+                           <button onClick={()=>setTopUpData({...topUpData, targetAmount: '10000', discount: '1000', notes: '滿10000折1000'})} className="text-[11px] bg-[#FDFBF7] border border-[#D4B8A8] text-[#A87B7B] px-2 py-1 rounded hover:bg-[#F5E3E3] transition">滿10000折1000</button>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-1">給予固定折扣 / 贈送額 (無則免填)</label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                          <input type="text" inputMode="numeric" value={topUpData.discount} onChange={e=>setTopUpData({...topUpData, discount: e.target.value.replace(/\D/g, '')})} placeholder="0" className="w-full pl-7 p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C59A5C]" />
+                        </div>
+                        <p className="text-[10px] text-gray-400 mt-1">例如：買5000付4500，上面填5000，這裡填500。這500元將計入報表「總折扣」中。</p>
+                      </div>
+                      
+                      <div className="bg-[#FDFBF7] p-3 rounded-lg border border-[#E8D3C8] flex justify-between items-center">
+                          <span className="font-bold text-[#A87B7B]">客人實際需付現金：</span>
+                          <span className="text-2xl font-black text-[#A87B7B]">${Math.max(0, (Number(topUpData.targetAmount)||0) - (Number(topUpData.discount)||0))}</span>
+                      </div>
+
+                      <div>
+                         <label className="block text-xs font-bold text-gray-500 mb-1">支付方式</label>
+                         <select value={topUpData.method} onChange={e=>setTopUpData({...topUpData, method: e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C59A5C] bg-white">
+                           {paymentMethods.filter(m => m !== '儲值金扣款' && m !== '扣除包堂').map(m=><option key={m} value={m}>{m}</option>)}
+                         </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-1">備註/折扣原因</label>
+                        <input type="text" value={topUpData.notes} onChange={e=>setTopUpData({...topUpData, notes: e.target.value})} placeholder="例如：滿5000折500優惠" className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C59A5C]" />
+                      </div>
+                      <button onClick={handleSaveTopUp} className="w-full bg-[#C59A5C] text-white py-3 rounded-xl text-sm font-bold shadow-sm hover:bg-[#b08850] transition mt-2">
+                        確認加值存入 ${Number(topUpData.targetAmount) || 0}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {showDeleteClientModal && (
                 <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
@@ -2247,7 +2450,6 @@ export default function App() {
             </div>
           )}
 
-          {/* 新增：資料匯出匯入 Modal */}
           {showDataModal && (
             <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
               <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-2xl relative animate-in zoom-in duration-200">
@@ -2304,7 +2506,7 @@ export default function App() {
           )}
 
           {activeTab === 'transactions' && (
-            <div className="p-6 max-w-5xl mx-auto">
+            <div className="p-6 max-w-6xl mx-auto">
                <div className="mb-6"><h1 className="text-2xl font-bold text-gray-800">交易紀錄與業績統計</h1></div>
                
                <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 mb-6 flex flex-col md:flex-row gap-4 md:items-end">
@@ -2358,10 +2560,36 @@ export default function App() {
                  </div>
                </div>
 
-               <div className="grid grid-cols-2 gap-4 mb-6">
-                 <div className="bg-white p-5 rounded-2xl border shadow-sm"><p className="text-sm text-gray-500">期間總營業額</p><h2 className="text-3xl font-bold text-[#A87B7B]">${totalRevenue.toLocaleString()}</h2></div>
-                 <div className="bg-white p-5 rounded-2xl border shadow-sm"><p className="text-sm text-gray-500">交易筆數</p><h2 className="text-3xl font-bold text-gray-800">{allTransactions.length}</h2></div>
+               {/* 進階：帳務拆分五大指標 */}
+               <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+                 <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-4 rounded-xl border shadow-lg relative overflow-hidden">
+                    <div className="absolute -right-3 -bottom-3 text-white opacity-10"><Wallet size={70}/></div>
+                    <p className="text-[11px] font-bold text-gray-400 mb-1">💰 實際總收入 (現金流)</p>
+                    <h2 className="text-2xl font-bold text-white">${actualRevenue.toLocaleString()}</h2>
+                    <p className="text-[10px] text-gray-400 mt-1">進收銀機的錢(含服務+儲值)</p>
+                 </div>
+                 <div className="bg-white p-4 rounded-xl border shadow-sm relative overflow-hidden">
+                    <p className="text-[11px] font-bold text-gray-500 mb-1">✂️ 其中：服務實收</p>
+                    <h2 className="text-2xl font-bold text-green-600">${serviceRevenue.toLocaleString()}</h2>
+                    <p className="text-[10px] text-gray-400 mt-1">不含用舊儲值金抵扣的款項</p>
+                 </div>
+                 <div className="bg-[#FDFBF7] border-[#F0E6D8] p-4 rounded-xl border shadow-sm relative overflow-hidden">
+                    <p className="text-[11px] font-bold text-[#A87B7B] mb-1">💎 其中：客戶買儲值</p>
+                    <h2 className="text-2xl font-bold text-[#C59A5C]">${topUpRevenue.toLocaleString()}</h2>
+                    <p className="text-[10px] text-gray-500 mt-1">客人買儲值金實際付的現金</p>
+                 </div>
+                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm relative overflow-hidden">
+                    <p className="text-[11px] font-bold text-gray-500 mb-1">📉 消耗舊儲值金</p>
+                    <h2 className="text-2xl font-bold text-orange-500">${consumedValue.toLocaleString()}</h2>
+                    <p className="text-[10px] text-gray-400 mt-1">帳面數字(無現金流)，完成負債</p>
+                 </div>
+                 <div className="bg-rose-50 p-4 rounded-xl border border-rose-100 shadow-sm relative overflow-hidden">
+                    <p className="text-[11px] font-bold text-rose-600 mb-1">🎁 總折扣與贈送額</p>
+                    <h2 className="text-2xl font-bold text-rose-500">${totalDiscountValue.toLocaleString()}</h2>
+                    <p className="text-[10px] text-rose-400 mt-1">包含服務打折與儲值贈送金</p>
+                 </div>
                </div>
+
                <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
                  <table className="w-full text-left text-sm whitespace-nowrap">
                    <thead className="bg-gray-50 text-gray-500 border-b border-gray-100">
@@ -2371,32 +2599,63 @@ export default function App() {
                        <th className="p-4">客戶</th>
                        <th className="p-4">項目</th>
                        <th className="p-4">付款明細</th>
-                       <th className="p-4 text-right">總金額</th>
+                       <th className="p-4 text-right">入帳(現金流)</th>
                      </tr>
                    </thead>
                    <tbody>
-                     {allTransactions.map((tx, index) => (
-                       <tr key={`${tx.id}-${index}`} className="border-b border-gray-50 hover:bg-gray-50">
-                         <td className="p-4 text-gray-600">{tx.date}</td>
-                         <td className="p-4 text-gray-600">{tx.designerName || '未指定'}</td>
-                         <td className="p-4 font-bold text-gray-800">{tx.clientName}</td>
-                         <td className="p-4 max-w-[150px] md:max-w-[200px] truncate" title={tx.service}>{tx.service}</td>
-                         <td className="p-4">
-                           {tx.payments && tx.payments.length > 0 ? (
-                             <div className="flex flex-col gap-1">
-                               {tx.payments.map((p, i) => (
-                                 <span key={i} className={`px-2 py-0.5 rounded text-[11px] w-fit ${p.method === '儲值金扣款' || p.method === '扣除包堂' ? 'bg-[#FDFBF7] text-[#A87B7B] border border-[#F0E6D8]' : 'bg-gray-100 text-gray-500 border border-gray-200'}`}>
-                                   {p.method} ${p.amount}
-                                 </span>
-                               ))}
-                             </div>
-                           ) : (
-                             <span className={`px-2 py-1 rounded text-[11px] border ${tx.paymentMethod === '儲值金扣款' || tx.paymentMethod === '扣除包堂' ? 'bg-[#FDFBF7] text-[#A87B7B] border-[#F0E6D8]' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>{tx.paymentMethod}</span>
-                           )}
-                         </td>
-                         <td className="p-4 text-right font-bold text-[#A87B7B]">${tx.totalAmount.toLocaleString()}</td>
-                       </tr>
-                     ))}
+                     {allTransactions.map((tx, index) => {
+                       // 計算這筆訂單的「實際現金流」
+                       let thisActualCash = 0;
+                       if (tx.isTopUp) {
+                         tx.payments?.forEach(p => thisActualCash += (Number(p.amount)||0));
+                       } else {
+                         if (tx.payments && tx.payments.length > 0) {
+                           tx.payments.forEach(p => {
+                             if (p.method !== '儲值金扣款' && p.method !== '扣除包堂') thisActualCash += (Number(p.amount)||0);
+                           });
+                         } else {
+                           if (tx.paymentMethod !== '儲值金扣款' && tx.paymentMethod !== '扣除包堂') thisActualCash = tx.totalAmount;
+                         }
+                       }
+
+                       return (
+                         <tr key={`${tx.id}-${index}`} className={`border-b hover:bg-gray-50 ${tx.isTopUp ? 'bg-[#FDFBF7]/40 border-[#F5E3BD]/30' : 'border-gray-50'}`}>
+                           <td className="p-4 text-gray-600">
+                             {tx.date}
+                             {tx.isTopUp && <span className="ml-2 bg-[#C59A5C] text-white text-[10px] px-1.5 py-0.5 rounded font-bold">儲值</span>}
+                           </td>
+                           <td className="p-4 text-gray-600">{tx.isTopUp ? '--' : (tx.designerName || '未指定')}</td>
+                           <td className="p-4 font-bold text-gray-800">{tx.clientName}</td>
+                           <td className="p-4">
+                             <div className={`max-w-[150px] md:max-w-[200px] truncate ${tx.isTopUp ? 'text-[#C59A5C] font-bold' : ''}`} title={tx.service}>{tx.service}</div>
+                             {tx.discount > 0 && (
+                                <div className="text-[11px] text-rose-500 font-bold mt-0.5">
+                                  {tx.discountNote ? `${tx.discountNote} (-$${tx.discount})` : `已折扣 -$${tx.discount}`}
+                                </div>
+                             )}
+                             {tx.bonus > 0 && (
+                                <div className="text-[11px] text-[#A87B7B] font-bold mt-0.5">加碼贈送 ${tx.bonus}</div>
+                             )}
+                           </td>
+                           <td className="p-4">
+                             {tx.payments && tx.payments.length > 0 ? (
+                               <div className="flex flex-col gap-1">
+                                 {tx.payments.map((p, i) => (
+                                   <span key={i} className={`px-2 py-0.5 rounded text-[11px] w-fit ${p.method === '儲值金扣款' || p.method === '扣除包堂' ? 'bg-[#FDFBF7] text-[#A87B7B] border border-[#F0E6D8]' : 'bg-gray-100 text-gray-500 border border-gray-200'}`}>
+                                     {p.method} ${p.amount}
+                                   </span>
+                                 ))}
+                               </div>
+                             ) : (
+                               <span className={`px-2 py-1 rounded text-[11px] border ${tx.paymentMethod === '儲值金扣款' || tx.paymentMethod === '扣除包堂' ? 'bg-[#FDFBF7] text-[#A87B7B] border-[#F0E6D8]' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>{tx.paymentMethod}</span>
+                             )}
+                           </td>
+                           <td className={`p-4 text-right font-bold ${thisActualCash > 0 ? 'text-green-600' : 'text-gray-400'}`}>
+                             {thisActualCash > 0 ? `+${thisActualCash.toLocaleString()}` : '0'}
+                           </td>
+                         </tr>
+                       );
+                     })}
                      {allTransactions.length === 0 && (
                        <tr><td colSpan="6" className="text-center py-10 text-gray-400">該條件下尚無交易紀錄</td></tr>
                      )}
@@ -2760,7 +3019,10 @@ export default function App() {
         </div>
       </div>
       <div className="fixed bottom-0 w-full max-w-md bg-white border-t border-gray-100 p-5 pb-8 shadow-[0_-15px_30px_rgba(0,0,0,0.06)] z-30">
-        <button className="w-full bg-[#A87B7B] text-white py-4 rounded-xl text-lg font-bold flex items-center justify-center gap-2 hover:bg-[#8f6666] shadow-xl" onClick={handleCopyBooking}>{selectedTime ? "確認時間並回傳給客服" : "請先點選您想要的時段"}<ChevronRight size={20} /></button>
+        <button className="w-full bg-[#A87B7B] text-white py-4 rounded-xl text-lg font-bold flex items-center justify-center gap-2 hover:bg-[#8f6666] shadow-xl" onClick={handleCopyBooking}>
+          {selectedTime ? "確認時間並回傳給客服" : "請先點選您想要的時段"}
+          <ChevronRight size={20} />
+        </button>
       </div>
     </div>
   );
