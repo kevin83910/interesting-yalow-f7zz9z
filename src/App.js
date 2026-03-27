@@ -276,6 +276,10 @@ export default function App() {
   const [editingClientId, setEditingClientId] = useState(null); 
   const [showDataModal, setShowDataModal] = useState(false); 
   
+  // --- 修正遺失的 State ---
+  const [newServiceInput, setNewServiceInput] = useState('');
+  const [newPaymentInput, setNewPaymentInput] = useState('');
+
   // --- 儲值功能狀態 ---
   const [showTopUpModal, setShowTopUpModal] = useState(false);
   const [editingTopUpId, setEditingTopUpId] = useState(null);
@@ -1270,6 +1274,289 @@ export default function App() {
             </div>
           )}
 
+          {/* === 交易紀錄 Tab === */}
+          {activeTab === 'transactions' && (
+            <div className="p-6 max-w-6xl mx-auto">
+               <div className="mb-6"><h1 className="text-2xl font-bold text-gray-800">交易紀錄與業績統計</h1></div>
+               
+               <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 mb-6 flex flex-col md:flex-row gap-4 md:items-end">
+                 <div className="flex items-center gap-2 mb-1 md:hidden">
+                    <Filter size={16} className="text-[#A87B7B]"/> 
+                    <span className="font-bold text-sm text-gray-700">篩選條件</span>
+                 </div>
+                 
+                 <div className="flex-1">
+                   <label className="block text-xs font-bold text-gray-500 mb-1">查詢區間</label>
+                   <select value={txFilterType} onChange={e => setTxFilterType(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]">
+                     <option value="month">單月查詢</option>
+                     <option value="day">單日查詢</option>
+                     <option value="custom">自訂區間</option>
+                     <option value="all">所有紀錄</option>
+                   </select>
+                 </div>
+                 
+                 {txFilterType === 'month' && (
+                   <div className="flex-1">
+                     <label className="block text-xs font-bold text-gray-500 mb-1">選擇月份</label>
+                     <input type="month" value={txFilterMonth} onChange={e=>setTxFilterMonth(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                   </div>
+                 )}
+                 {txFilterType === 'day' && (
+                   <div className="flex-1">
+                     <label className="block text-xs font-bold text-gray-500 mb-1">選擇日期</label>
+                     <input type="date" value={txFilterDate} onChange={e=>setTxFilterDate(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                   </div>
+                 )}
+                 {txFilterType === 'custom' && (
+                   <div className="flex-2 flex items-end gap-2">
+                     <div className="flex-1">
+                       <label className="block text-xs font-bold text-gray-500 mb-1">開始日期</label>
+                       <input type="date" value={txFilterStartDate} onChange={e=>setTxFilterStartDate(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                     </div>
+                     <span className="text-gray-400 mb-2">-</span>
+                     <div className="flex-1">
+                       <label className="block text-xs font-bold text-gray-500 mb-1">結束日期</label>
+                       <input type="date" value={txFilterEndDate} onChange={e=>setTxFilterEndDate(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                     </div>
+                   </div>
+                 )}
+
+                 <div className="flex-1">
+                   <label className="block text-xs font-bold text-gray-500 mb-1">指定設計師</label>
+                   <select value={txFilterDesignerId} onChange={e => setTxFilterDesignerId(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]">
+                     <option value="all">全部設計師 (總店)</option>
+                     {designers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                   </select>
+                 </div>
+               </div>
+
+               {/* 進階：帳務拆分五大指標 */}
+               <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+                 <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-4 rounded-xl border shadow-lg relative overflow-hidden">
+                    <div className="absolute -right-3 -bottom-3 text-white opacity-10"><Wallet size={70}/></div>
+                    <p className="text-[11px] font-bold text-gray-400 mb-1">💰 實際總收入 (現金流)</p>
+                    <h2 className="text-2xl font-bold text-white">${actualRevenue.toLocaleString()}</h2>
+                    <p className="text-[10px] text-gray-400 mt-1">進收銀機的錢(含服務+儲值)</p>
+                 </div>
+                 <div className="bg-white p-4 rounded-xl border shadow-sm relative overflow-hidden">
+                    <p className="text-[11px] font-bold text-gray-500 mb-1">✂️ 其中：服務實收</p>
+                    <h2 className="text-2xl font-bold text-green-600">${serviceRevenue.toLocaleString()}</h2>
+                    <p className="text-[10px] text-gray-400 mt-1">不含用舊儲值金抵扣的款項</p>
+                 </div>
+                 <div className="bg-[#FDFBF7] border-[#F0E6D8] p-4 rounded-xl border shadow-sm relative overflow-hidden">
+                    <p className="text-[11px] font-bold text-[#A87B7B] mb-1">💎 其中：客戶買儲值</p>
+                    <h2 className="text-2xl font-bold text-[#C59A5C]">${topUpRevenue.toLocaleString()}</h2>
+                    <p className="text-[10px] text-gray-500 mt-1">客人買儲值金實際付的現金</p>
+                 </div>
+                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm relative overflow-hidden">
+                    <p className="text-[11px] font-bold text-gray-500 mb-1">📉 消耗舊儲值金</p>
+                    <h2 className="text-2xl font-bold text-orange-500">${consumedValue.toLocaleString()}</h2>
+                    <p className="text-[10px] text-gray-400 mt-1">帳面數字(無現金流)，完成負債</p>
+                 </div>
+                 <div className="bg-rose-50 p-4 rounded-xl border border-rose-100 shadow-sm relative overflow-hidden">
+                    <p className="text-[11px] font-bold text-rose-600 mb-1">🎁 總折扣與贈送額</p>
+                    <h2 className="text-2xl font-bold text-rose-500">${totalDiscountValue.toLocaleString()}</h2>
+                    <p className="text-[10px] text-rose-400 mt-1">包含服務打折與儲值贈送金</p>
+                 </div>
+               </div>
+
+               <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+                 <table className="w-full text-left text-sm whitespace-nowrap">
+                   <thead className="bg-gray-50 text-gray-500 border-b border-gray-100">
+                     <tr>
+                       <th className="p-4">日期</th>
+                       <th className="p-4">設計師</th>
+                       <th className="p-4">客戶</th>
+                       <th className="p-4">項目</th>
+                       <th className="p-4">付款明細</th>
+                       <th className="p-4 text-right">入帳(現金流)</th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                     {allTransactions.map((tx, index) => {
+                       let thisActualCash = 0;
+                       if (tx.isTopUp) {
+                         tx.payments?.forEach(p => thisActualCash += (Number(p.amount)||0));
+                       } else {
+                         if (tx.payments && tx.payments.length > 0) {
+                           tx.payments.forEach(p => {
+                             if (p.method !== '儲值金扣款' && p.method !== '扣除包堂') thisActualCash += (Number(p.amount)||0);
+                           });
+                         } else {
+                           if (tx.paymentMethod !== '儲值金扣款' && tx.paymentMethod !== '扣除包堂') thisActualCash = tx.totalAmount;
+                         }
+                       }
+
+                       return (
+                         <tr key={`${tx.id}-${index}`} className={`border-b hover:bg-gray-50 ${tx.isTopUp ? 'bg-[#FDFBF7]/40 border-[#F5E3BD]/30' : 'border-gray-50'}`}>
+                           <td className="p-4 text-gray-600">
+                             {tx.date}
+                             {tx.isTopUp && <span className="ml-2 bg-[#C59A5C] text-white text-[10px] px-1.5 py-0.5 rounded font-bold">儲值</span>}
+                           </td>
+                           <td className="p-4 text-gray-600">{tx.isTopUp ? '--' : (tx.designerName || '未指定')}</td>
+                           <td className="p-4 font-bold text-gray-800">{tx.clientName}</td>
+                           <td className="p-4">
+                             <div className={`max-w-[150px] md:max-w-[200px] truncate ${tx.isTopUp ? 'text-[#C59A5C] font-bold' : ''}`} title={tx.service}>{tx.service}</div>
+                             {tx.discount > 0 && (
+                                <div className="text-[11px] text-rose-500 font-bold mt-0.5">
+                                  {tx.discountNote ? `${tx.discountNote} (-$${tx.discount})` : `已折扣 -$${tx.discount}`}
+                                </div>
+                             )}
+                             {tx.bonus > 0 && (
+                                <div className="text-[11px] text-[#A87B7B] font-bold mt-0.5">加碼贈送 ${tx.bonus}</div>
+                             )}
+                           </td>
+                           <td className="p-4">
+                             {tx.payments && tx.payments.length > 0 ? (
+                               <div className="flex flex-col gap-1">
+                                 {tx.payments.map((p, i) => (
+                                   <span key={i} className={`px-2 py-0.5 rounded text-[11px] w-fit ${p.method === '儲值金扣款' || p.method === '扣除包堂' ? 'bg-[#FDFBF7] text-[#A87B7B] border border-[#F0E6D8]' : 'bg-gray-100 text-gray-500 border border-gray-200'}`}>
+                                     {p.method} ${p.amount}
+                                   </span>
+                                 ))}
+                               </div>
+                             ) : (
+                               <span className={`px-2 py-1 rounded text-[11px] border ${tx.paymentMethod === '儲值金扣款' || tx.paymentMethod === '扣除包堂' ? 'bg-[#FDFBF7] text-[#A87B7B] border-[#F0E6D8]' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>{tx.paymentMethod}</span>
+                             )}
+                           </td>
+                           <td className={`p-4 text-right font-bold ${thisActualCash > 0 ? 'text-green-600' : 'text-gray-400'}`}>
+                             {thisActualCash > 0 ? `+${thisActualCash.toLocaleString()}` : '0'}
+                           </td>
+                         </tr>
+                       );
+                     })}
+                     {allTransactions.length === 0 && (
+                       <tr><td colSpan="6" className="text-center py-10 text-gray-400">該條件下尚無交易紀錄</td></tr>
+                     )}
+                   </tbody>
+                 </table>
+               </div>
+            </div>
+          )}
+
+          {/* === 耗材與庫存 Tab === */}
+          {activeTab === 'inventory' && (
+            <div className="p-6 max-w-4xl mx-auto">
+              <div className="mb-6"><h1 className="text-2xl font-bold text-gray-800">耗材與庫存</h1></div>
+              <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+                 <table className="w-full text-left text-sm whitespace-nowrap">
+                   <thead className="bg-gray-50 text-gray-500"><tr><th className="p-4">品項</th><th className="p-4">分類</th><th className="p-4 text-center">庫存</th><th className="p-4">狀態</th></tr></thead>
+                   <tbody>
+                     {inventory.map(item => (
+                       <tr key={item.id} className="border-b hover:bg-gray-50"><td className="p-4 font-bold text-gray-800">{item.name}</td><td className="p-4"><span className="bg-gray-100 px-2 py-1 rounded text-xs">{item.category}</span></td><td className="p-4 text-center font-bold">{item.stock}</td><td className="p-4">{item.status==='低庫存'?<span className="text-red-500 bg-red-50 px-2 py-1 rounded text-xs font-bold">過低</span>:<span className="text-green-500 bg-green-50 px-2 py-1 rounded text-xs font-bold">充足</span>}</td></tr>
+                     ))}
+                   </tbody>
+                 </table>
+               </div>
+            </div>
+          )}
+
+          {/* === 系統設定 Tab === */}
+          {activeTab === 'settings' && (
+            <div className="p-6 max-w-5xl mx-auto space-y-6">
+              <div className="mb-6">
+                <h1 className="text-2xl font-bold text-gray-800 mb-1">系統設定</h1>
+                <p className="text-sm text-gray-500">System Configuration & Management</p>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-6">
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                    <div className="flex justify-between items-center mb-5 border-b border-gray-100 pb-3">
+                      <h2 className="font-bold text-gray-800 flex items-center gap-2"><Users size={18} className="text-[#A87B7B]"/> 設計師團隊管理</h2>
+                      <button onClick={handleAddNewDesigner} className="text-[#A87B7B] hover:text-[#8f6666] text-sm font-bold flex items-center gap-1"><Plus size={16}/> 新增</button>
+                    </div>
+                    <div className="space-y-4">
+                      {designers.map(d => (
+                        <div key={d.id} className="flex gap-3 items-center bg-gray-50 p-3 rounded-xl border border-gray-100">
+                          <div className="flex-1 space-y-2">
+                            <div><label className="text-[10px] text-gray-500 font-bold block">姓名</label><input type="text" value={d.name} onChange={e=>handleUpdateDesignerItem(d.id, "name", e.target.value)} className="w-full bg-white border border-gray-200 rounded p-1.5 text-sm outline-none focus:border-[#A87B7B]" /></div>
+                            <div><label className="text-[10px] text-gray-500 font-bold block">地點/備註</label><input type="text" value={d.location} onChange={e=>handleUpdateDesignerItem(d.id, "location", e.target.value)} className="w-full bg-white border border-gray-200 rounded p-1.5 text-sm outline-none focus:border-[#A87B7B]" /></div>
+                          </div>
+                          <button onClick={() => setConfirmModal({ title: '刪除設計師', message: `確定要刪除「${d.name}」嗎？這將同時刪除該設計師的所有排班紀錄，且無法復原。`, onConfirm: () => handleDeleteDesigner(d.id) })} className="text-gray-400 hover:text-red-500 p-2 bg-white rounded-lg border border-gray-200 hover:border-red-200 transition">
+                            <Trash2 size={16}/>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                    <h2 className="font-bold text-gray-800 mb-5 border-b border-gray-100 pb-3 flex items-center gap-2"><CreditCard size={18} className="text-[#A87B7B]"/> 付款方式管理</h2>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {paymentMethods.map(method => (
+                        <div key={method} className="flex items-center gap-1.5 bg-[#FDFBF7] border border-[#F0E6D8] text-gray-700 px-3 py-1.5 rounded-lg text-sm">
+                          <span>{method}</span>
+                          {!['現金', '轉帳', '信用卡', 'Line Pay', '儲值金扣款', '扣除包堂'].includes(method) && (
+                            <button onClick={() => setConfirmModal({ title: '刪除付款方式', message: `確定要刪除「${method}」嗎？`, onConfirm: () => handleDeletePaymentSetting(method) })} className="text-gray-400 hover:text-red-500 ml-1"><X size={14}/></button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <input type="text" placeholder="輸入新的付款方式" value={newPaymentInput} onChange={e=>setNewPaymentInput(e.target.value)} className="flex-1 p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                      <button onClick={handleAddPaymentSetting} className="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-black transition">新增</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                    <div className="flex justify-between items-center mb-5 border-b border-gray-100 pb-3">
+                      <h2 className="font-bold text-gray-800 flex items-center gap-2"><BookmarkPlus size={18} className="text-[#A87B7B]"/> 消費項目設定</h2>
+                    </div>
+                    <div className="max-h-60 overflow-y-auto pr-2 space-y-2 mb-4">
+                      {savedServices.map(svc => (
+                        <div key={svc} className="flex justify-between items-center bg-gray-50 border border-gray-100 p-2.5 rounded-lg">
+                          <span className="text-sm font-bold text-gray-700">{svc}</span>
+                          <button onClick={() => setConfirmModal({ title: '刪除服務項目', message: `確定要移除「${svc}」嗎？`, onConfirm: () => handleDeleteServiceSetting(svc) })} className="text-gray-400 hover:text-red-500"><X size={16}/></button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                      <label className="block text-[10px] font-bold text-gray-500 mb-2">快速新增項目</label>
+                      <div className="flex gap-2">
+                        <input type="text" placeholder="輸入項目名稱" value={newServiceInput} onChange={e=>setNewServiceInput(e.target.value)} className="flex-[2] p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                        <button onClick={handleAddServiceSetting} className="bg-[#A87B7B] text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#8f6666] transition shadow-sm">新增</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                    <h2 className="font-bold text-gray-800 mb-5 border-b border-gray-100 pb-3 flex items-center gap-2"><Settings size={18} className="text-[#A87B7B]"/> 全域系統設定</h2>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-1">LINE 官方帳號 ID (前台跳轉用)</label>
+                        <input type="text" placeholder="@lashbeauty" value={lineOfficialId} onChange={e=>{setLineOfficialId(e.target.value); setHasUnsavedChanges(true);}} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 outline-none focus:bg-white focus:border-[#A87B7B]" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-1">LINE 預約總表推播網址 (Google Apps Script)</label>
+                        <input type="text" placeholder="https://script.google.com/macros/s/..." value={lineNotifyUrl} onChange={e=>{setLineNotifyUrl(e.target.value); setHasUnsavedChanges(true);}} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 outline-none focus:bg-white focus:border-[#A87B7B]" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-1">接收推播的 LINE User ID (多人請用半形逗號 , 分隔)</label>
+                        <input type="text" placeholder="例: U123..., U456..." value={lineUserIds} onChange={e=>{setLineUserIds(e.target.value); setHasUnsavedChanges(true);}} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 outline-none focus:bg-white focus:border-[#A87B7B]" />
+                      </div>
+                      <div className="p-3 bg-[#FDFBF7] border border-[#F0E6D8] rounded-xl">
+                        <label className="block text-xs font-bold text-[#A87B7B] mb-1">Google 雲端硬碟圖床網址 (Apps Script) ✨新功能</label>
+                        <input type="text" placeholder="https://script.google.com/macros/s/..." value={gdriveApiUrl} onChange={e=>{setGdriveApiUrl(e.target.value); setHasUnsavedChanges(true);}} className="w-full p-2.5 border border-[#E8D3C8] rounded-lg text-sm bg-white outline-none focus:border-[#A87B7B]" />
+                        <p className="text-[10px] text-gray-500 mt-1.5 leading-tight">填寫此欄位後，照片將優先上傳至您的 Google 雲端硬碟，保留最高畫質且不佔 Firebase 空間。</p>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-1">變更後台登入密碼</label>
+                        <div className="flex gap-2">
+                          <input type="password" placeholder="輸入新密碼" value={newPasswordInput} onChange={e=>setNewPasswordInput(e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 outline-none focus:bg-white focus:border-[#A87B7B]" />
+                          <button onClick={handleChangePassword} className="bg-gray-800 text-white px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-black transition">更新</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 全域 Modal 放至此區塊末端 */}
           {showAutoScheduleModal && (
             <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
               <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative animate-in zoom-in duration-200">
