@@ -555,7 +555,7 @@ export default function App() {
 
   // --- CRM 功能 ---
   const handleSaveClient = async () => {
-    if(!newClientData.name || !newClientData.phone) return showToast("姓名與電話為必填！");
+    if(!newClientData.name) return showToast("姓名為必填！");
     const tagsArray = newClientData.tags ? newClientData.tags.split(',').map(t => t.trim()) : ["新客"];
     
     let updatedClients = [...clients];
@@ -784,20 +784,20 @@ export default function App() {
       const headers = rows[0].map(h => h.trim().replace(/\uFEFF/g, '').replace(/"/g, ''));
       const nameIdx = headers.indexOf("姓名");
       const phoneIdx = headers.indexOf("電話");
-      if(nameIdx === -1 || phoneIdx === -1) {
+      if(nameIdx === -1) {
          e.target.value = null; 
-         return showToast("匯入失敗：CSV 必須包含「姓名」與「電話」欄位");
+         return showToast("匯入失敗：CSV 必須至少包含「姓名」欄位");
       }
 
       const newClients = [];
       for(let i=1; i<rows.length; i++) {
          const cols = rows[i];
-         if(cols.length < 2 || !cols[nameIdx] || !cols[phoneIdx]) continue;
+         if(cols.length < 1 || !cols[nameIdx]) continue;
          const name = cols[nameIdx].trim().replace(/"/g, '');
-         const phone = cols[phoneIdx].trim().replace(/"/g, '');
-         if(!name || !phone) continue;
+         const phone = phoneIdx > -1 && cols[phoneIdx] ? cols[phoneIdx].trim().replace(/"/g, '') : '';
+         if(!name) continue;
          
-         if(clients.some(c => c.phone === phone) || newClients.some(c => c.phone === phone)) continue;
+         if(phone && (clients.some(c => c.phone === phone) || newClients.some(c => c.phone === phone))) continue;
 
          const bdayIdx = headers.indexOf("生日");
          const tagsIdx = headers.indexOf("標籤");
@@ -2425,7 +2425,7 @@ export default function App() {
                     <input type="text" placeholder="例如：林語晴" value={newClientData.name} onChange={e=>setNewClientData({...newClientData,name:e.target.value})} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-1">手機 *</label>
+                    <label className="block text-xs font-bold text-gray-500 mb-1">手機</label>
                     <input type="tel" placeholder="例如：0912-345-678" value={newClientData.phone} onChange={e=>setNewClientData({...newClientData,phone:e.target.value})} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
                   </div>
                   <div>
