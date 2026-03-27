@@ -1916,7 +1916,62 @@ export default function App() {
             </div>
           )}
 
-          {/* 全域 Modal 放至此區塊末端 */}
+          {/* === 所有彈跳視窗 Modal (僅需一份，放在最後) === */}
+          {showTopUpModal && (
+            <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+              <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative animate-in zoom-in duration-200">
+                <button onClick={closeTopUpModal} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><X size={20}/></button>
+                <h3 className="text-xl font-bold text-gray-800 mb-1 flex items-center gap-2"><Wallet size={24} className="text-[#C59A5C]" /> {editingTopUpId ? '編輯儲值紀錄' : '儲值金加值'}</h3>
+                <p className="text-xs text-gray-500 mb-5">為 {selectedClient?.name} {editingTopUpId ? '修改儲值資訊與餘額' : '存入新的可用餘額'}</p>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-1">儲值日期 *</label>
+                    <input type="date" value={topUpData.date} onChange={e=>setTopUpData({...topUpData, date: e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C59A5C] bg-white" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-1">實收儲值金額 (客人付的現金) *</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <input type="text" inputMode="numeric" value={topUpData.targetAmount} onChange={e=>setTopUpData({...topUpData, targetAmount: e.target.value.replace(/\D/g, '')})} placeholder="0" className="w-full pl-7 p-2.5 border border-gray-200 rounded-lg text-lg font-bold text-gray-800 outline-none focus:border-[#C59A5C]" />
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                       <button onClick={()=>setTopUpData({...topUpData, targetAmount: '5000', bonus: '500', notes: '滿5000送500'})} className="text-[11px] bg-[#FDFBF7] border border-[#D4B8A8] text-[#A87B7B] px-2 py-1 rounded hover:bg-[#F5E3E3] transition shadow-sm">滿5000送500</button>
+                       <button onClick={()=>setTopUpData({...topUpData, targetAmount: '10000', bonus: '1000', notes: '滿10000送1000'})} className="text-[11px] bg-[#FDFBF7] border border-[#D4B8A8] text-[#A87B7B] px-2 py-1 rounded hover:bg-[#F5E3E3] transition shadow-sm">滿10000送1000</button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-1">加碼贈送額度 (客訴補償可單填此欄)</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <input type="text" inputMode="numeric" value={topUpData.bonus} onChange={e=>setTopUpData({...topUpData, bonus: e.target.value.replace(/\D/g, '')})} placeholder="0" className="w-full pl-7 p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C59A5C]" />
+                    </div>
+                    <p className="text-[10px] text-gray-400 mt-1 leading-tight">例如：滿5000送500，上方填5000，此處填500。總共會存入5500額度。</p>
+                  </div>
+                  
+                  <div className="bg-[#FDFBF7] p-3 rounded-lg border border-[#E8D3C8] flex justify-between items-center">
+                      <span className="font-bold text-[#A87B7B]">將存入客戶餘額：</span>
+                      <span className="text-2xl font-black text-[#A87B7B]">${(Number(topUpData.targetAmount)||0) + (Number(topUpData.bonus)||0)}</span>
+                  </div>
+
+                  <div>
+                     <label className="block text-xs font-bold text-gray-500 mb-1">支付方式</label>
+                     <select value={topUpData.method} onChange={e=>setTopUpData({...topUpData, method: e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C59A5C] bg-white">
+                       {paymentMethods.filter(m => m !== '儲值金扣款' && m !== '扣除包堂').map(m=><option key={m} value={m}>{m}</option>)}
+                     </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-1">備註/活動原因</label>
+                    <input type="text" value={topUpData.notes} onChange={e=>setTopUpData({...topUpData, notes: e.target.value})} placeholder="例如：滿5000送500活動 / 客訴補償" className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C59A5C]" />
+                  </div>
+                  <button onClick={handleSaveTopUp} className="w-full bg-[#C59A5C] text-white py-3 rounded-xl text-sm font-bold shadow-sm hover:bg-[#b08850] transition mt-2">
+                    {editingTopUpId ? `確認更新存入 $${(Number(topUpData.targetAmount)||0) + (Number(topUpData.bonus)||0)}` : `確認加值存入 $${(Number(topUpData.targetAmount)||0) + (Number(topUpData.bonus)||0)}`}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {showAutoScheduleModal && (
             <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
               <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative animate-in zoom-in duration-200">
@@ -2225,76 +2280,76 @@ export default function App() {
             </div>
           )}
 
-        </div>
-        
-        {enlargedImage && (
-          <div className="fixed inset-0 bg-black/90 z-[300] flex items-center justify-center p-4 backdrop-blur-sm cursor-zoom-out" onClick={() => setEnlargedImage(null)}>
-            <button className="absolute top-5 right-5 text-white/70 hover:text-white transition p-2"><X size={32}/></button>
-            <img src={getDisplayImageUrl(enlargedImage)} alt="放大圖片" className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl cursor-default" onClick={e => e.stopPropagation()} />
-          </div>
-        )}
-
-        {confirmModal && (
-          <div className="fixed inset-0 bg-black/50 z-[400] flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative animate-in zoom-in duration-200">
-              <h3 className="text-xl font-bold text-gray-800 mb-2">{confirmModal.title}</h3>
-              <p className="text-sm text-gray-600 mb-6 leading-relaxed">{confirmModal.message}</p>
-              <div className="flex gap-3">
-                <button onClick={() => setConfirmModal(null)} className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-200 transition">取消</button>
-                <button onClick={() => { confirmModal.onConfirm(); setConfirmModal(null); }} className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 transition shadow-sm shadow-red-200">確定刪除</button>
-              </div>
+          {enlargedImage && (
+            <div className="fixed inset-0 bg-black/90 z-[300] flex items-center justify-center p-4 backdrop-blur-sm cursor-zoom-out" onClick={() => setEnlargedImage(null)}>
+              <button className="absolute top-5 right-5 text-white/70 hover:text-white transition p-2"><X size={32}/></button>
+              <img src={getDisplayImageUrl(enlargedImage)} alt="放大圖片" className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl cursor-default" onClick={e => e.stopPropagation()} />
             </div>
-          </div>
-        )}
+          )}
 
-        {showTodayNotice && (
-          <div className="fixed inset-0 bg-black/60 z-[500] flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative animate-in zoom-in duration-300">
-              <button onClick={() => setShowTodayNotice(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><X size={20}/></button>
-              <div className="flex flex-col items-center mb-6">
-                <div className="w-16 h-16 bg-[#FDFBF7] text-[#C59A5C] rounded-full flex items-center justify-center mb-3 shadow-sm border border-[#F0E6D8]">
-                  <CalendarCheck size={32} />
+          {confirmModal && (
+            <div className="fixed inset-0 bg-black/50 z-[400] flex items-center justify-center p-4 backdrop-blur-sm">
+              <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative animate-in zoom-in duration-200">
+                <h3 className="text-xl font-bold text-gray-800 mb-2">{confirmModal.title}</h3>
+                <p className="text-sm text-gray-600 mb-6 leading-relaxed">{confirmModal.message}</p>
+                <div className="flex gap-3">
+                  <button onClick={() => setConfirmModal(null)} className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-200 transition">取消</button>
+                  <button onClick={() => { confirmModal.onConfirm(); setConfirmModal(null); }} className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 transition shadow-sm shadow-red-200">確定刪除</button>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-800">今日行程提醒</h3>
-                <p className="text-sm text-gray-500 mt-1">您今天有專屬的美麗任務喔！</p>
               </div>
-              <div className="max-h-[50vh] overflow-y-auto space-y-4 pr-2 mb-6 hide-scrollbar">
-                {designers.map(d => {
-                  const todayStr = getTodayString();
-                  const todaySchedule = d.schedules.find(s => s.fullDate === todayStr);
-                  const todayAppointments = todaySchedule ? todaySchedule.times.filter(t => t.isFull) : [];
-                  if (todayAppointments.length === 0) return null;
-                  
-                  const groups = groupSlots(todayAppointments);
-
-                  return (
-                    <div key={d.id} className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                      <h4 className="font-bold text-[#A87B7B] mb-3 flex items-center gap-1.5"><Users size={16}/> {d.name} 的預約</h4>
-                      <div className="space-y-3">
-                        {groups.map((g, i) => (
-                          <div key={i} className="flex gap-3 items-center bg-white p-3 rounded-lg shadow-sm border border-gray-50">
-                            <div className="font-bold text-gray-700 bg-gray-100 px-2 py-1 rounded text-sm">{g.startTime}</div>
-                            <div className="flex-1">
-                              <p className="font-bold text-gray-800 text-sm">{g.clientName}</p>
-                              <p className="text-xs text-gray-500">{g.service}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              <button onClick={() => setShowTodayNotice(false)} className="w-full bg-[#A87B7B] text-white py-3.5 rounded-xl text-lg font-bold hover:bg-[#8f6666] shadow-lg transition">我知道了，開始今天的工作！</button>
-              <button 
-                onClick={handleSendTodayScheduleToLine} 
-                className="w-full mt-3 bg-[#06C755] text-white py-3.5 rounded-xl text-lg font-bold hover:bg-[#05b34c] shadow-lg transition flex items-center justify-center gap-2"
-              >
-                <Bell size={20}/> 傳送今日總表至 LINE
-              </button>
             </div>
-          </div>
-        )}
+          )}
+
+          {showTodayNotice && (
+            <div className="fixed inset-0 bg-black/60 z-[500] flex items-center justify-center p-4 backdrop-blur-sm">
+              <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative animate-in zoom-in duration-300">
+                <button onClick={() => setShowTodayNotice(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><X size={20}/></button>
+                <div className="flex flex-col items-center mb-6">
+                  <div className="w-16 h-16 bg-[#FDFBF7] text-[#C59A5C] rounded-full flex items-center justify-center mb-3 shadow-sm border border-[#F0E6D8]">
+                    <CalendarCheck size={32} />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-800">今日行程提醒</h3>
+                  <p className="text-sm text-gray-500 mt-1">您今天有專屬的美麗任務喔！</p>
+                </div>
+                <div className="max-h-[50vh] overflow-y-auto space-y-4 pr-2 mb-6 hide-scrollbar">
+                  {designers.map(d => {
+                    const todayStr = getTodayString();
+                    const todaySchedule = d.schedules.find(s => s.fullDate === todayStr);
+                    const todayAppointments = todaySchedule ? todaySchedule.times.filter(t => t.isFull) : [];
+                    if (todayAppointments.length === 0) return null;
+                    
+                    const groups = groupSlots(todayAppointments);
+
+                    return (
+                      <div key={d.id} className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                        <h4 className="font-bold text-[#A87B7B] mb-3 flex items-center gap-1.5"><Users size={16}/> {d.name} 的預約</h4>
+                        <div className="space-y-3">
+                          {groups.map((g, i) => (
+                            <div key={i} className="flex gap-3 items-center bg-white p-3 rounded-lg shadow-sm border border-gray-50">
+                              <div className="font-bold text-gray-700 bg-gray-100 px-2 py-1 rounded text-sm">{g.startTime}</div>
+                              <div className="flex-1">
+                                <p className="font-bold text-gray-800 text-sm">{g.clientName}</p>
+                                <p className="text-xs text-gray-500">{g.service}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <button onClick={() => setShowTodayNotice(false)} className="w-full bg-[#A87B7B] text-white py-3.5 rounded-xl text-lg font-bold hover:bg-[#8f6666] shadow-lg transition">我知道了，開始今天的工作！</button>
+                <button 
+                  onClick={handleSendTodayScheduleToLine} 
+                  className="w-full mt-3 bg-[#06C755] text-white py-3.5 rounded-xl text-lg font-bold hover:bg-[#05b34c] shadow-lg transition flex items-center justify-center gap-2"
+                >
+                  <Bell size={20}/> 傳送今日總表至 LINE
+                </button>
+              </div>
+            </div>
+          )}
+
+        </div>
       </div>
     );
   };
