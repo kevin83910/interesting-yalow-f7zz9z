@@ -283,7 +283,7 @@ export default function App() {
   // --- 儲值功能狀態 ---
   const [showTopUpModal, setShowTopUpModal] = useState(false);
   const [editingTopUpId, setEditingTopUpId] = useState(null);
-  const [topUpData, setTopUpData] = useState({ date: getTodayString(), targetAmount: '', bonus: '', method: '現金', notes: '' });
+  const [topUpData, setTopUpData] = useState({ date: getTodayString(), targetAmount: '', bonus: '', method: '現金', notes: '', designerId: '' });
 
   // --- 消費紀錄狀態 ---
   const [newVisit, setNewVisit] = useState({ 
@@ -310,6 +310,7 @@ export default function App() {
   const [txFilterStartDate, setTxFilterStartDate] = useState(getTodayString());
   const [txFilterEndDate, setTxFilterEndDate] = useState(getTodayString());
   const [txFilterDesignerId, setTxFilterDesignerId] = useState('all');
+  const [txFilterPaymentMethod, setTxFilterPaymentMethod] = useState('all');
 
   const [generateMonth, setGenerateMonth] = useState(() => {
     const d = new Date();
@@ -585,7 +586,7 @@ export default function App() {
   const closeTopUpModal = () => {
     setShowTopUpModal(false);
     setEditingTopUpId(null);
-    setTopUpData({ date: getTodayString(), targetAmount: '', bonus: '', method: paymentMethods.includes('現金') ? '現金' : paymentMethods[0], notes: '' });
+    setTopUpData({ date: getTodayString(), targetAmount: '', bonus: '', method: paymentMethods.includes('現金') ? '現金' : paymentMethods[0], notes: '', designerId: '' });
   };
 
   const handleSaveTopUp = async () => {
@@ -594,6 +595,9 @@ export default function App() {
     const totalAdded = actualPaid + bonus;
 
     if (actualPaid === 0 && bonus === 0) return showToast("請輸入實收金額或加碼贈送額度！");
+
+    const selectedDesigner = designers.find(d => d.id === topUpData.designerId);
+    const dName = selectedDesigner ? selectedDesigner.name : '系統/櫃台';
 
     const visitData = {
         id: editingTopUpId || Date.now(),
@@ -605,7 +609,8 @@ export default function App() {
         payments: [{ method: topUpData.method, amount: actualPaid }],
         paymentMethod: topUpData.method,
         notes: topUpData.notes,
-        designerName: '系統/櫃台'
+        designerId: topUpData.designerId || '',
+        designerName: dName
     };
 
     const updatedClients = clients.map(c => {
@@ -886,7 +891,8 @@ export default function App() {
         targetAmount: (visit.amount || 0).toString(),
         bonus: (visit.discount || visit.bonus || 0).toString(),
         method: visit.paymentMethod || '現金',
-        notes: visit.notes || ''
+        notes: visit.notes || '',
+        designerId: visit.designerId || ''
       });
       setShowTopUpModal(true);
       return;
@@ -1120,6 +1126,12 @@ export default function App() {
   const renderAdminView = () => {
     let allTransactions = clients.flatMap(client => client.visits.map(visit => ({ ...visit, clientId: client.id, clientName: client.name, totalAmount: (Number(visit.amount) || 0) + (Number(visit.productAmount) || 0) })));
     if (txFilterDesignerId !== 'all') allTransactions = allTransactions.filter(tx => tx.designerId === txFilterDesignerId);
+    if (txFilterPaymentMethod !== 'all') {
+      allTransactions = allTransactions.filter(tx => {
+        if (tx.payments && tx.payments.length > 0) return tx.payments.some(p => p.method === txFilterPaymentMethod);
+        return tx.paymentMethod === txFilterPaymentMethod;
+      });
+    }
     if (txFilterType === 'month') allTransactions = allTransactions.filter(tx => tx.date.startsWith(txFilterMonth));
     else if (txFilterType === 'day') allTransactions = allTransactions.filter(tx => tx.date === txFilterDate);
     else if (txFilterType === 'custom') allTransactions = allTransactions.filter(tx => tx.date >= txFilterStartDate && tx.date <= txFilterEndDate);
@@ -1130,13 +1142,24 @@ export default function App() {
     allTransactions.forEach(t => {
       totalDiscountValue += (Number(t.discount) || Number(t.bonus) || 0);
       if (t.isTopUp) {
-        let t_rev = 0; t.payments?.forEach(p => t_rev += (Number(p.amount) || 0));
+        let t_rev = 0; 
+        t.payments?.forEach(p => {
+          if (txFilterPaymentMethod === 'all' || p.method === txFilterPaymentMethod) t_rev += (Number(p.amount) || 0);
+        });
         topUpRevenue += t_rev; actualRevenue += t_rev;
       } else {
         if (t.payments && t.payments.length > 0) {
-           t.payments.forEach(p => { if (p.method === '儲值金扣款') consumedValue += (Number(p.amount) || 0); else if (p.method !== '扣除包堂') { let amt = Number(p.amount) || 0; serviceRevenue += amt; actualRevenue += amt; } });
+           t.payments.forEach(p => { 
+             if (txFilterPaymentMethod === 'all' || p.method === txFilterPaymentMethod) {
+               if (p.method === '儲值金扣款') consumedValue += (Number(p.amount) || 0); 
+               else if (p.method !== '扣除包堂') { let amt = Number(p.amount) || 0; serviceRevenue += amt; actualRevenue += amt; } 
+             }
+           });
         } else {
-           if (t.paymentMethod === '儲值金扣款') consumedValue += t.totalAmount; else if (t.paymentMethod !== '扣除包堂') { serviceRevenue += t.totalAmount; actualRevenue += t.totalAmount; }
+           if (txFilterPaymentMethod === 'all' || t.paymentMethod === txFilterPaymentMethod) {
+             if (t.paymentMethod === '儲值金扣款') consumedValue += t.totalAmount; 
+             else if (t.paymentMethod !== '扣除包堂') { serviceRevenue += t.totalAmount; actualRevenue += t.totalAmount; }
+           }
         }
       }
     });
@@ -1688,6 +1711,14 @@ export default function App() {
                      {designers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                    </select>
                  </div>
+
+                 <div className="flex-1">
+                   <label className="block text-xs font-bold text-gray-500 mb-1">支付方式</label>
+                   <select value={txFilterPaymentMethod} onChange={e => setTxFilterPaymentMethod(e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]">
+                     <option value="all">全部方式</option>
+                     {paymentMethods.map(m => <option key={m} value={m}>{m}</option>)}
+                   </select>
+                 </div>
                </div>
 
                {/* 進階：帳務拆分五大指標 */}
@@ -1736,14 +1767,20 @@ export default function App() {
                      {allTransactions.map((tx, index) => {
                        let thisActualCash = 0;
                        if (tx.isTopUp) {
-                         tx.payments?.forEach(p => thisActualCash += (Number(p.amount)||0));
+                         tx.payments?.forEach(p => {
+                           if (txFilterPaymentMethod === 'all' || p.method === txFilterPaymentMethod) thisActualCash += (Number(p.amount)||0);
+                         });
                        } else {
                          if (tx.payments && tx.payments.length > 0) {
                            tx.payments.forEach(p => {
-                             if (p.method !== '儲值金扣款' && p.method !== '扣除包堂') thisActualCash += (Number(p.amount)||0);
+                             if (txFilterPaymentMethod === 'all' || p.method === txFilterPaymentMethod) {
+                               if (p.method !== '儲值金扣款' && p.method !== '扣除包堂') thisActualCash += (Number(p.amount)||0);
+                             }
                            });
                          } else {
-                           if (tx.paymentMethod !== '儲值金扣款' && tx.paymentMethod !== '扣除包堂') thisActualCash = tx.totalAmount;
+                           if (txFilterPaymentMethod === 'all' || tx.paymentMethod === txFilterPaymentMethod) {
+                             if (tx.paymentMethod !== '儲值金扣款' && tx.paymentMethod !== '扣除包堂') thisActualCash = tx.totalAmount;
+                           }
                          }
                        }
 
@@ -1928,6 +1965,13 @@ export default function App() {
                   <div>
                     <label className="block text-xs font-bold text-gray-500 mb-1">儲值日期 *</label>
                     <input type="date" value={topUpData.date} onChange={e=>setTopUpData({...topUpData, date: e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C59A5C] bg-white" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-1">業績歸屬設計師</label>
+                    <select value={topUpData.designerId || ''} onChange={e=>setTopUpData({...topUpData, designerId: e.target.value})} className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#C59A5C] bg-white">
+                      <option value="">不指定 (系統/櫃台)</option>
+                      {designers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                    </select>
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-500 mb-1">實收儲值金額 (客人付的現金) *</label>
