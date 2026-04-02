@@ -807,8 +807,15 @@ export default function App() {
   };
 
   const handleEditClientClick = () => {
-    setNewClientData({ name: selectedClient.name, phone: selectedClient.phone, birthday: selectedClient.birthday !== '-' ? selectedClient.birthday : '', tags: selectedClient.tags.join(', '), lashPreference: selectedClient.lashPreference === '尚未建立紀錄' ? '' : selectedClient.lashPreference });
-    setEditingClientId(selectedClient.id); setShowAddClientModal(true);
+    setNewClientData({
+      name: selectedClient.name || '',
+      phone: selectedClient.phone || '',
+      birthday: selectedClient.birthday !== '-' ? selectedClient.birthday : '',
+      tags: Array.isArray(selectedClient.tags) ? selectedClient.tags.join(', ') : '',
+      lashPreference: selectedClient.lashPreference === '尚未建立紀錄' ? '' : (selectedClient.lashPreference || '')
+    });
+    setEditingClientId(selectedClient.id);
+    setShowAddClientModal(true);
   };
 
   const handleDeleteClient = async () => {
@@ -1073,7 +1080,7 @@ export default function App() {
     const newDesigners = designers.map(d => d.id === activeDesignerId ? { ...d, schedules: updatedSchedules } : d);
     showToast("排班資料儲存中..."); const success = await syncToCloud({ designers: newDesigners, clients: finalClients });
     
-    if (success) { setDesigners(newDesigners); setClients(finalClients); setEditingSlot(null); showToast(isNewClientCreated ? "時段設定成功！已為新客人自動建立檔案。" : "時段設定成功！自動同步。"); }
+    if (success) { setDesigners(newDesigners); setClients(finalClients); setEditingSlot(null); showToast(isNewClientCreated ? "時段設定成功！已為新客人自動建立檔案。" : "時段設定成功！已自動同步。"); }
   };
 
   const handleRemoveSlot = async () => {
@@ -1345,8 +1352,8 @@ export default function App() {
                         {filteredClients.map(c => (
                           <tr key={c.id} className="border-b border-gray-50 hover:bg-[#FDFBF7] transition cursor-pointer" onClick={() => setSelectedClient(c)}>
                             <td className="py-3 px-4 font-bold text-gray-800">{c.name}</td><td className="py-3 px-4 text-sm text-gray-600">{c.phone}</td>
-                            <td className="py-3 px-4 flex gap-1">{c.tags.map(t => <span key={t} className="bg-[#F5E3E3] text-[#A87B7B] text-[10px] px-2 py-0.5 rounded-full font-bold">{t}</span>)}</td>
-                            <td className="py-3 px-4 text-sm text-gray-500">{c.visits.length > 0 ? c.visits[0].date : '無紀錄'}</td>
+                            <td className="py-3 px-4 flex gap-1">{(c.tags||[]).map(t => <span key={t} className="bg-[#F5E3E3] text-[#A87B7B] text-[10px] px-2 py-0.5 rounded-full font-bold">{t}</span>)}</td>
+                            <td className="py-3 px-4 text-sm text-gray-500">{c.visits && c.visits.length > 0 ? c.visits[0].date : '無紀錄'}</td>
                             <td className="py-3 px-4 text-right text-sm font-bold text-[#A87B7B]">查看</td>
                           </tr>
                         ))}
@@ -1373,21 +1380,21 @@ export default function App() {
                         <div className="flex items-center gap-2">
                           <button 
                             onClick={handleEditClientClick}
-                            className="text-gray-400 hover:text-[#A87B7B] transition p-2 bg-gray-50 hover:bg-[#FDFBF7] rounded-full"
+                            className="text-gray-400 hover:text-[#A87B7B] transition p-2 bg-gray-50 hover:bg-[#FDFBF7] rounded-full z-10 relative"
                             title="編輯此客戶"
                           >
                             <Edit size={16} />
                           </button>
                           <button 
                             onClick={() => setConfirmModal({ title: '刪除客戶', message: `刪除「${selectedClient.name}」後將無法復原，包含所有消費紀錄都會被移除。確定刪除嗎？`, onConfirm: handleDeleteClient })}
-                            className="text-gray-400 hover:text-red-500 transition p-2 bg-gray-50 hover:bg-red-50 rounded-full"
+                            className="text-gray-400 hover:text-red-500 transition p-2 bg-gray-50 hover:bg-red-50 rounded-full z-10 relative"
                             title="刪除此客戶"
                           >
                             <Trash2 size={16} />
                           </button>
                         </div>
                       </div>
-                      <div className="mt-4 flex flex-wrap gap-1.5">{selectedClient.tags.map(t => <span key={t} className="bg-[#F5E3E3] text-[#A87B7B] text-[10px] px-2 py-0.5 rounded-full font-bold">{t}</span>)}</div>
+                      <div className="mt-4 flex flex-wrap gap-1.5">{(selectedClient.tags||[]).map(t => <span key={t} className="bg-[#F5E3E3] text-[#A87B7B] text-[10px] px-2 py-0.5 rounded-full font-bold">{t}</span>)}</div>
                       <div className="mt-5 space-y-3">
                         <div className="p-3 bg-[#FDFBF7] rounded-xl border border-[#F0E6D8]">
                           <p className="text-xs text-[#A87B7B] font-bold mb-1 flex items-center gap-1"><Clock size={12} /> 專屬睫毛密碼</p>
@@ -1401,7 +1408,7 @@ export default function App() {
                               <Wallet size={12}/> 儲值
                             </button>
                           </div>
-                          <div className="p-3 bg-gray-50 border border-gray-100 rounded-xl"><p className="text-[10px] text-gray-500 font-bold">剩餘包堂</p>{selectedClient.packages.length>0 ? selectedClient.packages.map(p=><p key={p.id} className="text-sm font-bold text-[#A87B7B]">{p.name}:{p.remaining}</p>) : <p className="text-sm font-bold text-gray-400">無</p>}</div>
+                          <div className="p-3 bg-gray-50 border border-gray-100 rounded-xl"><p className="text-[10px] text-gray-500 font-bold">剩餘包堂</p>{selectedClient.packages && selectedClient.packages.length>0 ? selectedClient.packages.map(p=><p key={p.id} className="text-sm font-bold text-[#A87B7B]">{p.name}:{p.remaining}</p>) : <p className="text-sm font-bold text-gray-400">無</p>}</div>
                         </div>
                       </div>
                     </div>
@@ -1422,6 +1429,7 @@ export default function App() {
                           {isAddingVisit ? '取消' : <><Plus size={16}/>新增消費紀錄</>}
                         </button>
                       </div>
+                      
                       {isAddingVisit && (
                         <div className="mb-8 p-5 bg-[#FDFBF7] border border-[#F0E6D8] rounded-xl shadow-inner">
                           <h4 className="font-bold text-[#A87B7B] mb-4 flex items-center gap-2 border-b border-[#F0E6D8] pb-2">
@@ -1468,7 +1476,6 @@ export default function App() {
                                </div>
                              </div>
 
-                             {/* === 進階折扣設定區 === */}
                              <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm space-y-4 relative overflow-hidden">
                                <div className="absolute top-0 left-0 w-1 h-full bg-[#A87B7B]"></div>
                                <h5 className="font-bold text-gray-700 text-sm flex items-center gap-1.5"><Tag size={16} className="text-[#A87B7B]"/> 金額與折扣設定</h5>
@@ -1514,7 +1521,6 @@ export default function App() {
                                </div>
                              </div>
 
-                             {/* 付款方式分配 */}
                              <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
                                   <div className="flex justify-between items-end mb-3">
                                       <label className="text-sm font-bold text-gray-700 block">請輸入客人的付款方式 *</label>
@@ -1608,7 +1614,7 @@ export default function App() {
                       )}
                       
                       <div className="space-y-5">
-                        {selectedClient.visits.map((visit) => (
+                        {(selectedClient.visits||[]).map((visit) => (
                           <div key={visit.id} className={`relative pl-6 border-l-2 ${visit.isTopUp ? 'border-[#C59A5C]' : 'border-gray-100'} pb-2 group`}>
                             <div className={`absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-white border-4 ${visit.isTopUp ? 'border-[#C59A5C]' : 'border-[#E8D3C8]'}`}></div>
                             <div className="flex flex-col sm:flex-row gap-4 justify-between items-start mb-2">
@@ -1673,7 +1679,7 @@ export default function App() {
                             )}
                           </div>
                         ))}
-                        {selectedClient.visits.length===0 && <p className="text-sm text-gray-400 text-center py-4">無紀錄</p>}
+                        {(!selectedClient.visits || selectedClient.visits.length===0) && <p className="text-sm text-gray-400 text-center py-4">無紀錄</p>}
                       </div>
                     </div>
                   </div>
@@ -1977,7 +1983,7 @@ export default function App() {
               </div>
             )}
 
-            {/* === 全域 Modal 放至此區塊末端 === */}
+            {/* === Modal 區塊 (放置於 relative 的主容器最後層) === */}
             {showTopUpModal && (
               <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
                 <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative animate-in zoom-in duration-200">
@@ -2260,6 +2266,162 @@ export default function App() {
               </div>
             )}
 
+            {showAddClientModal && (
+              <div className="fixed inset-0 bg-black/40 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+                <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative">
+                  <button onClick={closeClientModal} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><X size={20}/></button>
+                  <h2 className="text-xl font-bold mb-4">{editingClientId ? '編輯客戶資料' : '新增客戶資料'}</h2>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">姓名 *</label>
+                      <input type="text" placeholder="例如：林語晴" value={newClientData.name} onChange={e=>setNewClientData({...newClientData,name:e.target.value})} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">手機</label>
+                      <input type="tel" placeholder="例如：0912-345-678" value={newClientData.phone} onChange={e=>setNewClientData({...newClientData,phone:e.target.value})} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">生日</label>
+                      <input type="date" value={newClientData.birthday} onChange={e=>setNewClientData({...newClientData,birthday:e.target.value})} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none text-gray-700 focus:border-[#A87B7B]" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 mb-1">標籤 (用逗號分隔)</label>
+                      <input type="text" placeholder="例如：VIP, 喜歡自然款" value={newClientData.tags} onChange={e=>setNewClientData({...newClientData,tags:e.target.value})} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                    </div>
+                    {editingClientId && (
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-1">專屬睫毛密碼</label>
+                        <input type="text" placeholder="例如：C翹度 / 粗度0.10" value={newClientData.lashPreference || ''} onChange={e=>setNewClientData({...newClientData,lashPreference:e.target.value})} className="w-full p-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#A87B7B]" />
+                      </div>
+                    )}
+                    <button onClick={handleSaveClient} className="w-full bg-[#A87B7B] text-white py-2.5 rounded-lg text-sm font-bold mt-4 shadow-sm hover:bg-[#8f6666] transition">
+                      {editingClientId ? '更新儲存' : '建立'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {showDataModal && (
+              <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+                <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-2xl relative animate-in zoom-in duration-200">
+                  <button onClick={() => setShowDataModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><X size={20}/></button>
+                  <h2 className="text-2xl font-bold text-gray-800 mb-5 flex items-center gap-2"><Database size={24} className="text-[#C59A5C]" /> 資料備份與匯入管理</h2>
+                  
+                  <div className="space-y-6">
+                    <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
+                      <h3 className="font-bold text-gray-800 flex items-center gap-2 mb-3"><FileText size={18} className="text-[#A87B7B]" /> 📊 匯出 Excel 報表 (閱讀/對帳用)</h3>
+                      <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+                        可將後台資料匯出成人類可讀的 Excel (CSV) 報表，方便您在電腦上檢視與整理帳務。
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <button onClick={handleExportClientsCSV} className="py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-100 transition flex items-center justify-center gap-2 shadow-sm"><Download size={16}/> 客戶名單</button>
+                        <button onClick={handleExportSchedulesCSV} className="py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-100 transition flex items-center justify-center gap-2 shadow-sm"><Download size={16}/> 預約排班表</button>
+                        <button onClick={handleExportTransactionsCSV} className="py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-100 transition flex items-center justify-center gap-2 shadow-sm"><Download size={16}/> 交易紀錄</button>
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
+                      <h3 className="font-bold text-gray-800 flex items-center gap-2 mb-3"><Upload size={18} className="text-[#A87B7B]" /> 📥 匯入新客戶名單 (CSV)</h3>
+                      <p className="text-[11px] text-gray-500 mb-4 leading-tight">
+                        適合用來大量建檔新客。<span className="text-[#A87B7B] font-bold">※ 若「電話」已存在，將自動略過以避免重複建檔。</span>
+                      </p>
+                      <div className="flex flex-wrap gap-3">
+                        <button onClick={handleDownloadTemplate} className="flex-1 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-100 transition flex items-center justify-center gap-2 shadow-sm"><Download size={16}/> 下載匯入範本</button>
+                        <div className="flex-1 relative">
+                           <input type="file" accept=".csv" onChange={handleImportCSV} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                           <button className="w-full py-2 bg-[#A87B7B] text-white rounded-lg text-sm font-bold hover:bg-[#8f6666] transition flex items-center justify-center gap-2 shadow-sm pointer-events-none"><Upload size={16}/> 上傳名單匯入</button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-[#FDFBF7] rounded-xl p-5 border border-[#F0E6D8]">
+                      <h3 className="font-bold text-gray-800 flex items-center gap-2 mb-3"><Database size={18} className="text-[#C59A5C]" /> 🛡️ 系統時光機還原備份 (JSON)</h3>
+                      <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+                        會將【系統設定、預約表、客戶、交易】完整打包備份。<br/>
+                        <span className="text-red-500 font-bold">⚠️ 警告：上傳此還原檔將會【完全覆蓋】目前的系統資料！請務必定期下載備份。</span>
+                      </p>
+                      <div className="flex flex-wrap gap-3">
+                        <button onClick={handleExportJSON} className="flex-1 py-2.5 bg-gray-800 text-white rounded-lg text-sm font-bold hover:bg-black transition flex items-center justify-center gap-2 shadow-sm"><Download size={16}/> 下載完整系統快照</button>
+                        <div className="flex-1 relative">
+                           <input type="file" accept=".json" onChange={handleImportJSON} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                           <button className="w-full py-2.5 bg-red-500 text-white rounded-lg text-sm font-bold hover:bg-red-600 transition flex items-center justify-center gap-2 shadow-sm pointer-events-none"><Upload size={16}/> 上傳備份還原系統</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {enlargedImage && (
+              <div className="fixed inset-0 bg-black/90 z-[300] flex items-center justify-center p-4 backdrop-blur-sm cursor-zoom-out" onClick={() => setEnlargedImage(null)}>
+                <button className="absolute top-5 right-5 text-white/70 hover:text-white transition p-2"><X size={32}/></button>
+                <img src={getDisplayImageUrl(enlargedImage)} alt="放大圖片" className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl cursor-default" onClick={e => e.stopPropagation()} />
+              </div>
+            )}
+
+            {confirmModal && (
+              <div className="fixed inset-0 bg-black/50 z-[400] flex items-center justify-center p-4 backdrop-blur-sm">
+                <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative animate-in zoom-in duration-200">
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">{confirmModal.title}</h3>
+                  <p className="text-sm text-gray-600 mb-6 leading-relaxed">{confirmModal.message}</p>
+                  <div className="flex gap-3">
+                    <button onClick={() => setConfirmModal(null)} className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-200 transition">取消</button>
+                    <button onClick={() => { confirmModal.onConfirm(); setConfirmModal(null); }} className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 transition shadow-sm shadow-red-200">確定刪除</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {showTodayNotice && (
+              <div className="fixed inset-0 bg-black/60 z-[500] flex items-center justify-center p-4 backdrop-blur-sm">
+                <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative animate-in zoom-in duration-300">
+                  <button onClick={() => setShowTodayNotice(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><X size={20}/></button>
+                  <div className="flex flex-col items-center mb-6">
+                    <div className="w-16 h-16 bg-[#FDFBF7] text-[#C59A5C] rounded-full flex items-center justify-center mb-3 shadow-sm border border-[#F0E6D8]">
+                      <CalendarCheck size={32} />
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-800">今日行程提醒</h3>
+                    <p className="text-sm text-gray-500 mt-1">您今天有專屬的美麗任務喔！</p>
+                  </div>
+                  <div className="max-h-[50vh] overflow-y-auto space-y-4 pr-2 mb-6 hide-scrollbar">
+                    {designers.map(d => {
+                      const todayStr = getTodayString();
+                      const todaySchedule = d.schedules.find(s => s.fullDate === todayStr);
+                      const todayAppointments = todaySchedule ? todaySchedule.times.filter(t => t.isFull) : [];
+                      if (todayAppointments.length === 0) return null;
+                      
+                      const groups = groupSlots(todayAppointments);
+
+                      return (
+                        <div key={d.id} className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                          <h4 className="font-bold text-[#A87B7B] mb-3 flex items-center gap-1.5"><Users size={16}/> {d.name} 的預約</h4>
+                          <div className="space-y-3">
+                            {groups.map((g, i) => (
+                              <div key={i} className="flex gap-3 items-center bg-white p-3 rounded-lg shadow-sm border border-gray-50">
+                                <div className="font-bold text-gray-700 bg-gray-100 px-2 py-1 rounded text-sm">{g.startTime}</div>
+                                <div className="flex-1">
+                                  <p className="font-bold text-gray-800 text-sm">{g.clientName}</p>
+                                  <p className="text-xs text-gray-500">{g.service}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <button onClick={() => setShowTodayNotice(false)} className="w-full bg-[#A87B7B] text-white py-3.5 rounded-xl text-lg font-bold hover:bg-[#8f6666] shadow-lg transition">我知道了，開始今天的工作！</button>
+                  <button 
+                    onClick={handleSendTodayScheduleToLine} 
+                    className="w-full mt-3 bg-[#06C755] text-white py-3.5 rounded-xl text-lg font-bold hover:bg-[#05b34c] shadow-lg transition flex items-center justify-center gap-2"
+                  >
+                    <Bell size={20}/> 傳送今日總表至 LINE
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
