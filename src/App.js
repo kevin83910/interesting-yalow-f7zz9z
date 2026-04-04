@@ -1284,7 +1284,7 @@ export default function App() {
                             
                             return (
                               <div key={day.fullDate} className={`flex-1 border-r border-gray-100 relative min-w-[100px] ${day.isToday ? 'bg-[#FDFBF7]/40' : ''}`}>
-                                <div className="absolute inset-0 flex flex-col z-0 pointer-events-none">
+                                <div className="absolute inset-0 flex flex-col z-0">
                                   {TIME_BLOCKS.map(time => (
                                     <div key={time} className={`h-[45px] border-b border-dashed border-gray-100 transition-colors pointer-events-auto ${isPast ? 'bg-gray-100/50 cursor-not-allowed' : 'hover:bg-[#E8D3C8]/20 cursor-pointer'}`} onClick={() => !isPast && handleCellClick(day.fullDate, time)} />
                                   ))}
