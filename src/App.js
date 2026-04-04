@@ -2149,6 +2149,14 @@ export default function App() {
         </div>
       )}
 
+      {/* 照片放大 Modal */}
+      {enlargedImage && (
+        <div className="fixed inset-0 bg-black/80 z-[200] flex items-center justify-center backdrop-blur-sm px-4" onClick={() => setEnlargedImage(null)}>
+          <button onClick={() => setEnlargedImage(null)} className="absolute top-5 right-5 text-white/80 hover:text-white z-10"><X size={32} /></button>
+          <img src={getDisplayImageUrl(enlargedImage)} alt="放大照片" className="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl" onClick={e => e.stopPropagation()} />
+        </div>
+      )}
+
       </>
     );
   };
