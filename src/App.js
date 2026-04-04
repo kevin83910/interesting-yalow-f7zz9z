@@ -1284,9 +1284,9 @@ export default function App() {
                             
                             return (
                               <div key={day.fullDate} className={`flex-1 border-r border-gray-100 relative min-w-[100px] ${day.isToday ? 'bg-[#FDFBF7]/40' : ''}`}>
-                                <div className="absolute inset-0 flex flex-col z-0">
+                                <div className="absolute inset-0 flex flex-col z-0 pointer-events-none">
                                   {TIME_BLOCKS.map(time => (
-                                    <div key={time} className={`h-[45px] border-b border-dashed border-gray-100 transition-colors ${isPast ? 'bg-gray-100/50 cursor-not-allowed' : 'hover:bg-[#E8D3C8]/20 cursor-pointer'}`} onClick={() => !isPast && handleCellClick(day.fullDate, time)} />
+                                    <div key={time} className={`h-[45px] border-b border-dashed border-gray-100 transition-colors pointer-events-auto ${isPast ? 'bg-gray-100/50 cursor-not-allowed' : 'hover:bg-[#E8D3C8]/20 cursor-pointer'}`} onClick={() => !isPast && handleCellClick(day.fullDate, time)} />
                                   ))}
                                 </div>
 
@@ -1369,14 +1369,14 @@ export default function App() {
                         </div>
                         <div className="flex items-center gap-2">
                           <button 
-                            onClick={handleEditClientClick}
+                            onClick={(e) => { e.stopPropagation(); handleEditClientClick(); }}
                             className="text-gray-400 hover:text-[#A87B7B] transition p-2 bg-gray-50 hover:bg-[#FDFBF7] rounded-full z-10 relative"
                             title="編輯此客戶"
                           >
                             <Edit size={16} />
                           </button>
                           <button 
-                            onClick={() => setConfirmModal({ title: '刪除客戶', message: `刪除「${selectedClient.name}」後將無法復原，包含所有消費紀錄都會被移除。確定刪除嗎？`, onConfirm: handleDeleteClient })}
+                            onClick={(e) => { e.stopPropagation(); setConfirmModal({ title: '刪除客戶', message: `刪除「${selectedClient.name}」後將無法復原，包含所有消費紀錄都會被移除。確定刪除嗎？`, onConfirm: handleDeleteClient }); }}
                             className="text-gray-400 hover:text-red-500 transition p-2 bg-gray-50 hover:bg-red-50 rounded-full z-10 relative"
                             title="刪除此客戶"
                           >
@@ -1394,7 +1394,7 @@ export default function App() {
                           <div className="p-3 bg-gray-50 border border-gray-100 rounded-xl relative">
                             <p className="text-[10px] text-gray-500 font-bold">儲值餘額</p>
                             <p className="text-lg font-bold text-gray-800">${selectedClient.balance}</p>
-                            <button onClick={() => setShowTopUpModal(true)} className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#C59A5C] text-white text-[11px] px-2.5 py-1 rounded shadow-sm hover:bg-[#b08850] flex items-center gap-0.5">
+                            <button onClick={(e) => { e.stopPropagation(); setShowTopUpModal(true); }} className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#C59A5C] text-white text-[11px] px-2.5 py-1 rounded shadow-sm hover:bg-[#b08850] flex items-center gap-0.5">
                               <Wallet size={12}/> 儲值
                             </button>
                           </div>
