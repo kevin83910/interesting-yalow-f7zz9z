@@ -2117,12 +2117,36 @@ export default function App() {
               {editingSlot.isFull && (
                 <>
                   <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-1">選擇既有客戶（快速帶入）</label>
+                    <select
+                      value=""
+                      onChange={e => {
+                        const c = clients.find(c => c.id.toString() === e.target.value);
+                        if (c) setEditingSlot({...editingSlot, clientName: c.name, clientPhone: c.phone});
+                      }}
+                      className="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#A87B7B] bg-gray-50"
+                    >
+                      <option value="">-- 從客戶名單選擇 --</option>
+                      {clients.map(c => <option key={c.id} value={c.id}>{c.name} ({c.phone})</option>)}
+                    </select>
+                  </div>
+                  <div>
                     <label className="block text-xs font-bold text-gray-500 mb-1">客戶姓名</label>
-                    <input type="text" placeholder="請輸入客戶姓名" value={editingSlot.clientName} onChange={e => setEditingSlot({...editingSlot, clientName: e.target.value})} className="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#A87B7B]" />
+                    <input type="text" placeholder="請輸入客戶姓名" value={editingSlot.clientName} onChange={e => {
+                      const val = e.target.value;
+                      setEditingSlot({...editingSlot, clientName: val});
+                      const match = clients.find(c => c.name === val);
+                      if (match && !editingSlot.clientPhone) setEditingSlot({...editingSlot, clientName: val, clientPhone: match.phone});
+                    }} className="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#A87B7B]" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-500 mb-1">客戶電話</label>
-                    <input type="text" placeholder="請輸入客戶電話" value={editingSlot.clientPhone} onChange={e => setEditingSlot({...editingSlot, clientPhone: e.target.value})} className="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#A87B7B]" />
+                    <input type="text" placeholder="請輸入客戶電話" value={editingSlot.clientPhone} onChange={e => {
+                      const val = e.target.value;
+                      setEditingSlot({...editingSlot, clientPhone: val});
+                      const match = clients.find(c => c.phone === val);
+                      if (match) setEditingSlot({...editingSlot, clientPhone: val, clientName: match.name});
+                    }} className="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#A87B7B]" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-500 mb-1">服務項目</label>
