@@ -1180,6 +1180,7 @@ export default function App() {
     const weekDates = getWeekDates(currentWeekStart);
 
     return (
+      <>
       <div className="h-screen bg-[#F8F9FA] flex flex-col font-sans overflow-hidden w-full relative">
         {syncErrorMsg && (
             <div className="bg-red-500 text-white p-3 text-sm font-bold flex justify-between items-start z-[999] shadow-md w-full shrink-0">
@@ -1994,6 +1995,161 @@ export default function App() {
           </div>
         </div>
       </div>
+
+      {/* 確認對話框 */}
+      {confirmModal && (
+        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center backdrop-blur-sm px-4">
+          <div className="bg-white rounded-2xl p-7 w-full max-w-[340px] shadow-2xl">
+            <h3 className="text-lg font-bold text-gray-800 mb-3">{confirmModal.title}</h3>
+            <p className="text-sm text-gray-600 mb-6 leading-relaxed">{confirmModal.message}</p>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmModal(null)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition">取消</button>
+              <button onClick={() => { confirmModal.onConfirm(); setConfirmModal(null); }} className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 transition">確定</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 新增/編輯客戶 Modal */}
+      {showAddClientModal && (
+        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center backdrop-blur-sm px-4">
+          <div className="bg-white rounded-2xl p-7 w-full max-w-[400px] shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button onClick={closeClientModal} className="absolute top-5 right-5 text-gray-400 hover:text-gray-800"><X size={24} /></button>
+            <h2 className="text-xl font-bold text-gray-800 mb-5">{editingClientId ? '編輯客戶資料' : '新增客戶'}</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1">姓名 *</label>
+                <input type="text" placeholder="請輸入姓名" value={newClientData.name} onChange={e => setNewClientData({...newClientData, name: e.target.value})} className="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#A87B7B]" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1">電話</label>
+                <input type="text" placeholder="請輸入電話" value={newClientData.phone} onChange={e => setNewClientData({...newClientData, phone: e.target.value})} className="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#A87B7B]" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1">生日</label>
+                <input type="date" value={newClientData.birthday} onChange={e => setNewClientData({...newClientData, birthday: e.target.value})} className="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#A87B7B]" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1">標籤（逗號分隔）</label>
+                <input type="text" placeholder="例：VIP, 過敏體質" value={newClientData.tags} onChange={e => setNewClientData({...newClientData, tags: e.target.value})} className="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#A87B7B]" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1">睫毛密碼</label>
+                <input type="text" placeholder="例：C 0.07 10-12mm" value={newClientData.lashPreference} onChange={e => setNewClientData({...newClientData, lashPreference: e.target.value})} className="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#A87B7B]" />
+              </div>
+            </div>
+            <button onClick={handleSaveClient} className="w-full mt-6 bg-[#A87B7B] text-white py-3 rounded-xl text-sm font-bold hover:bg-[#8f6666] transition">{editingClientId ? '儲存變更' : '建立客戶'}</button>
+          </div>
+        </div>
+      )}
+
+      {/* 儲值 Modal */}
+      {showTopUpModal && selectedClient && (
+        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center backdrop-blur-sm px-4">
+          <div className="bg-white rounded-2xl p-7 w-full max-w-[400px] shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button onClick={closeTopUpModal} className="absolute top-5 right-5 text-gray-400 hover:text-gray-800"><X size={24} /></button>
+            <h2 className="text-xl font-bold text-gray-800 mb-1 flex items-center gap-2"><Wallet size={20} className="text-[#C59A5C]" /> {editingTopUpId ? '編輯儲值紀錄' : '客戶儲值'}</h2>
+            <p className="text-sm text-gray-500 mb-5">{selectedClient.name}．目前餘額 ${selectedClient.balance}</p>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1">儲值日期</label>
+                <input type="date" value={topUpData.date} onChange={e => setTopUpData({...topUpData, date: e.target.value})} className="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#A87B7B]" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1">實收金額</label>
+                <input type="number" placeholder="0" value={topUpData.targetAmount} onChange={e => setTopUpData({...topUpData, targetAmount: e.target.value})} className="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#A87B7B]" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1">加碼贈送</label>
+                <input type="number" placeholder="0" value={topUpData.bonus} onChange={e => setTopUpData({...topUpData, bonus: e.target.value})} className="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#A87B7B]" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1">付款方式</label>
+                <select value={topUpData.method} onChange={e => setTopUpData({...topUpData, method: e.target.value})} className="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#A87B7B]">
+                  {paymentMethods.filter(m => m !== '儲值金扣款' && m !== '扣除包堂').map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1">負責設計師</label>
+                <select value={topUpData.designerId} onChange={e => setTopUpData({...topUpData, designerId: e.target.value})} className="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#A87B7B]">
+                  <option value="">系統/櫃台</option>
+                  {designers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1">備註</label>
+                <input type="text" placeholder="選填" value={topUpData.notes} onChange={e => setTopUpData({...topUpData, notes: e.target.value})} className="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#A87B7B]" />
+              </div>
+            </div>
+            <button onClick={handleSaveTopUp} className="w-full mt-6 bg-[#C59A5C] text-white py-3 rounded-xl text-sm font-bold hover:bg-[#b08850] transition">{editingTopUpId ? '更新儲值紀錄' : '確認儲值'}</button>
+          </div>
+        </div>
+      )}
+
+      {/* 預約時段編輯 Modal */}
+      {editingSlot && (
+        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center backdrop-blur-sm px-4">
+          <div className="bg-white rounded-2xl p-7 w-full max-w-[400px] shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button onClick={() => setEditingSlot(null)} className="absolute top-5 right-5 text-gray-400 hover:text-gray-800"><X size={24} /></button>
+            <h2 className="text-xl font-bold text-gray-800 mb-5 flex items-center gap-2"><CalendarCheck size={20} className="text-[#A87B7B]" /> {editingSlot.isNew ? '新增時段' : '編輯時段'}</h2>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 mb-1">開始時間</label>
+                  <select value={editingSlot.startTime} onChange={e => setEditingSlot({...editingSlot, startTime: e.target.value})} className="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#A87B7B]">
+                    {TIME_BLOCKS.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 mb-1">結束時間</label>
+                  <select value={editingSlot.endTime} onChange={e => setEditingSlot({...editingSlot, endTime: e.target.value})} className="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#A87B7B]">
+                    {TIME_BLOCKS.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1">狀態</label>
+                <div className="flex gap-3">
+                  <button onClick={() => setEditingSlot({...editingSlot, isFull: false})} className={`flex-1 py-2.5 rounded-xl text-sm font-bold border transition ${!editingSlot.isFull ? 'bg-[#FDFBF7] text-[#A87B7B] border-[#A87B7B]' : 'bg-white text-gray-500 border-gray-200'}`}>開放預約</button>
+                  <button onClick={() => setEditingSlot({...editingSlot, isFull: true})} className={`flex-1 py-2.5 rounded-xl text-sm font-bold border transition ${editingSlot.isFull ? 'bg-[#FDFBF7] text-[#A87B7B] border-[#A87B7B]' : 'bg-white text-gray-500 border-gray-200'}`}>已預約</button>
+                </div>
+              </div>
+              {editingSlot.isFull && (
+                <>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-1">客戶姓名</label>
+                    <input type="text" placeholder="請輸入客戶姓名" value={editingSlot.clientName} onChange={e => setEditingSlot({...editingSlot, clientName: e.target.value})} className="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#A87B7B]" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-1">客戶電話</label>
+                    <input type="text" placeholder="請輸入客戶電話" value={editingSlot.clientPhone} onChange={e => setEditingSlot({...editingSlot, clientPhone: e.target.value})} className="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#A87B7B]" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 mb-1">服務項目</label>
+                    <input type="text" placeholder="例：自然款接睫" value={editingSlot.service} onChange={e => setEditingSlot({...editingSlot, service: e.target.value})} className="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-[#A87B7B]" />
+                  </div>
+                </>
+              )}
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1">顏色標記</label>
+                <div className="flex gap-2 flex-wrap">
+                  {EVENT_COLORS.map(c => (
+                    <button key={c.id} onClick={() => setEditingSlot({...editingSlot, color: c.id})} className={`w-8 h-8 rounded-full border-2 transition ${editingSlot.color === c.id ? 'border-gray-800 scale-110' : 'border-transparent'}`} style={{backgroundColor: c.hex}} title={c.name} />
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              {!editingSlot.isNew && (
+                <button onClick={handleRemoveSlot} className="flex-1 py-3 border border-red-200 text-red-500 rounded-xl text-sm font-bold hover:bg-red-50 transition">刪除時段</button>
+              )}
+              <button onClick={handleSaveSlotEdit} className="flex-1 py-3 bg-[#A87B7B] text-white rounded-xl text-sm font-bold hover:bg-[#8f6666] transition">儲存</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      </>
     );
   };
 
